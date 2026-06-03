@@ -1,0 +1,20 @@
+# Eclipse build artifacts
+bin/
+test-bin/
+xtend-gen/
+
+# Eclipse IDE workspace files
+.classpath
+.project
+.settings/
+*.launch
+
+# Xtext ANTLR binary dependency (resolved via target platform)
+*.jar
+
+# macOS
+.DS_Store
+__MACOSX/
+
+# Generated plugin manifests (keep plugin.xml, ignore _gen copies)
+plugin.xml_gen

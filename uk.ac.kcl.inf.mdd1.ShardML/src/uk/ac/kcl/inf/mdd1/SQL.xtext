@@ -1,0 +1,57 @@
+/*
+ * SQL grammar
+ * A lightweight ddl parser for ShardML
+ * Supports a subset of CREATE TABLE statements, sufficient for sharding decisions
+ * Schema files use the .msql extension and are imported by ShardML models
+ * to provide table and column cross-references
+ * 
+ */
+
+grammar uk.ac.kcl.inf.mdd1.SQL with org.eclipse.xtext.common.Terminals
+generate sql "http://www.ac.uk/kcl/inf/mdd1/SQL"
+
+// Root container
+Schema:
+	tables += Table*
+;
+
+// maps to database table
+// columns are comma separated (classic SQL syntax)
+Table:
+	'CREATE' 'TABLE' name=ID '('
+		columns += Column (',' columns += Column )*
+	')' 
+;
+
+// supports zero or more constraints (primary key, unique, not null)
+Column:
+    name=ID (simpleType=AllTypes | varchar=Varchar) constraint += Constraint*
+;
+
+// explicit rule for varchar because of the size paramteter
+Varchar:
+	'VARCHAR' '(' size=INT ')'
+;
+
+// covers most common types
+enum AllTypes:
+    INT='INT'|BIGINT='BIGINT'|UUID='UUID'|DECIMAL='DECIMAL'|TIMESTAMP='TIMESTAMP'|DATE='DATE'|BOOLEAN='BOOLEAN'|TEXT='TEXT'
+;
+
+// we use Xtext's forced type instantiation {Type} here
+// this is necessary because each constraint has no feature assignments
+Constraint:
+    PrimaryAnnotation | UniqueAnnotation | NotNull
+;
+
+PrimaryAnnotation:
+	{PrimaryAnnotation} 'PRIMARY''KEY'
+;
+
+UniqueAnnotation:
+	{UniqueAnnotation} 'UNIQUE'
+;
+
+NotNull:
+	{NotNull} 'NOT''NULL'
+;

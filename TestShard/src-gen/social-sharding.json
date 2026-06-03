@@ -1,0 +1,38 @@
+{
+    "database": "social",
+    "target": "vitess",
+    "keyspace": "social",
+    "tables": [
+        {
+            "name": "users",
+            "vindex": "id",
+            "vindex_type": "hash",
+            "buckets": 32
+        },
+        {
+            "name": "posts",
+            "vindex": "user_id",
+            "vindex_type": "hash",
+            "buckets": 32
+            ,"colocate_with": "users"
+        },
+        {
+            "name": "comments",
+            "vindex": "user_id",
+            "vindex_type": "hash",
+            "buckets": 32
+            ,"colocate_with": "posts"
+        },
+        {
+            "name": "likes",
+            "vindex": "user_id",
+            "vindex_type": "hash",
+            "buckets": 32
+            ,"colocate_with": "users"
+        },
+        {
+            "name": "countries",
+            "vindex_type": "reference"
+        }
+    ]
+}

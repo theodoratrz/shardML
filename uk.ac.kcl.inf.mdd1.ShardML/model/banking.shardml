@@ -1,0 +1,67 @@
+import "banking.msql"
+
+database banking {
+    type: postgres
+
+    shard customers {
+        strategy: hash
+        key: id
+        buckets: 32
+    }
+
+    shard accounts {
+        strategy: hash
+        key: customer_id
+        buckets: 32
+        colocate_with: customers
+    } 
+   
+    shard transactions {
+        strategy: hash
+        key: account_id
+        buckets: 32
+        colocate_with: accounts
+    }
+
+    shard cards {
+        strategy: hash
+        key: id
+        buckets: 32
+        colocate_with: customers
+    }
+	
+    route transactions {
+        policy: warn
+
+        query FindTransactionsByAccount {
+            type: read
+            where: account_id = ?
+        }
+
+        query FindLargeTransactions {
+            type: read
+            where: amount > ?
+        }
+
+        query FindAllTransactions {
+            type: read
+        }
+        
+        query FindTransactionsSortedByAmount {
+            type: read
+            where: account_id = ?
+            sort: amount ASC
+        }
+
+        query GroupTransactionsByAmount {
+            type: read
+            group_by: amount
+        }
+    }
+
+
+
+    accounts belongs_to customers
+    transactions belongs_to accounts
+    cards belongs_to customers
+}

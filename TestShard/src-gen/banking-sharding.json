@@ -1,0 +1,33 @@
+{
+    "database": "banking",
+    "target": "citus",
+    "tables": [
+        {
+            "name": "customers",
+            "distribution_column": "id",
+            "shard_count": 32,
+            "distribution_type": "hash"
+        },
+        {
+            "name": "accounts",
+            "distribution_column": "customer_id",
+            "shard_count": 32,
+            "distribution_type": "hash"
+            ,"colocate_with": "customers"
+        },
+        {
+            "name": "transactions",
+            "distribution_column": "account_id",
+            "shard_count": 32,
+            "distribution_type": "hash"
+            ,"colocate_with": "accounts"
+        },
+        {
+            "name": "cards",
+            "distribution_column": "id",
+            "shard_count": 32,
+            "distribution_type": "hash"
+            ,"colocate_with": "customers"
+        }
+    ]
+}
