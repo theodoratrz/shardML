@@ -85,11 +85,11 @@ shardml/                               # Language runtime
     GenerateSQLMaven.mwe2              # Xtext generation, step 1 (SQL)
     GenerateShardMLMaven.mwe2          # Xtext generation, step 2 (ShardML)
     scoping/
-      ShardMLScopeProvider.xtend       # Cross-resource reference resolution
+      ShardMLScopeProvider.java        # Cross-resource reference resolution
     validation/
-      ShardMLValidator.xtend           # 23 validation rules
+      ShardMLValidator.java            # 23 validation rules
     generator/
-      ShardMLGenerator.xtend           # Citus/Vitess output generation
+      ShardMLGenerator.java            # Citus/Vitess output generation
   src-gen/                             # Xtext-generated parser infrastructure
   model/generated/                     # Generated Ecore metamodels
 

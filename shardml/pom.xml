@@ -63,16 +63,6 @@
                 <artifactId>maven-clean-plugin</artifactId>
                 <executions>
                     <execution>
-                        <id>default-clean</id>
-                        <configuration>
-                            <filesets>
-                                <fileset>
-                                    <directory>xtend-gen</directory>
-                                </fileset>
-                            </filesets>
-                        </configuration>
-                    </execution>
-                    <execution>
                         <id>clean-generated</id>
                         <phase>generate-sources</phase>
                         <goals>
@@ -184,24 +174,6 @@
                             <sources>
                                 <source>src-gen</source>
                             </sources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-
-            <!-- 3. Compile .xtend (scope provider, validator, generator) to xtend-gen. -->
-            <plugin>
-                <groupId>org.eclipse.xtend</groupId>
-                <artifactId>xtend-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>xtend-compile</id>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                        <configuration>
-                            <outputDirectory>${project.basedir}/xtend-gen</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
