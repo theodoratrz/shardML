@@ -1080,4 +1080,50 @@ public class ShardMLParsingTest {
 		validationTestHelper.assertError(model, ShardMLPackage.Literals.SORT_CLAUSE, Diagnostic.LINKING_DIAGNOSTIC, "body");
 		validationTestHelper.assertError(model, ShardMLPackage.Literals.GROUP_BY, Diagnostic.LINKING_DIAGNOSTIC, "sec_id");
 	}
+
+	@Test
+	public void testColocatedBucketCountMismatch() throws Exception {
+		Model model = parseShardML(TEST_MSQL, """
+				import "test.msql"
+				database test{
+				    type: postgres
+				    shard test_table {
+				        strategy: hash
+				        key: id
+				        buckets: 32
+				    }
+				    shard second_table {
+				        strategy: hash
+				        key: id
+				        buckets: 64
+				        colocate_with: test_table
+				    }
+				}
+				""");
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_028",
+				"'second_table' has 64 buckets, but is colocated with 'test_table', which has 32. "
+				+ "Colocated tables share shard boundaries, so they need the same bucket count.");
+	}
+
+	@Test
+	public void testColocatedBucketCountMatch() throws Exception {
+		Model model = parseShardML(TEST_MSQL, """
+				import "test.msql"
+				database test{
+				    type: postgres
+				    shard test_table {
+				        strategy: hash
+				        key: id
+				        buckets: 32
+				    }
+				    shard second_table {
+				        strategy: hash
+				        key: id
+				        buckets: 32
+				        colocate_with: test_table
+				    }
+				}
+				""");
+		validationTestHelper.assertNoIssue(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_028");
+	}
 }

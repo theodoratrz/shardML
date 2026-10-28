@@ -162,6 +162,32 @@ public class ShardMLGeneratorTest {
 	}
 
 	@Test
+	public void testPostgresSqlShardCount() throws IOException {
+		String sql = file(generate("""
+				import "test.msql"
+				database mybank {
+				    type: postgres
+				    shard customers {
+				        strategy: hash
+				        key: id
+				        buckets: 64
+				    }
+				    shard orders {
+				        strategy: hash
+				        key: customer_id
+				        buckets: 64
+				        colocate_with: customers
+				    }
+				}
+				"""), "mybank-distribution.sql");
+		// Citus rejects shard_count together with colocate_with; orders takes the count from customers
+		Assertions.assertEquals("""
+				SELECT create_distributed_table('customers', 'id'  ,shard_count => 64 );
+				SELECT create_distributed_table('orders', 'customer_id'  ,colocate_with => 'customers' );
+				""", sql);
+	}
+
+	@Test
 	public void testPostgresSchemaScript() throws IOException {
 		String sql = file(generate("""
 				import "test.msql"

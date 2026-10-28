@@ -139,6 +139,8 @@ public class ShardMLGenerator extends AbstractGenerator {
 	// generates Citus distribution commands for each sharded table.
 	// hash-sharded: create_distributed_table()
 	// replicated: create_reference_table()
+	// shard_count goes on the first table of each colocation group only: Citus rejects it
+	// together with colocate_with, and colocated tables take the group's count
 	public CharSequence distributionDefinitions(Database db) {
 		StringBuilder out = new StringBuilder();
 		for (ShardDecl shard : db.getShard_decl()) {
@@ -147,6 +149,8 @@ public class ShardMLGenerator extends AbstractGenerator {
 						.append("', '").append(shard.getId().getName()).append("' ");
 				if (shard.getColocate() != null)
 					out.append(" ,colocate_with => '").append(shard.getColocate().getName()).append("' ");
+				else
+					out.append(" ,shard_count => ").append(shard.getBuckets()).append(" ");
 				out.append(");\n");
 			} else {
 				out.append("SELECT create_reference_table('").append(shard.getEntity().getName()).append("');\n");

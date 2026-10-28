@@ -61,6 +61,7 @@ public class ShardMLValidator extends AbstractShardMLValidator {
 	private static final String UNSUPPORTED_TARGET        = "SHML_025";
 	private static final String COLOCATION_ROOT_MISMATCH  = "SHML_026";
 	private static final String FOREIGN_KEY_TYPE_MISMATCH = "SHML_027";
+	private static final String COLOCATED_BUCKET_MISMATCH = "SHML_028";
 
 	// restrict validation to shardML only
 	@Override
@@ -381,6 +382,22 @@ public class ShardMLValidator extends AbstractShardMLValidator {
 			error("Foreign key " + qualified(rel.getVia()) + " is " + typeName(rel.getVia()) + ", but the shard key it references, "
 					+ qualified(parentKey) + ", is " + typeName(parentKey) + ". Colocated tables need the same type at every link.",
 					rel, ShardMLPackage.Literals.BELONGS_TO__VIA, FOREIGN_KEY_TYPE_MISMATCH);
+		}
+	}
+
+	// Colocated tables share shard boundaries; Citus takes the count from the table colocated
+	// with, so a different count here would be silently ignored
+	@Check
+	public void checkColocatedBucketCount(ShardDecl shard) {
+		if (shard.getColocate() == null || !isHashed(shard))
+			return;
+		Database db = (Database) shard.eContainer();
+		ShardDecl target = shardFor(db, shard.getColocate());
+		if (target != null && target != shard && isHashed(target) && target.getBuckets() != shard.getBuckets()) {
+			error("'" + shard.getEntity().getName() + "' has " + shard.getBuckets() + " buckets, but is colocated with '"
+					+ target.getEntity().getName() + "', which has " + target.getBuckets()
+					+ ". Colocated tables share shard boundaries, so they need the same bucket count.",
+					shard, ShardMLPackage.Literals.SHARD_DECL__BUCKETS, COLOCATED_BUCKET_MISMATCH);
 		}
 	}
 
