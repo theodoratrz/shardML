@@ -6,6 +6,7 @@ package io.shardml.sql.impl;
 import io.shardml.sql.Column;
 import io.shardml.sql.SqlPackage;
 import io.shardml.sql.Table;
+import io.shardml.sql.TableConstraint;
 
 import java.util.Collection;
 
@@ -33,6 +34,7 @@ import org.eclipse.emf.ecore.util.InternalEList;
  * <ul>
  *   <li>{@link io.shardml.sql.impl.TableImpl#getName <em>Name</em>}</li>
  *   <li>{@link io.shardml.sql.impl.TableImpl#getColumns <em>Columns</em>}</li>
+ *   <li>{@link io.shardml.sql.impl.TableImpl#getConstraints <em>Constraints</em>}</li>
  * </ul>
  *
  * @generated
@@ -68,6 +70,16 @@ public class TableImpl extends MinimalEObjectImpl.Container implements Table
    * @ordered
    */
   protected EList<Column> columns;
+
+  /**
+   * The cached value of the '{@link #getConstraints() <em>Constraints</em>}' containment reference list.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #getConstraints()
+   * @generated
+   * @ordered
+   */
+  protected EList<TableConstraint> constraints;
 
   /**
    * <!-- begin-user-doc -->
@@ -136,12 +148,29 @@ public class TableImpl extends MinimalEObjectImpl.Container implements Table
    * @generated
    */
   @Override
+  public EList<TableConstraint> getConstraints()
+  {
+    if (constraints == null)
+    {
+      constraints = new EObjectContainmentEList<TableConstraint>(TableConstraint.class, this, SqlPackage.TABLE__CONSTRAINTS);
+    }
+    return constraints;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
   public NotificationChain eInverseRemove(InternalEObject otherEnd, int featureID, NotificationChain msgs)
   {
     switch (featureID)
     {
       case SqlPackage.TABLE__COLUMNS:
         return ((InternalEList<?>)getColumns()).basicRemove(otherEnd, msgs);
+      case SqlPackage.TABLE__CONSTRAINTS:
+        return ((InternalEList<?>)getConstraints()).basicRemove(otherEnd, msgs);
     }
     return super.eInverseRemove(otherEnd, featureID, msgs);
   }
@@ -160,6 +189,8 @@ public class TableImpl extends MinimalEObjectImpl.Container implements Table
         return getName();
       case SqlPackage.TABLE__COLUMNS:
         return getColumns();
+      case SqlPackage.TABLE__CONSTRAINTS:
+        return getConstraints();
     }
     return super.eGet(featureID, resolve, coreType);
   }
@@ -182,6 +213,10 @@ public class TableImpl extends MinimalEObjectImpl.Container implements Table
         getColumns().clear();
         getColumns().addAll((Collection<? extends Column>)newValue);
         return;
+      case SqlPackage.TABLE__CONSTRAINTS:
+        getConstraints().clear();
+        getConstraints().addAll((Collection<? extends TableConstraint>)newValue);
+        return;
     }
     super.eSet(featureID, newValue);
   }
@@ -202,6 +237,9 @@ public class TableImpl extends MinimalEObjectImpl.Container implements Table
       case SqlPackage.TABLE__COLUMNS:
         getColumns().clear();
         return;
+      case SqlPackage.TABLE__CONSTRAINTS:
+        getConstraints().clear();
+        return;
     }
     super.eUnset(featureID);
   }
@@ -220,6 +258,8 @@ public class TableImpl extends MinimalEObjectImpl.Container implements Table
         return NAME_EDEFAULT == null ? name != null : !NAME_EDEFAULT.equals(name);
       case SqlPackage.TABLE__COLUMNS:
         return columns != null && !columns.isEmpty();
+      case SqlPackage.TABLE__CONSTRAINTS:
+        return constraints != null && !constraints.isEmpty();
     }
     return super.eIsSet(featureID);
   }

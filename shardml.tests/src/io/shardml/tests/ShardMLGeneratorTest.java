@@ -188,6 +188,40 @@ public class ShardMLGeneratorTest {
 				""", sql, "Schema script should create every imported table, including unsharded ones");
 	}
 
+	@Test
+	public void testPostgresSchemaScriptTableConstraints() throws IOException {
+		Model model = parseShardML("""
+				CREATE TABLE accounts (
+				    id BIGINT NOT NULL,
+				    customer_id BIGINT NOT NULL,
+				    iban VARCHAR(34),
+				    PRIMARY KEY (customer_id, id),
+				    UNIQUE (customer_id, iban)
+				)
+				""", """
+				import "test.msql"
+				database mybank {
+				    type: postgres
+				    shard accounts {
+				        strategy: hash
+				        key: customer_id
+				        buckets: 32
+				    }
+				}
+				""");
+		InMemoryFileSystemAccess fsa = new InMemoryFileSystemAccess();
+		generator.doGenerate(model.eResource(), fsa, new GeneratorContext());
+		Assertions.assertEquals("""
+				CREATE TABLE accounts (
+				    id BIGINT NOT NULL,
+				    customer_id BIGINT NOT NULL,
+				    iban VARCHAR(34),
+				    PRIMARY KEY (customer_id, id),
+				    UNIQUE (customer_id, iban)
+				);
+				""", file(fsa.getTextFiles(), "mybank-schema.sql"));
+	}
+
 	// --- mysql (unsupported) ---
 
 	@Test

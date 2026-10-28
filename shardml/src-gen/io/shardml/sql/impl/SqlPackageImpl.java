@@ -8,11 +8,14 @@ import io.shardml.sql.Column;
 import io.shardml.sql.Constraint;
 import io.shardml.sql.NotNull;
 import io.shardml.sql.PrimaryAnnotation;
+import io.shardml.sql.PrimaryKey;
 import io.shardml.sql.Schema;
 import io.shardml.sql.SqlFactory;
 import io.shardml.sql.SqlPackage;
 import io.shardml.sql.Table;
+import io.shardml.sql.TableConstraint;
 import io.shardml.sql.UniqueAnnotation;
+import io.shardml.sql.UniqueKey;
 import io.shardml.sql.Varchar;
 
 import org.eclipse.emf.ecore.EAttribute;
@@ -86,6 +89,27 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
    * @generated
    */
   private EClass notNullEClass = null;
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  private EClass tableConstraintEClass = null;
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  private EClass primaryKeyEClass = null;
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  private EClass uniqueKeyEClass = null;
 
   /**
    * <!-- begin-user-doc -->
@@ -217,6 +241,17 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
    * @generated
    */
   @Override
+  public EReference getTable_Constraints()
+  {
+    return (EReference)tableEClass.getEStructuralFeatures().get(2);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
   public EClass getColumn()
   {
     return columnEClass;
@@ -338,6 +373,50 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
    * @generated
    */
   @Override
+  public EClass getTableConstraint()
+  {
+    return tableConstraintEClass;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EReference getTableConstraint_Columns()
+  {
+    return (EReference)tableConstraintEClass.getEStructuralFeatures().get(0);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EClass getPrimaryKey()
+  {
+    return primaryKeyEClass;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EClass getUniqueKey()
+  {
+    return uniqueKeyEClass;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
   public EEnum getAllTypes()
   {
     return allTypesEEnum;
@@ -380,6 +459,7 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
     tableEClass = createEClass(TABLE);
     createEAttribute(tableEClass, TABLE__NAME);
     createEReference(tableEClass, TABLE__COLUMNS);
+    createEReference(tableEClass, TABLE__CONSTRAINTS);
 
     columnEClass = createEClass(COLUMN);
     createEAttribute(columnEClass, COLUMN__NAME);
@@ -397,6 +477,13 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
     uniqueAnnotationEClass = createEClass(UNIQUE_ANNOTATION);
 
     notNullEClass = createEClass(NOT_NULL);
+
+    tableConstraintEClass = createEClass(TABLE_CONSTRAINT);
+    createEReference(tableConstraintEClass, TABLE_CONSTRAINT__COLUMNS);
+
+    primaryKeyEClass = createEClass(PRIMARY_KEY);
+
+    uniqueKeyEClass = createEClass(UNIQUE_KEY);
 
     // Create enums
     allTypesEEnum = createEEnum(ALL_TYPES);
@@ -434,6 +521,8 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
     primaryAnnotationEClass.getESuperTypes().add(this.getConstraint());
     uniqueAnnotationEClass.getESuperTypes().add(this.getConstraint());
     notNullEClass.getESuperTypes().add(this.getConstraint());
+    primaryKeyEClass.getESuperTypes().add(this.getTableConstraint());
+    uniqueKeyEClass.getESuperTypes().add(this.getTableConstraint());
 
     // Initialize classes and features; add operations and parameters
     initEClass(schemaEClass, Schema.class, "Schema", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
@@ -442,6 +531,7 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
     initEClass(tableEClass, Table.class, "Table", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
     initEAttribute(getTable_Name(), ecorePackage.getEString(), "name", null, 0, 1, Table.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
     initEReference(getTable_Columns(), this.getColumn(), null, "columns", null, 0, -1, Table.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEReference(getTable_Constraints(), this.getTableConstraint(), null, "constraints", null, 0, -1, Table.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
     initEClass(columnEClass, Column.class, "Column", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
     initEAttribute(getColumn_Name(), ecorePackage.getEString(), "name", null, 0, 1, Column.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
@@ -459,6 +549,13 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
     initEClass(uniqueAnnotationEClass, UniqueAnnotation.class, "UniqueAnnotation", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
 
     initEClass(notNullEClass, NotNull.class, "NotNull", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
+
+    initEClass(tableConstraintEClass, TableConstraint.class, "TableConstraint", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
+    initEReference(getTableConstraint_Columns(), this.getColumn(), null, "columns", null, 0, -1, TableConstraint.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_COMPOSITE, IS_RESOLVE_PROXIES, !IS_UNSETTABLE, !IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+
+    initEClass(primaryKeyEClass, PrimaryKey.class, "PrimaryKey", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
+
+    initEClass(uniqueKeyEClass, UniqueKey.class, "UniqueKey", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
 
     // Initialize enums and add enum literals
     initEEnum(allTypesEEnum, AllTypes.class, "AllTypes");

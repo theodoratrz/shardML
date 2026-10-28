@@ -74,6 +74,9 @@ public class SqlFactoryImpl extends EFactoryImpl implements SqlFactory
       case SqlPackage.PRIMARY_ANNOTATION: return createPrimaryAnnotation();
       case SqlPackage.UNIQUE_ANNOTATION: return createUniqueAnnotation();
       case SqlPackage.NOT_NULL: return createNotNull();
+      case SqlPackage.TABLE_CONSTRAINT: return createTableConstraint();
+      case SqlPackage.PRIMARY_KEY: return createPrimaryKey();
+      case SqlPackage.UNIQUE_KEY: return createUniqueKey();
       default:
         throw new IllegalArgumentException("The class '" + eClass.getName() + "' is not a valid classifier");
     }
@@ -207,6 +210,42 @@ public class SqlFactoryImpl extends EFactoryImpl implements SqlFactory
   {
     NotNullImpl notNull = new NotNullImpl();
     return notNull;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public TableConstraint createTableConstraint()
+  {
+    TableConstraintImpl tableConstraint = new TableConstraintImpl();
+    return tableConstraint;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public PrimaryKey createPrimaryKey()
+  {
+    PrimaryKeyImpl primaryKey = new PrimaryKeyImpl();
+    return primaryKey;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public UniqueKey createUniqueKey()
+  {
+    UniqueKeyImpl uniqueKey = new UniqueKeyImpl();
+    return uniqueKey;
   }
 
   /**

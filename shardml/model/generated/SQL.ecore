@@ -9,6 +9,8 @@
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="columns" upperBound="-1"
         eType="#//Column" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="constraints" upperBound="-1"
+        eType="#//TableConstraint" containment="true"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="Column">
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
@@ -35,4 +37,10 @@
   <eClassifiers xsi:type="ecore:EClass" name="PrimaryAnnotation" eSuperTypes="#//Constraint"/>
   <eClassifiers xsi:type="ecore:EClass" name="UniqueAnnotation" eSuperTypes="#//Constraint"/>
   <eClassifiers xsi:type="ecore:EClass" name="NotNull" eSuperTypes="#//Constraint"/>
+  <eClassifiers xsi:type="ecore:EClass" name="TableConstraint">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="columns" unique="false"
+        upperBound="-1" eType="#//Column"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="PrimaryKey" eSuperTypes="#//TableConstraint"/>
+  <eClassifiers xsi:type="ecore:EClass" name="UniqueKey" eSuperTypes="#//TableConstraint"/>
 </ecore:EPackage>

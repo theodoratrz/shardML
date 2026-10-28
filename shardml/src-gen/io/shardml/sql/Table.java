@@ -18,6 +18,7 @@ import org.eclipse.emf.ecore.EObject;
  * <ul>
  *   <li>{@link io.shardml.sql.Table#getName <em>Name</em>}</li>
  *   <li>{@link io.shardml.sql.Table#getColumns <em>Columns</em>}</li>
+ *   <li>{@link io.shardml.sql.Table#getConstraints <em>Constraints</em>}</li>
  * </ul>
  *
  * @see io.shardml.sql.SqlPackage#getTable()
@@ -59,5 +60,17 @@ public interface Table extends EObject
    * @generated
    */
   EList<Column> getColumns();
+
+  /**
+   * Returns the value of the '<em><b>Constraints</b></em>' containment reference list.
+   * The list contents are of type {@link io.shardml.sql.TableConstraint}.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the value of the '<em>Constraints</em>' containment reference list.
+   * @see io.shardml.sql.SqlPackage#getTable_Constraints()
+   * @model containment="true"
+   * @generated
+   */
+  EList<TableConstraint> getConstraints();
 
 } // Table

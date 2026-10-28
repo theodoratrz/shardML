@@ -1,5 +1,9 @@
 package io.shardml.generator;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.xtext.generator.AbstractGenerator;
 import org.eclipse.xtext.generator.IFileSystemAccess2;
@@ -15,9 +19,12 @@ import io.shardml.sql.Column;
 import io.shardml.sql.Constraint;
 import io.shardml.sql.NotNull;
 import io.shardml.sql.PrimaryAnnotation;
+import io.shardml.sql.PrimaryKey;
 import io.shardml.sql.Schema;
 import io.shardml.sql.Table;
+import io.shardml.sql.TableConstraint;
 import io.shardml.sql.UniqueAnnotation;
+import io.shardml.sql.UniqueKey;
 
 /*Produces 3 output files per model, all for Citus:
  * 1. A json sharding config
@@ -86,15 +93,19 @@ public class ShardMLGenerator extends AbstractGenerator {
 		for (Table table : schema.getTables()) {
 			if (out.length() > 0)
 				out.append("\n");
-			out.append("CREATE TABLE ").append(table.getName()).append(" (\n");
-			for (int i = 0; i < table.getColumns().size(); i++) {
-				Column column = table.getColumns().get(i);
-				out.append("    ").append(column.getName()).append(" ").append(columnType(column));
+			// table constraints go after the columns, as in most hand-written DDL
+			List<String> lines = new ArrayList<>();
+			for (Column column : table.getColumns()) {
+				StringBuilder line = new StringBuilder(column.getName()).append(" ").append(columnType(column));
 				for (Constraint constraint : column.getConstraint())
-					out.append(" ").append(constraintSQL(constraint));
-				out.append(i < table.getColumns().size() - 1 ? ",\n" : "\n");
+					line.append(" ").append(constraintSQL(constraint));
+				lines.add(line.toString());
 			}
-			out.append(");\n");
+			for (TableConstraint constraint : table.getConstraints())
+				lines.add(tableConstraintSQL(constraint));
+			out.append("CREATE TABLE ").append(table.getName()).append(" (\n    ");
+			out.append(String.join(",\n    ", lines));
+			out.append("\n);\n");
 		}
 		return out;
 	}
@@ -114,6 +125,15 @@ public class ShardMLGenerator extends AbstractGenerator {
 		if (constraint instanceof NotNull)
 			return "NOT NULL";
 		throw new IllegalArgumentException("Unknown constraint: " + constraint.eClass().getName());
+	}
+
+	private static String tableConstraintSQL(TableConstraint constraint) {
+		String columns = constraint.getColumns().stream().map(Column::getName).collect(Collectors.joining(", "));
+		if (constraint instanceof PrimaryKey)
+			return "PRIMARY KEY (" + columns + ")";
+		if (constraint instanceof UniqueKey)
+			return "UNIQUE (" + columns + ")";
+		throw new IllegalArgumentException("Unknown table constraint: " + constraint.eClass().getName());
 	}
 
 	// generates Citus distribution commands for each sharded table.

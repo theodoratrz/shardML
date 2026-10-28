@@ -16,10 +16,11 @@ Schema:
 ;
 
 // maps to database table
-// columns are comma separated (classic SQL syntax)
+// columns and table constraints are comma separated (classic SQL syntax)
 Table:
 	'CREATE' 'TABLE' name=ID '('
-		columns += Column (',' columns += Column )*
+		(columns += Column | constraints += TableConstraint)
+		(',' (columns += Column | constraints += TableConstraint))*
 	')' 
 ;
 
@@ -54,4 +55,18 @@ UniqueAnnotation:
 
 NotNull:
 	{NotNull} 'NOT''NULL'
+;
+
+// table-level constraints over one or more columns of the same table,
+// e.g. PRIMARY KEY (customer_id, id)
+TableConstraint:
+	PrimaryKey | UniqueKey
+;
+
+PrimaryKey:
+	'PRIMARY' 'KEY' '(' columns += [Column] (',' columns += [Column])* ')'
+;
+
+UniqueKey:
+	'UNIQUE' '(' columns += [Column] (',' columns += [Column])* ')'
 ;

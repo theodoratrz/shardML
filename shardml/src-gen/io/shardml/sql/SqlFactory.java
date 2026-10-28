@@ -96,6 +96,33 @@ public interface SqlFactory extends EFactory
   NotNull createNotNull();
 
   /**
+   * Returns a new object of class '<em>Table Constraint</em>'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return a new object of class '<em>Table Constraint</em>'.
+   * @generated
+   */
+  TableConstraint createTableConstraint();
+
+  /**
+   * Returns a new object of class '<em>Primary Key</em>'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return a new object of class '<em>Primary Key</em>'.
+   * @generated
+   */
+  PrimaryKey createPrimaryKey();
+
+  /**
+   * Returns a new object of class '<em>Unique Key</em>'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return a new object of class '<em>Unique Key</em>'.
+   * @generated
+   */
+  UniqueKey createUniqueKey();
+
+  /**
    * Returns the package supported by this factory.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->

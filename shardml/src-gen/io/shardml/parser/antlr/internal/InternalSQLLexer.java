@@ -454,10 +454,10 @@ public class InternalSQLLexer extends Lexer {
         try {
             int _type = RULE_ID;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // InternalSQL.g:561:9: ( ( '^' )? ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )* )
-            // InternalSQL.g:561:11: ( '^' )? ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )*
+            // InternalSQL.g:771:9: ( ( '^' )? ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )* )
+            // InternalSQL.g:771:11: ( '^' )? ( 'a' .. 'z' | 'A' .. 'Z' | '_' ) ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )*
             {
-            // InternalSQL.g:561:11: ( '^' )?
+            // InternalSQL.g:771:11: ( '^' )?
             int alt1=2;
             int LA1_0 = input.LA(1);
 
@@ -466,7 +466,7 @@ public class InternalSQLLexer extends Lexer {
             }
             switch (alt1) {
                 case 1 :
-                    // InternalSQL.g:561:11: '^'
+                    // InternalSQL.g:771:11: '^'
                     {
                     match('^'); 
 
@@ -484,7 +484,7 @@ public class InternalSQLLexer extends Lexer {
                 recover(mse);
                 throw mse;}
 
-            // InternalSQL.g:561:40: ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )*
+            // InternalSQL.g:771:40: ( 'a' .. 'z' | 'A' .. 'Z' | '_' | '0' .. '9' )*
             loop2:
             do {
                 int alt2=2;
@@ -533,10 +533,10 @@ public class InternalSQLLexer extends Lexer {
         try {
             int _type = RULE_INT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // InternalSQL.g:563:10: ( ( '0' .. '9' )+ )
-            // InternalSQL.g:563:12: ( '0' .. '9' )+
+            // InternalSQL.g:773:10: ( ( '0' .. '9' )+ )
+            // InternalSQL.g:773:12: ( '0' .. '9' )+
             {
-            // InternalSQL.g:563:12: ( '0' .. '9' )+
+            // InternalSQL.g:773:12: ( '0' .. '9' )+
             int cnt3=0;
             loop3:
             do {
@@ -550,7 +550,7 @@ public class InternalSQLLexer extends Lexer {
 
                 switch (alt3) {
             	case 1 :
-            	    // InternalSQL.g:563:13: '0' .. '9'
+            	    // InternalSQL.g:773:13: '0' .. '9'
             	    {
             	    matchRange('0','9'); 
 
@@ -582,10 +582,10 @@ public class InternalSQLLexer extends Lexer {
         try {
             int _type = RULE_STRING;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // InternalSQL.g:565:13: ( ( '\"' ( '\\\\' . | ~ ( ( '\\\\' | '\"' ) ) )* '\"' | '\\'' ( '\\\\' . | ~ ( ( '\\\\' | '\\'' ) ) )* '\\'' ) )
-            // InternalSQL.g:565:15: ( '\"' ( '\\\\' . | ~ ( ( '\\\\' | '\"' ) ) )* '\"' | '\\'' ( '\\\\' . | ~ ( ( '\\\\' | '\\'' ) ) )* '\\'' )
+            // InternalSQL.g:775:13: ( ( '\"' ( '\\\\' . | ~ ( ( '\\\\' | '\"' ) ) )* '\"' | '\\'' ( '\\\\' . | ~ ( ( '\\\\' | '\\'' ) ) )* '\\'' ) )
+            // InternalSQL.g:775:15: ( '\"' ( '\\\\' . | ~ ( ( '\\\\' | '\"' ) ) )* '\"' | '\\'' ( '\\\\' . | ~ ( ( '\\\\' | '\\'' ) ) )* '\\'' )
             {
-            // InternalSQL.g:565:15: ( '\"' ( '\\\\' . | ~ ( ( '\\\\' | '\"' ) ) )* '\"' | '\\'' ( '\\\\' . | ~ ( ( '\\\\' | '\\'' ) ) )* '\\'' )
+            // InternalSQL.g:775:15: ( '\"' ( '\\\\' . | ~ ( ( '\\\\' | '\"' ) ) )* '\"' | '\\'' ( '\\\\' . | ~ ( ( '\\\\' | '\\'' ) ) )* '\\'' )
             int alt6=2;
             int LA6_0 = input.LA(1);
 
@@ -603,10 +603,10 @@ public class InternalSQLLexer extends Lexer {
             }
             switch (alt6) {
                 case 1 :
-                    // InternalSQL.g:565:16: '\"' ( '\\\\' . | ~ ( ( '\\\\' | '\"' ) ) )* '\"'
+                    // InternalSQL.g:775:16: '\"' ( '\\\\' . | ~ ( ( '\\\\' | '\"' ) ) )* '\"'
                     {
                     match('\"'); 
-                    // InternalSQL.g:565:20: ( '\\\\' . | ~ ( ( '\\\\' | '\"' ) ) )*
+                    // InternalSQL.g:775:20: ( '\\\\' . | ~ ( ( '\\\\' | '\"' ) ) )*
                     loop4:
                     do {
                         int alt4=3;
@@ -622,7 +622,7 @@ public class InternalSQLLexer extends Lexer {
 
                         switch (alt4) {
                     	case 1 :
-                    	    // InternalSQL.g:565:21: '\\\\' .
+                    	    // InternalSQL.g:775:21: '\\\\' .
                     	    {
                     	    match('\\'); 
                     	    matchAny(); 
@@ -630,7 +630,7 @@ public class InternalSQLLexer extends Lexer {
                     	    }
                     	    break;
                     	case 2 :
-                    	    // InternalSQL.g:565:28: ~ ( ( '\\\\' | '\"' ) )
+                    	    // InternalSQL.g:775:28: ~ ( ( '\\\\' | '\"' ) )
                     	    {
                     	    if ( (input.LA(1)>='\u0000' && input.LA(1)<='!')||(input.LA(1)>='#' && input.LA(1)<='[')||(input.LA(1)>=']' && input.LA(1)<='\uFFFF') ) {
                     	        input.consume();
@@ -655,10 +655,10 @@ public class InternalSQLLexer extends Lexer {
                     }
                     break;
                 case 2 :
-                    // InternalSQL.g:565:48: '\\'' ( '\\\\' . | ~ ( ( '\\\\' | '\\'' ) ) )* '\\''
+                    // InternalSQL.g:775:48: '\\'' ( '\\\\' . | ~ ( ( '\\\\' | '\\'' ) ) )* '\\''
                     {
                     match('\''); 
-                    // InternalSQL.g:565:53: ( '\\\\' . | ~ ( ( '\\\\' | '\\'' ) ) )*
+                    // InternalSQL.g:775:53: ( '\\\\' . | ~ ( ( '\\\\' | '\\'' ) ) )*
                     loop5:
                     do {
                         int alt5=3;
@@ -674,7 +674,7 @@ public class InternalSQLLexer extends Lexer {
 
                         switch (alt5) {
                     	case 1 :
-                    	    // InternalSQL.g:565:54: '\\\\' .
+                    	    // InternalSQL.g:775:54: '\\\\' .
                     	    {
                     	    match('\\'); 
                     	    matchAny(); 
@@ -682,7 +682,7 @@ public class InternalSQLLexer extends Lexer {
                     	    }
                     	    break;
                     	case 2 :
-                    	    // InternalSQL.g:565:61: ~ ( ( '\\\\' | '\\'' ) )
+                    	    // InternalSQL.g:775:61: ~ ( ( '\\\\' | '\\'' ) )
                     	    {
                     	    if ( (input.LA(1)>='\u0000' && input.LA(1)<='&')||(input.LA(1)>='(' && input.LA(1)<='[')||(input.LA(1)>=']' && input.LA(1)<='\uFFFF') ) {
                     	        input.consume();
@@ -725,12 +725,12 @@ public class InternalSQLLexer extends Lexer {
         try {
             int _type = RULE_ML_COMMENT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // InternalSQL.g:567:17: ( '/*' ( options {greedy=false; } : . )* '*/' )
-            // InternalSQL.g:567:19: '/*' ( options {greedy=false; } : . )* '*/'
+            // InternalSQL.g:777:17: ( '/*' ( options {greedy=false; } : . )* '*/' )
+            // InternalSQL.g:777:19: '/*' ( options {greedy=false; } : . )* '*/'
             {
             match("/*"); 
 
-            // InternalSQL.g:567:24: ( options {greedy=false; } : . )*
+            // InternalSQL.g:777:24: ( options {greedy=false; } : . )*
             loop7:
             do {
                 int alt7=2;
@@ -755,7 +755,7 @@ public class InternalSQLLexer extends Lexer {
 
                 switch (alt7) {
             	case 1 :
-            	    // InternalSQL.g:567:52: .
+            	    // InternalSQL.g:777:52: .
             	    {
             	    matchAny(); 
 
@@ -785,12 +785,12 @@ public class InternalSQLLexer extends Lexer {
         try {
             int _type = RULE_SL_COMMENT;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // InternalSQL.g:569:17: ( '//' (~ ( ( '\\n' | '\\r' ) ) )* ( ( '\\r' )? '\\n' )? )
-            // InternalSQL.g:569:19: '//' (~ ( ( '\\n' | '\\r' ) ) )* ( ( '\\r' )? '\\n' )?
+            // InternalSQL.g:779:17: ( '//' (~ ( ( '\\n' | '\\r' ) ) )* ( ( '\\r' )? '\\n' )? )
+            // InternalSQL.g:779:19: '//' (~ ( ( '\\n' | '\\r' ) ) )* ( ( '\\r' )? '\\n' )?
             {
             match("//"); 
 
-            // InternalSQL.g:569:24: (~ ( ( '\\n' | '\\r' ) ) )*
+            // InternalSQL.g:779:24: (~ ( ( '\\n' | '\\r' ) ) )*
             loop8:
             do {
                 int alt8=2;
@@ -803,7 +803,7 @@ public class InternalSQLLexer extends Lexer {
 
                 switch (alt8) {
             	case 1 :
-            	    // InternalSQL.g:569:24: ~ ( ( '\\n' | '\\r' ) )
+            	    // InternalSQL.g:779:24: ~ ( ( '\\n' | '\\r' ) )
             	    {
             	    if ( (input.LA(1)>='\u0000' && input.LA(1)<='\t')||(input.LA(1)>='\u000B' && input.LA(1)<='\f')||(input.LA(1)>='\u000E' && input.LA(1)<='\uFFFF') ) {
             	        input.consume();
@@ -823,7 +823,7 @@ public class InternalSQLLexer extends Lexer {
                 }
             } while (true);
 
-            // InternalSQL.g:569:40: ( ( '\\r' )? '\\n' )?
+            // InternalSQL.g:779:40: ( ( '\\r' )? '\\n' )?
             int alt10=2;
             int LA10_0 = input.LA(1);
 
@@ -832,9 +832,9 @@ public class InternalSQLLexer extends Lexer {
             }
             switch (alt10) {
                 case 1 :
-                    // InternalSQL.g:569:41: ( '\\r' )? '\\n'
+                    // InternalSQL.g:779:41: ( '\\r' )? '\\n'
                     {
-                    // InternalSQL.g:569:41: ( '\\r' )?
+                    // InternalSQL.g:779:41: ( '\\r' )?
                     int alt9=2;
                     int LA9_0 = input.LA(1);
 
@@ -843,7 +843,7 @@ public class InternalSQLLexer extends Lexer {
                     }
                     switch (alt9) {
                         case 1 :
-                            // InternalSQL.g:569:41: '\\r'
+                            // InternalSQL.g:779:41: '\\r'
                             {
                             match('\r'); 
 
@@ -875,10 +875,10 @@ public class InternalSQLLexer extends Lexer {
         try {
             int _type = RULE_WS;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // InternalSQL.g:571:9: ( ( ' ' | '\\t' | '\\r' | '\\n' )+ )
-            // InternalSQL.g:571:11: ( ' ' | '\\t' | '\\r' | '\\n' )+
+            // InternalSQL.g:781:9: ( ( ' ' | '\\t' | '\\r' | '\\n' )+ )
+            // InternalSQL.g:781:11: ( ' ' | '\\t' | '\\r' | '\\n' )+
             {
-            // InternalSQL.g:571:11: ( ' ' | '\\t' | '\\r' | '\\n' )+
+            // InternalSQL.g:781:11: ( ' ' | '\\t' | '\\r' | '\\n' )+
             int cnt11=0;
             loop11:
             do {
@@ -932,8 +932,8 @@ public class InternalSQLLexer extends Lexer {
         try {
             int _type = RULE_ANY_OTHER;
             int _channel = DEFAULT_TOKEN_CHANNEL;
-            // InternalSQL.g:573:16: ( . )
-            // InternalSQL.g:573:18: .
+            // InternalSQL.g:783:16: ( . )
+            // InternalSQL.g:783:18: .
             {
             matchAny(); 
 

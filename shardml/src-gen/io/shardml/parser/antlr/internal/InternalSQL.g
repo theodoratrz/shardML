@@ -145,34 +145,11 @@ ruleTable returns [EObject current=null]
 		}
 		(
 			(
-				{
-					newCompositeNode(grammarAccess.getTableAccess().getColumnsColumnParserRuleCall_4_0());
-				}
-				lv_columns_4_0=ruleColumn
-				{
-					if ($current==null) {
-						$current = createModelElementForParent(grammarAccess.getTableRule());
-					}
-					add(
-						$current,
-						"columns",
-						lv_columns_4_0,
-						"io.shardml.SQL.Column");
-					afterParserOrEnumRuleCall();
-				}
-			)
-		)
-		(
-			otherlv_5=','
-			{
-				newLeafNode(otherlv_5, grammarAccess.getTableAccess().getCommaKeyword_5_0());
-			}
-			(
 				(
 					{
-						newCompositeNode(grammarAccess.getTableAccess().getColumnsColumnParserRuleCall_5_1_0());
+						newCompositeNode(grammarAccess.getTableAccess().getColumnsColumnParserRuleCall_4_0_0());
 					}
-					lv_columns_6_0=ruleColumn
+					lv_columns_4_0=ruleColumn
 					{
 						if ($current==null) {
 							$current = createModelElementForParent(grammarAccess.getTableRule());
@@ -180,16 +157,83 @@ ruleTable returns [EObject current=null]
 						add(
 							$current,
 							"columns",
-							lv_columns_6_0,
+							lv_columns_4_0,
 							"io.shardml.SQL.Column");
 						afterParserOrEnumRuleCall();
 					}
 				)
 			)
+			    |
+			(
+				(
+					{
+						newCompositeNode(grammarAccess.getTableAccess().getConstraintsTableConstraintParserRuleCall_4_1_0());
+					}
+					lv_constraints_5_0=ruleTableConstraint
+					{
+						if ($current==null) {
+							$current = createModelElementForParent(grammarAccess.getTableRule());
+						}
+						add(
+							$current,
+							"constraints",
+							lv_constraints_5_0,
+							"io.shardml.SQL.TableConstraint");
+						afterParserOrEnumRuleCall();
+					}
+				)
+			)
+		)
+		(
+			otherlv_6=','
+			{
+				newLeafNode(otherlv_6, grammarAccess.getTableAccess().getCommaKeyword_5_0());
+			}
+			(
+				(
+					(
+						{
+							newCompositeNode(grammarAccess.getTableAccess().getColumnsColumnParserRuleCall_5_1_0_0());
+						}
+						lv_columns_7_0=ruleColumn
+						{
+							if ($current==null) {
+								$current = createModelElementForParent(grammarAccess.getTableRule());
+							}
+							add(
+								$current,
+								"columns",
+								lv_columns_7_0,
+								"io.shardml.SQL.Column");
+							afterParserOrEnumRuleCall();
+						}
+					)
+				)
+				    |
+				(
+					(
+						{
+							newCompositeNode(grammarAccess.getTableAccess().getConstraintsTableConstraintParserRuleCall_5_1_1_0());
+						}
+						lv_constraints_8_0=ruleTableConstraint
+						{
+							if ($current==null) {
+								$current = createModelElementForParent(grammarAccess.getTableRule());
+							}
+							add(
+								$current,
+								"constraints",
+								lv_constraints_8_0,
+								"io.shardml.SQL.TableConstraint");
+							afterParserOrEnumRuleCall();
+						}
+					)
+				)
+			)
 		)*
-		otherlv_7=')'
+		otherlv_9=')'
 		{
-			newLeafNode(otherlv_7, grammarAccess.getTableAccess().getRightParenthesisKeyword_6());
+			newLeafNode(otherlv_9, grammarAccess.getTableAccess().getRightParenthesisKeyword_6());
 		}
 	)
 ;
@@ -479,6 +523,172 @@ ruleNotNull returns [EObject current=null]
 		otherlv_2='NULL'
 		{
 			newLeafNode(otherlv_2, grammarAccess.getNotNullAccess().getNULLKeyword_2());
+		}
+	)
+;
+
+// Entry rule entryRuleTableConstraint
+entryRuleTableConstraint returns [EObject current=null]:
+	{ newCompositeNode(grammarAccess.getTableConstraintRule()); }
+	iv_ruleTableConstraint=ruleTableConstraint
+	{ $current=$iv_ruleTableConstraint.current; }
+	EOF;
+
+// Rule TableConstraint
+ruleTableConstraint returns [EObject current=null]
+@init {
+	enterRule();
+}
+@after {
+	leaveRule();
+}:
+	(
+		{
+			newCompositeNode(grammarAccess.getTableConstraintAccess().getPrimaryKeyParserRuleCall_0());
+		}
+		this_PrimaryKey_0=rulePrimaryKey
+		{
+			$current = $this_PrimaryKey_0.current;
+			afterParserOrEnumRuleCall();
+		}
+		    |
+		{
+			newCompositeNode(grammarAccess.getTableConstraintAccess().getUniqueKeyParserRuleCall_1());
+		}
+		this_UniqueKey_1=ruleUniqueKey
+		{
+			$current = $this_UniqueKey_1.current;
+			afterParserOrEnumRuleCall();
+		}
+	)
+;
+
+// Entry rule entryRulePrimaryKey
+entryRulePrimaryKey returns [EObject current=null]:
+	{ newCompositeNode(grammarAccess.getPrimaryKeyRule()); }
+	iv_rulePrimaryKey=rulePrimaryKey
+	{ $current=$iv_rulePrimaryKey.current; }
+	EOF;
+
+// Rule PrimaryKey
+rulePrimaryKey returns [EObject current=null]
+@init {
+	enterRule();
+}
+@after {
+	leaveRule();
+}:
+	(
+		otherlv_0='PRIMARY'
+		{
+			newLeafNode(otherlv_0, grammarAccess.getPrimaryKeyAccess().getPRIMARYKeyword_0());
+		}
+		otherlv_1='KEY'
+		{
+			newLeafNode(otherlv_1, grammarAccess.getPrimaryKeyAccess().getKEYKeyword_1());
+		}
+		otherlv_2='('
+		{
+			newLeafNode(otherlv_2, grammarAccess.getPrimaryKeyAccess().getLeftParenthesisKeyword_2());
+		}
+		(
+			(
+				{
+					if ($current==null) {
+						$current = createModelElement(grammarAccess.getPrimaryKeyRule());
+					}
+				}
+				otherlv_3=RULE_ID
+				{
+					newLeafNode(otherlv_3, grammarAccess.getPrimaryKeyAccess().getColumnsColumnCrossReference_3_0());
+				}
+			)
+		)
+		(
+			otherlv_4=','
+			{
+				newLeafNode(otherlv_4, grammarAccess.getPrimaryKeyAccess().getCommaKeyword_4_0());
+			}
+			(
+				(
+					{
+						if ($current==null) {
+							$current = createModelElement(grammarAccess.getPrimaryKeyRule());
+						}
+					}
+					otherlv_5=RULE_ID
+					{
+						newLeafNode(otherlv_5, grammarAccess.getPrimaryKeyAccess().getColumnsColumnCrossReference_4_1_0());
+					}
+				)
+			)
+		)*
+		otherlv_6=')'
+		{
+			newLeafNode(otherlv_6, grammarAccess.getPrimaryKeyAccess().getRightParenthesisKeyword_5());
+		}
+	)
+;
+
+// Entry rule entryRuleUniqueKey
+entryRuleUniqueKey returns [EObject current=null]:
+	{ newCompositeNode(grammarAccess.getUniqueKeyRule()); }
+	iv_ruleUniqueKey=ruleUniqueKey
+	{ $current=$iv_ruleUniqueKey.current; }
+	EOF;
+
+// Rule UniqueKey
+ruleUniqueKey returns [EObject current=null]
+@init {
+	enterRule();
+}
+@after {
+	leaveRule();
+}:
+	(
+		otherlv_0='UNIQUE'
+		{
+			newLeafNode(otherlv_0, grammarAccess.getUniqueKeyAccess().getUNIQUEKeyword_0());
+		}
+		otherlv_1='('
+		{
+			newLeafNode(otherlv_1, grammarAccess.getUniqueKeyAccess().getLeftParenthesisKeyword_1());
+		}
+		(
+			(
+				{
+					if ($current==null) {
+						$current = createModelElement(grammarAccess.getUniqueKeyRule());
+					}
+				}
+				otherlv_2=RULE_ID
+				{
+					newLeafNode(otherlv_2, grammarAccess.getUniqueKeyAccess().getColumnsColumnCrossReference_2_0());
+				}
+			)
+		)
+		(
+			otherlv_3=','
+			{
+				newLeafNode(otherlv_3, grammarAccess.getUniqueKeyAccess().getCommaKeyword_3_0());
+			}
+			(
+				(
+					{
+						if ($current==null) {
+							$current = createModelElement(grammarAccess.getUniqueKeyRule());
+						}
+					}
+					otherlv_4=RULE_ID
+					{
+						newLeafNode(otherlv_4, grammarAccess.getUniqueKeyAccess().getColumnsColumnCrossReference_3_1_0());
+					}
+				)
+			)
+		)*
+		otherlv_5=')'
+		{
+			newLeafNode(otherlv_5, grammarAccess.getUniqueKeyAccess().getRightParenthesisKeyword_4());
 		}
 	)
 ;

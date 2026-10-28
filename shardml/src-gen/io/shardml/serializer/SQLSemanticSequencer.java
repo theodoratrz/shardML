@@ -8,10 +8,12 @@ import io.shardml.services.SQLGrammarAccess;
 import io.shardml.sql.Column;
 import io.shardml.sql.NotNull;
 import io.shardml.sql.PrimaryAnnotation;
+import io.shardml.sql.PrimaryKey;
 import io.shardml.sql.Schema;
 import io.shardml.sql.SqlPackage;
 import io.shardml.sql.Table;
 import io.shardml.sql.UniqueAnnotation;
+import io.shardml.sql.UniqueKey;
 import io.shardml.sql.Varchar;
 import java.util.Set;
 import org.eclipse.emf.ecore.EObject;
@@ -47,6 +49,9 @@ public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
 			case SqlPackage.PRIMARY_ANNOTATION:
 				sequence_PrimaryAnnotation(context, (PrimaryAnnotation) semanticObject); 
 				return; 
+			case SqlPackage.PRIMARY_KEY:
+				sequence_PrimaryKey(context, (PrimaryKey) semanticObject); 
+				return; 
 			case SqlPackage.SCHEMA:
 				sequence_Schema(context, (Schema) semanticObject); 
 				return; 
@@ -55,6 +60,9 @@ public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
 				return; 
 			case SqlPackage.UNIQUE_ANNOTATION:
 				sequence_UniqueAnnotation(context, (UniqueAnnotation) semanticObject); 
+				return; 
+			case SqlPackage.UNIQUE_KEY:
+				sequence_UniqueKey(context, (UniqueKey) semanticObject); 
 				return; 
 			case SqlPackage.VARCHAR:
 				sequence_Varchar(context, (Varchar) semanticObject); 
@@ -111,6 +119,21 @@ public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
 	/**
 	 * <pre>
 	 * Contexts:
+	 *     TableConstraint returns PrimaryKey
+	 *     PrimaryKey returns PrimaryKey
+	 *
+	 * Constraint:
+	 *     (columns+=[Column|ID] columns+=[Column|ID]*)
+	 * </pre>
+	 */
+	protected void sequence_PrimaryKey(ISerializationContext context, PrimaryKey semanticObject) {
+		genericSequencer.createSequence(context, semanticObject);
+	}
+	
+	
+	/**
+	 * <pre>
+	 * Contexts:
 	 *     Schema returns Schema
 	 *
 	 * Constraint:
@@ -128,7 +151,7 @@ public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
 	 *     Table returns Table
 	 *
 	 * Constraint:
-	 *     (name=ID columns+=Column columns+=Column*)
+	 *     (name=ID (columns+=Column | constraints+=TableConstraint) columns+=Column? (constraints+=TableConstraint? columns+=Column?)*)
 	 * </pre>
 	 */
 	protected void sequence_Table(ISerializationContext context, Table semanticObject) {
@@ -147,6 +170,21 @@ public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
 	 * </pre>
 	 */
 	protected void sequence_UniqueAnnotation(ISerializationContext context, UniqueAnnotation semanticObject) {
+		genericSequencer.createSequence(context, semanticObject);
+	}
+	
+	
+	/**
+	 * <pre>
+	 * Contexts:
+	 *     TableConstraint returns UniqueKey
+	 *     UniqueKey returns UniqueKey
+	 *
+	 * Constraint:
+	 *     (columns+=[Column|ID] columns+=[Column|ID]*)
+	 * </pre>
+	 */
+	protected void sequence_UniqueKey(ISerializationContext context, UniqueKey semanticObject) {
 		genericSequencer.createSequence(context, semanticObject);
 	}
 	

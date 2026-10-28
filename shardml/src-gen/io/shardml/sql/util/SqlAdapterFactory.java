@@ -116,6 +116,21 @@ public class SqlAdapterFactory extends AdapterFactoryImpl
         return createNotNullAdapter();
       }
       @Override
+      public Adapter caseTableConstraint(TableConstraint object)
+      {
+        return createTableConstraintAdapter();
+      }
+      @Override
+      public Adapter casePrimaryKey(PrimaryKey object)
+      {
+        return createPrimaryKeyAdapter();
+      }
+      @Override
+      public Adapter caseUniqueKey(UniqueKey object)
+      {
+        return createUniqueKeyAdapter();
+      }
+      @Override
       public Adapter defaultCase(EObject object)
       {
         return createEObjectAdapter();
@@ -253,6 +268,51 @@ public class SqlAdapterFactory extends AdapterFactoryImpl
    * @generated
    */
   public Adapter createNotNullAdapter()
+  {
+    return null;
+  }
+
+  /**
+   * Creates a new adapter for an object of class '{@link io.shardml.sql.TableConstraint <em>Table Constraint</em>}'.
+   * <!-- begin-user-doc -->
+   * This default implementation returns null so that we can easily ignore cases;
+   * it's useful to ignore a case when inheritance will catch all the cases anyway.
+   * <!-- end-user-doc -->
+   * @return the new adapter.
+   * @see io.shardml.sql.TableConstraint
+   * @generated
+   */
+  public Adapter createTableConstraintAdapter()
+  {
+    return null;
+  }
+
+  /**
+   * Creates a new adapter for an object of class '{@link io.shardml.sql.PrimaryKey <em>Primary Key</em>}'.
+   * <!-- begin-user-doc -->
+   * This default implementation returns null so that we can easily ignore cases;
+   * it's useful to ignore a case when inheritance will catch all the cases anyway.
+   * <!-- end-user-doc -->
+   * @return the new adapter.
+   * @see io.shardml.sql.PrimaryKey
+   * @generated
+   */
+  public Adapter createPrimaryKeyAdapter()
+  {
+    return null;
+  }
+
+  /**
+   * Creates a new adapter for an object of class '{@link io.shardml.sql.UniqueKey <em>Unique Key</em>}'.
+   * <!-- begin-user-doc -->
+   * This default implementation returns null so that we can easily ignore cases;
+   * it's useful to ignore a case when inheritance will catch all the cases anyway.
+   * <!-- end-user-doc -->
+   * @return the new adapter.
+   * @see io.shardml.sql.UniqueKey
+   * @generated
+   */
+  public Adapter createUniqueKeyAdapter()
   {
     return null;
   }

@@ -115,13 +115,22 @@ public interface SqlPackage extends EPackage
   int TABLE__COLUMNS = 1;
 
   /**
+   * The feature id for the '<em><b>Constraints</b></em>' containment reference list.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int TABLE__CONSTRAINTS = 2;
+
+  /**
    * The number of structural features of the '<em>Table</em>' class.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
    * @generated
    * @ordered
    */
-  int TABLE_FEATURE_COUNT = 2;
+  int TABLE_FEATURE_COUNT = 3;
 
   /**
    * The meta object id for the '{@link io.shardml.sql.impl.ColumnImpl <em>Column</em>}' class.
@@ -283,6 +292,90 @@ public interface SqlPackage extends EPackage
   int NOT_NULL_FEATURE_COUNT = CONSTRAINT_FEATURE_COUNT + 0;
 
   /**
+   * The meta object id for the '{@link io.shardml.sql.impl.TableConstraintImpl <em>Table Constraint</em>}' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see io.shardml.sql.impl.TableConstraintImpl
+   * @see io.shardml.sql.impl.SqlPackageImpl#getTableConstraint()
+   * @generated
+   */
+  int TABLE_CONSTRAINT = 8;
+
+  /**
+   * The feature id for the '<em><b>Columns</b></em>' reference list.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int TABLE_CONSTRAINT__COLUMNS = 0;
+
+  /**
+   * The number of structural features of the '<em>Table Constraint</em>' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int TABLE_CONSTRAINT_FEATURE_COUNT = 1;
+
+  /**
+   * The meta object id for the '{@link io.shardml.sql.impl.PrimaryKeyImpl <em>Primary Key</em>}' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see io.shardml.sql.impl.PrimaryKeyImpl
+   * @see io.shardml.sql.impl.SqlPackageImpl#getPrimaryKey()
+   * @generated
+   */
+  int PRIMARY_KEY = 9;
+
+  /**
+   * The feature id for the '<em><b>Columns</b></em>' reference list.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int PRIMARY_KEY__COLUMNS = TABLE_CONSTRAINT__COLUMNS;
+
+  /**
+   * The number of structural features of the '<em>Primary Key</em>' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int PRIMARY_KEY_FEATURE_COUNT = TABLE_CONSTRAINT_FEATURE_COUNT + 0;
+
+  /**
+   * The meta object id for the '{@link io.shardml.sql.impl.UniqueKeyImpl <em>Unique Key</em>}' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see io.shardml.sql.impl.UniqueKeyImpl
+   * @see io.shardml.sql.impl.SqlPackageImpl#getUniqueKey()
+   * @generated
+   */
+  int UNIQUE_KEY = 10;
+
+  /**
+   * The feature id for the '<em><b>Columns</b></em>' reference list.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int UNIQUE_KEY__COLUMNS = TABLE_CONSTRAINT__COLUMNS;
+
+  /**
+   * The number of structural features of the '<em>Unique Key</em>' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int UNIQUE_KEY_FEATURE_COUNT = TABLE_CONSTRAINT_FEATURE_COUNT + 0;
+
+  /**
    * The meta object id for the '{@link io.shardml.sql.AllTypes <em>All Types</em>}' enum.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
@@ -290,7 +383,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getAllTypes()
    * @generated
    */
-  int ALL_TYPES = 8;
+  int ALL_TYPES = 11;
 
 
   /**
@@ -345,6 +438,17 @@ public interface SqlPackage extends EPackage
    * @generated
    */
   EReference getTable_Columns();
+
+  /**
+   * Returns the meta object for the containment reference list '{@link io.shardml.sql.Table#getConstraints <em>Constraints</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the containment reference list '<em>Constraints</em>'.
+   * @see io.shardml.sql.Table#getConstraints()
+   * @see #getTable()
+   * @generated
+   */
+  EReference getTable_Constraints();
 
   /**
    * Returns the meta object for class '{@link io.shardml.sql.Column <em>Column</em>}'.
@@ -462,6 +566,47 @@ public interface SqlPackage extends EPackage
   EClass getNotNull();
 
   /**
+   * Returns the meta object for class '{@link io.shardml.sql.TableConstraint <em>Table Constraint</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for class '<em>Table Constraint</em>'.
+   * @see io.shardml.sql.TableConstraint
+   * @generated
+   */
+  EClass getTableConstraint();
+
+  /**
+   * Returns the meta object for the reference list '{@link io.shardml.sql.TableConstraint#getColumns <em>Columns</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the reference list '<em>Columns</em>'.
+   * @see io.shardml.sql.TableConstraint#getColumns()
+   * @see #getTableConstraint()
+   * @generated
+   */
+  EReference getTableConstraint_Columns();
+
+  /**
+   * Returns the meta object for class '{@link io.shardml.sql.PrimaryKey <em>Primary Key</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for class '<em>Primary Key</em>'.
+   * @see io.shardml.sql.PrimaryKey
+   * @generated
+   */
+  EClass getPrimaryKey();
+
+  /**
+   * Returns the meta object for class '{@link io.shardml.sql.UniqueKey <em>Unique Key</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for class '<em>Unique Key</em>'.
+   * @see io.shardml.sql.UniqueKey
+   * @generated
+   */
+  EClass getUniqueKey();
+
+  /**
    * Returns the meta object for enum '{@link io.shardml.sql.AllTypes <em>All Types</em>}'.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
@@ -537,6 +682,14 @@ public interface SqlPackage extends EPackage
      * @generated
      */
     EReference TABLE__COLUMNS = eINSTANCE.getTable_Columns();
+
+    /**
+     * The meta object literal for the '<em><b>Constraints</b></em>' containment reference list feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EReference TABLE__CONSTRAINTS = eINSTANCE.getTable_Constraints();
 
     /**
      * The meta object literal for the '{@link io.shardml.sql.impl.ColumnImpl <em>Column</em>}' class.
@@ -637,6 +790,44 @@ public interface SqlPackage extends EPackage
      * @generated
      */
     EClass NOT_NULL = eINSTANCE.getNotNull();
+
+    /**
+     * The meta object literal for the '{@link io.shardml.sql.impl.TableConstraintImpl <em>Table Constraint</em>}' class.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @see io.shardml.sql.impl.TableConstraintImpl
+     * @see io.shardml.sql.impl.SqlPackageImpl#getTableConstraint()
+     * @generated
+     */
+    EClass TABLE_CONSTRAINT = eINSTANCE.getTableConstraint();
+
+    /**
+     * The meta object literal for the '<em><b>Columns</b></em>' reference list feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EReference TABLE_CONSTRAINT__COLUMNS = eINSTANCE.getTableConstraint_Columns();
+
+    /**
+     * The meta object literal for the '{@link io.shardml.sql.impl.PrimaryKeyImpl <em>Primary Key</em>}' class.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @see io.shardml.sql.impl.PrimaryKeyImpl
+     * @see io.shardml.sql.impl.SqlPackageImpl#getPrimaryKey()
+     * @generated
+     */
+    EClass PRIMARY_KEY = eINSTANCE.getPrimaryKey();
+
+    /**
+     * The meta object literal for the '{@link io.shardml.sql.impl.UniqueKeyImpl <em>Unique Key</em>}' class.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @see io.shardml.sql.impl.UniqueKeyImpl
+     * @see io.shardml.sql.impl.SqlPackageImpl#getUniqueKey()
+     * @generated
+     */
+    EClass UNIQUE_KEY = eINSTANCE.getUniqueKey();
 
     /**
      * The meta object literal for the '{@link io.shardml.sql.AllTypes <em>All Types</em>}' enum.

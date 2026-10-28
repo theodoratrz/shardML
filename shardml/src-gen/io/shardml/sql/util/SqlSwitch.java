@@ -132,6 +132,29 @@ public class SqlSwitch<T> extends Switch<T>
         if (result == null) result = defaultCase(theEObject);
         return result;
       }
+      case SqlPackage.TABLE_CONSTRAINT:
+      {
+        TableConstraint tableConstraint = (TableConstraint)theEObject;
+        T result = caseTableConstraint(tableConstraint);
+        if (result == null) result = defaultCase(theEObject);
+        return result;
+      }
+      case SqlPackage.PRIMARY_KEY:
+      {
+        PrimaryKey primaryKey = (PrimaryKey)theEObject;
+        T result = casePrimaryKey(primaryKey);
+        if (result == null) result = caseTableConstraint(primaryKey);
+        if (result == null) result = defaultCase(theEObject);
+        return result;
+      }
+      case SqlPackage.UNIQUE_KEY:
+      {
+        UniqueKey uniqueKey = (UniqueKey)theEObject;
+        T result = caseUniqueKey(uniqueKey);
+        if (result == null) result = caseTableConstraint(uniqueKey);
+        if (result == null) result = defaultCase(theEObject);
+        return result;
+      }
       default: return defaultCase(theEObject);
     }
   }
@@ -260,6 +283,54 @@ public class SqlSwitch<T> extends Switch<T>
    * @generated
    */
   public T caseNotNull(NotNull object)
+  {
+    return null;
+  }
+
+  /**
+   * Returns the result of interpreting the object as an instance of '<em>Table Constraint</em>'.
+   * <!-- begin-user-doc -->
+   * This implementation returns null;
+   * returning a non-null result will terminate the switch.
+   * <!-- end-user-doc -->
+   * @param object the target of the switch.
+   * @return the result of interpreting the object as an instance of '<em>Table Constraint</em>'.
+   * @see #doSwitch(org.eclipse.emf.ecore.EObject) doSwitch(EObject)
+   * @generated
+   */
+  public T caseTableConstraint(TableConstraint object)
+  {
+    return null;
+  }
+
+  /**
+   * Returns the result of interpreting the object as an instance of '<em>Primary Key</em>'.
+   * <!-- begin-user-doc -->
+   * This implementation returns null;
+   * returning a non-null result will terminate the switch.
+   * <!-- end-user-doc -->
+   * @param object the target of the switch.
+   * @return the result of interpreting the object as an instance of '<em>Primary Key</em>'.
+   * @see #doSwitch(org.eclipse.emf.ecore.EObject) doSwitch(EObject)
+   * @generated
+   */
+  public T casePrimaryKey(PrimaryKey object)
+  {
+    return null;
+  }
+
+  /**
+   * Returns the result of interpreting the object as an instance of '<em>Unique Key</em>'.
+   * <!-- begin-user-doc -->
+   * This implementation returns null;
+   * returning a non-null result will terminate the switch.
+   * <!-- end-user-doc -->
+   * @param object the target of the switch.
+   * @return the result of interpreting the object as an instance of '<em>Unique Key</em>'.
+   * @see #doSwitch(org.eclipse.emf.ecore.EObject) doSwitch(EObject)
+   * @generated
+   */
+  public T caseUniqueKey(UniqueKey object)
   {
     return null;
   }

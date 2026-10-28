@@ -3,13 +3,28 @@
  */
 package io.shardml.scoping;
 
+import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.EReference;
+import org.eclipse.xtext.EcoreUtil2;
+import org.eclipse.xtext.scoping.IScope;
+import org.eclipse.xtext.scoping.Scopes;
 
-/**
- * This class contains custom scoping description.
- * 
- * See https://www.eclipse.org/Xtext/documentation/303_runtime_concepts.html#scoping
- * on how and when to use it.
- */
+import io.shardml.sql.SqlPackage;
+import io.shardml.sql.Table;
+
+/* resolves column references inside the .msql schema. */
 public class SQLScopeProvider extends AbstractSQLScopeProvider {
 
+	// columns of a table-level PRIMARY KEY / UNIQUE resolve to the columns of
+	// that same table only, so a shared name like `id` never links elsewhere
+	@Override
+	public IScope getScope(EObject context, EReference reference) {
+		if (reference == SqlPackage.Literals.TABLE_CONSTRAINT__COLUMNS) {
+			Table table = EcoreUtil2.getContainerOfType(context, Table.class);
+			if (table == null)
+				return IScope.NULLSCOPE;
+			return Scopes.scopeFor(table.getColumns());
+		}
+		return super.getScope(context, reference);
+	}
 }
