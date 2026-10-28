@@ -177,6 +177,7 @@ The tests cover all major validators and the generator, including multi-resource
 
 ## Limitations
 
-- The SQL grammar supports a subset of DDL (no ALTER, no indices, no composite primary keys).
+- The SQL grammar supports a subset of DDL (no ALTER, no indices, no FOREIGN KEY constraints).
+- `via` is trusted. `X belongs_to Y via k`, with `k` the shard key of `X`, is taken to mean that `k` references the shard key of `Y`. Nothing checks which column `k` really references, so a model that names the wrong column still validates; only the type check (SHML_027) and the examples' probe joins against a real cluster catch it.
 - Citus is the only target; Vitess is not supported.
 - Query patterns are declared manually and must be kept in sync with application code.
