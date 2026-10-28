@@ -120,8 +120,8 @@ I have not found the root cause. The failure is specific to the split child
 placed on the **source** node: the same split with both halves on other nodes
 (next section) completes in 6 s under the same load. It is a logical
 replication error, not a timing effect, so emulation is an unlikely cause, but
-that is not ruled out until it reproduces on native hardware (see the arm64 /
-x86 TODO in `docs/PLAN.md`). Next step: minimise it (no load / INSERT-only /
+that is not ruled out until it reproduces on native hardware (a native arm64
+image or an x86 machine; see `bench/README.md`). Next step: minimise it (no load / INSERT-only /
 UPDATE-only, one table) and report it to Citus if it reproduces natively.
 
 ### Split with both halves on other nodes: online except for a short cutover pause

@@ -5,8 +5,7 @@
 > emulation. Measurements taken here are valid for **yes/no blocking
 > behaviour** only (does a write stall during an operation or not), **not for
 > absolute latency or throughput**. Cost-model validation needs the native
-> arm64 image, and final evaluation needs an x86 cloud VM; both are tracked in
-> `docs/PLAN.md`, Phase 0.
+> arm64 image, and final evaluation needs an x86 cloud VM; neither exists yet.
 
 A local Citus cluster for the Phase 0 spike and, later, the integration tests: one
 coordinator and three workers, `citusdata/citus:14.2.0-pg17` (Citus 14.2.0 on
