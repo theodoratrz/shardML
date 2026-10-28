@@ -17,3 +17,7 @@ target/
 .DS_Store
 __MACOSX/
 
+
+# Notes stay local; only READMEs are published
+*.md
+!README.md
