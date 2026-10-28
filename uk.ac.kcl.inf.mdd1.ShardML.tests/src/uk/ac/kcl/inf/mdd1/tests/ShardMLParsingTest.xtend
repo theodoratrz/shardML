@@ -79,7 +79,7 @@ class ShardMLParsingTest {
 				}
 			}
 		''')
-	validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, null, "Buckets must be greater than 0 in hash sharding.")
+	validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_004", "Buckets must be greater than 0 in hash sharding.")
 	}
 	
 	@Test 
@@ -95,7 +95,7 @@ class ShardMLParsingTest {
 				}
 			}
 		''')
-	validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, null, "In replicated sharding we don't define buckets.")
+	validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_004", "In replicated sharding we don't define buckets.")
 	}
 	
 	@Test
@@ -113,7 +113,7 @@ class ShardMLParsingTest {
 				}
 			'''
 		)
-		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.SHARD_DECL, null, "Bucket count should be a power of 2 for optimal performance.")	
+		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_017", "Bucket count should be a power of 2 for optimal performance.")	
 	
 	}
 	
@@ -132,7 +132,7 @@ class ShardMLParsingTest {
 				}
 			'''
 		)
-		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.SHARD_DECL, null, "Bucket count should not exceed 2048 for optimal performance.")	
+		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_018", "Bucket count should not exceed 2048 for optimal performance.")	
 	
 	}
 	
@@ -152,7 +152,7 @@ class ShardMLParsingTest {
 				}
 			'''
 		)
-		validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, null, "Cannot colocate a table with itself")	
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_005", "Cannot colocate a table with itself")	
 		
 	}
 	
@@ -170,7 +170,7 @@ class ShardMLParsingTest {
 				}
 			'''
 		)
-		validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, null, "Key is required for hash sharding")	
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_002", "Key is required for hash sharding")	
 		
 	}
 	
@@ -189,7 +189,7 @@ class ShardMLParsingTest {
 				}
 			'''
 		)
-		validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, null,"No key is required for replicated sharding")	
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_003","No key is required for replicated sharding")	
 		
 	}
 	
@@ -213,7 +213,7 @@ class ShardMLParsingTest {
 				}
 			'''
 		)
-		validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, null, "The same table cannot appear in 2 shard declarations.")	
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_019", "The same table cannot appear in 2 shard declarations.")	
 		
 	}
 	
@@ -240,7 +240,7 @@ class ShardMLParsingTest {
 				}
 			'''
 		)
-		validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, null, "Circular colocation detected: two tables cannot colocate with each other.")	
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_015", "Circular colocation detected: two tables cannot colocate with each other.")	
 		
 	}
 	
@@ -259,7 +259,7 @@ class ShardMLParsingTest {
 				}
 			'''
 		)
-		validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, null, "Shard column must belong to sharded table")	
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_006", "Shard column must belong to sharded table")	
 		
 	}
 	
@@ -284,7 +284,7 @@ class ShardMLParsingTest {
 		    }
 		'''
 		)
-		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.QUERY_PATTERN, null, "Read query without where clause is a scatter-gather risk.")	
+		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.QUERY_PATTERN, "SHML_007", "Read query without where clause is a scatter-gather risk.")	
 		
 	}
 	
@@ -309,7 +309,7 @@ class ShardMLParsingTest {
 		    }
 		'''
 		)
-		validationTestHelper.assertError(model, ShardMLPackage.Literals.QUERY_PATTERN, null, "Read query without where clause is a scatter-gather risk.")	
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.QUERY_PATTERN, "SHML_007", "Read query without where clause is a scatter-gather risk.")	
 		
 	}
 	
@@ -334,7 +334,7 @@ class ShardMLParsingTest {
 		    }
 		'''
 		)
-		validationTestHelper.assertError(model, ShardMLPackage.Literals.QUERY_PATTERN, null, "Remove query without where clause will affect all shards.")	
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.QUERY_PATTERN, "SHML_007", "Delete query without where clause will affect all shards.")	
 		
 	}
 	
@@ -359,7 +359,7 @@ class ShardMLParsingTest {
 		    }
 		'''
 		)
-		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.QUERY_PATTERN, null, "Write query without where clause will affect all shards.")	
+		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.QUERY_PATTERN, "SHML_007", "Write query without where clause will affect all shards.")	
 		
 	}
 	
@@ -384,7 +384,7 @@ class ShardMLParsingTest {
 		    }
 		'''
 		)
-		validationTestHelper.assertError(model, ShardMLPackage.Literals.QUERY_PATTERN, null, "Write query without where clause will affect all shards.")	
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.QUERY_PATTERN, "SHML_007", "Write query without where clause will affect all shards.")	
 		
 	}
 	
@@ -410,7 +410,7 @@ class ShardMLParsingTest {
 		    }
 		'''
 		)
-		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.QUERY_PATTERN, null, "Where clause should include shard key")	
+		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.QUERY_PATTERN, "SHML_008", "Where clause should include shard key")	
 		
 	}
 	
@@ -436,7 +436,7 @@ class ShardMLParsingTest {
 		    }
 		'''
 		)
-		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.QUERY_PATTERN, null, "Use of OR in a Where clause can lead to scatter-gather.")	
+		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.QUERY_PATTERN, "SHML_012", "Use of OR in a Where clause can lead to scatter-gather.")	
 		
 	}
 	
@@ -462,7 +462,7 @@ class ShardMLParsingTest {
 		    }
 		'''
 		)
-		validationTestHelper.assertError(model, ShardMLPackage.Literals.QUERY_PATTERN, null, "Where clause should include shard key")	
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.QUERY_PATTERN, "SHML_008", "Where clause should include shard key")	
 		
 	}
 	
@@ -488,7 +488,7 @@ class ShardMLParsingTest {
 		    }
 		'''
 		)
-		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.QUERY_PATTERN, null, "GROUP BY on a non shard-key column requires cross shard aggregation and may cause performance issues.")	
+		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.QUERY_PATTERN, "SHML_010", "GROUP BY on a non shard-key column requires cross shard aggregation and may cause performance issues.")	
 		
 	}
 	
@@ -514,7 +514,7 @@ class ShardMLParsingTest {
 		    }
 		'''
 		)
-		validationTestHelper.assertError(model, ShardMLPackage.Literals.QUERY_PATTERN, null, "GROUP BY on a non shard-key column requires cross shard aggregation and may cause performance issues.")	
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.QUERY_PATTERN, "SHML_010", "GROUP BY on a non shard-key column requires cross shard aggregation and may cause performance issues.")	
 		
 	}
 	
@@ -540,7 +540,7 @@ class ShardMLParsingTest {
 		    }
 		'''
 		)
-		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.QUERY_PATTERN, null, "ORDER BY on a non shard-key column requires cross shard aggregation and may cause performance issues.")	
+		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.QUERY_PATTERN, "SHML_011", "ORDER BY on a non shard-key column requires cross shard aggregation and may cause performance issues.")	
 		
 	}
 	
@@ -566,7 +566,7 @@ class ShardMLParsingTest {
 		    }
 		'''
 		)
-		validationTestHelper.assertError(model, ShardMLPackage.Literals.QUERY_PATTERN, null, "ORDER BY on a non shard-key column requires cross shard aggregation and may cause performance issues.")	
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.QUERY_PATTERN, "SHML_011", "ORDER BY on a non shard-key column requires cross shard aggregation and may cause performance issues.")	
 		
 	}
 	
@@ -592,7 +592,7 @@ class ShardMLParsingTest {
 		    }
 		'''
 		)
-		validationTestHelper.assertError(model, ShardMLPackage.Literals.QUERY_PATTERN, null, "DISTINCT requires cross-shard validation and may cause performance issues")	
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.QUERY_PATTERN, "SHML_009", "DISTINCT requires cross-shard validation and may cause performance issues")	
 		
 	}
 	
@@ -618,7 +618,7 @@ class ShardMLParsingTest {
 		    }
 		'''
 		)
-		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.QUERY_PATTERN, null, "DISTINCT requires cross-shard validation and may cause performance issues")	
+		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.QUERY_PATTERN, "SHML_009", "DISTINCT requires cross-shard validation and may cause performance issues")	
 		
 	}
 	
@@ -649,7 +649,7 @@ class ShardMLParsingTest {
 			    }
 			'''
 		)
-		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.DATABASE, null, "Tables related to each other should be colocated")	
+		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.DATABASE, "SHML_013", "Tables related to each other should be colocated")	
 		
 	}
 	
@@ -663,7 +663,7 @@ class ShardMLParsingTest {
 			    }
 			'''
 		)
-		validationTestHelper.assertError(model, ShardMLPackage.Literals.DATABASE, null, "Database has no shard declarations.")	
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.DATABASE, "SHML_001", "Database has no shard declarations.")	
 		
 	}
 	
@@ -687,7 +687,7 @@ class ShardMLParsingTest {
 			    }
 			'''
 		)
-		validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, null, "Cannot colocate with replicated table.")	
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_014", "Cannot colocate with replicated table.")	
 		
 	}
 	
@@ -720,7 +720,7 @@ class ShardMLParsingTest {
 			    }
 			'''
 		)
-		validationTestHelper.assertError(model, ShardMLPackage.Literals.ROUTE_RULE, null, "The same table cannot have 2 route rules defined.")	
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.ROUTE_RULE, "SHML_020", "The same table cannot have 2 route rules defined.")	
 		
 	}
 	
@@ -739,7 +739,7 @@ class ShardMLParsingTest {
 			    }
 			'''
 		)
-		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.SHARD_DECL, null, "Shard key should be of type INT, BIGINT or UUID for optimal performance.")	
+		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_021", "Shard key should be of type INT, BIGINT or UUID for optimal performance.")	
 		
 	}
 	
@@ -758,7 +758,7 @@ class ShardMLParsingTest {
 			    }
 			'''
 		)
-		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.SHARD_DECL, null, "No route rule defined for table")		
+		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_022", "No route rule defined for table")		
 	}
 	
 	@Test
@@ -788,7 +788,7 @@ class ShardMLParsingTest {
 	            }
 	        '''
 	    )
-	    validationTestHelper.assertWarning(model, ShardMLPackage.Literals.DATABASE, null, "have a relationship, but are not colocated")
+	    validationTestHelper.assertWarning(model, ShardMLPackage.Literals.DATABASE, "SHML_023", "have a relationship, but are not colocated")
 	}
 	
 	@Test
@@ -830,6 +830,6 @@ class ShardMLParsingTest {
 	            }
 	        '''
 	    )
-	    validationTestHelper.assertWarning(model, ShardMLPackage.Literals.SHARD_DECL, null, "Long Colocation Chain found.")
+	    validationTestHelper.assertWarning(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_016", "Long colocation chain found.")
 	}
 }
