@@ -111,11 +111,6 @@
                     <artifactId>build-helper-maven-plugin</artifactId>
                     <version>${build-helper-plugin.version}</version>
                 </plugin>
-                <plugin>
-                    <groupId>org.eclipse.xtend</groupId>
-                    <artifactId>xtend-maven-plugin</artifactId>
-                    <version>${xtext.version}</version>
-                </plugin>
             </plugins>
         </pluginManagement>
     </build>

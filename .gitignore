@@ -1,7 +1,6 @@
 # Build output
 bin/
 test-bin/
-xtend-gen/
 
 # Maven build output
 target/

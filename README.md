@@ -2,7 +2,7 @@
 
 A domain-specific language (DSL) for planning, validating, and generating database sharding configurations targeting PostgreSQL/Citus and MySQL/Vitess.
 
-Built with **Xtext** and **Xtend**.
+Built with **Xtext**; the scoping, validation and generation code is plain Java.
 
 ---
 
@@ -166,7 +166,7 @@ The tests cover all major validators and the generator, including multi-resource
 
 - Java 21
 - Maven
-- Xtext / Xtend 2.42.0
+- Xtext 2.42.0
 
 ---
 
