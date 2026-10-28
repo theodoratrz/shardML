@@ -18,7 +18,7 @@ database social {
 
     shard comments {
         strategy: hash
-        key: user_id
+        key: post_user_id
         buckets: 32
         colocate_with: posts
     }
@@ -71,7 +71,7 @@ database social {
         }*/
     }
 
-    posts belongs_to users
-    comments belongs_to posts
-    likes belongs_to users
+    posts belongs_to users via user_id
+    comments belongs_to posts via post_user_id
+    likes belongs_to users via user_id
 }

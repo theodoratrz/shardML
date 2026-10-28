@@ -1,31 +1,53 @@
+/*
+ * Users, posts, comments and likes are distributed by the user who owns
+ * the post tree, so each has a composite primary key that starts with that
+ * column (Citus requires the distribution column in every PRIMARY KEY /
+ * UNIQUE, SHML_024). countries is a reference table and keeps its
+ * constraints.
+ */
+
 CREATE TABLE users (
     id INT PRIMARY KEY,
     username VARCHAR(50) NOT NULL,
-    email VARCHAR(100) UNIQUE,
+    /*
+     * Globally unique, but not the distribution column, so Citus cannot
+     * enforce UNIQUE here. Option used: a lookup table
+     * user_emails(email PRIMARY KEY, user_id), distributed by email and
+     * written in the same transaction; login reads it to find the user.
+     */
+    email VARCHAR(100),
     country_id INT,
     created_at TIMESTAMP
 )
 
 CREATE TABLE posts (
-    id INT PRIMARY KEY,
+    id INT NOT NULL,
     user_id INT NOT NULL,
     content TEXT,
-    created_at TIMESTAMP
+    created_at TIMESTAMP,
+    PRIMARY KEY (user_id, id)
 )
 
+/*
+ * post_user_id is the post's author, copied from the post at insert time,
+ * so a comment lives on its post's shard. user_id is the commenter.
+ */
 CREATE TABLE comments (
-    id INT PRIMARY KEY,
+    id INT NOT NULL,
     post_id INT NOT NULL,
+    post_user_id INT NOT NULL,
     user_id INT,
     body TEXT,
-    created_at TIMESTAMP
+    created_at TIMESTAMP,
+    PRIMARY KEY (post_user_id, id)
 )
 
 CREATE TABLE likes (
-    id INT PRIMARY KEY,
+    id INT NOT NULL,
     user_id INT NOT NULL,
     post_id INT,
-    created_at TIMESTAMP
+    created_at TIMESTAMP,
+    PRIMARY KEY (user_id, id)
 )
 
 CREATE TABLE countries (
