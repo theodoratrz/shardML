@@ -897,4 +897,126 @@ public class ShardMLParsingTest {
 				""");
 		Assertions.assertFalse(model.eResource().getErrors().isEmpty(), "belongs_to without via should not parse");
 	}
+
+	private static final String COLOCATION_MSQL = """
+			CREATE TABLE customers (
+			    id BIGINT PRIMARY KEY
+			)
+			CREATE TABLE accounts (
+			    id BIGINT NOT NULL,
+			    customer_id BIGINT NOT NULL,
+			    PRIMARY KEY (customer_id, id)
+			)
+			CREATE TABLE transactions (
+			    id BIGINT NOT NULL,
+			    customer_id BIGINT NOT NULL,
+			    account_id BIGINT NOT NULL,
+			    PRIMARY KEY (customer_id, id)
+			)
+			CREATE TABLE cards (
+			    id BIGINT NOT NULL,
+			    customer_id INT NOT NULL,
+			    PRIMARY KEY (customer_id, id)
+			)
+			""";
+
+	private static final String CUSTOMER_TREE = """
+			    shard customers {
+			        strategy: hash
+			        key: id
+			        buckets: 32
+			    }
+			    shard accounts {
+			        strategy: hash
+			        key: customer_id
+			        buckets: 32
+			        colocate_with: customers
+			    }
+			""";
+
+	// customers <- accounts <- transactions all resolve to customers.id
+	@Test
+	public void testColocationRootKey_chain() throws Exception {
+		Model model = parseShardML(COLOCATION_MSQL, "import \"test.msql\"\ndatabase test{\n    type: postgres\n" + CUSTOMER_TREE + """
+				    shard transactions {
+				        strategy: hash
+				        key: customer_id
+				        buckets: 32
+				        colocate_with: accounts
+				    }
+				    accounts belongs_to customers via customer_id
+				    transactions belongs_to accounts via customer_id
+				}
+				""");
+		validationTestHelper.assertNoIssue(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_026");
+		validationTestHelper.assertNoIssue(model, ShardMLPackage.Literals.BELONGS_TO, "SHML_027");
+	}
+
+	// the original banking mistake: transactions placed by account_id, accounts by customer_id
+	@Test
+	public void testColocationRootKey_differentKey() throws Exception {
+		Model model = parseShardML(COLOCATION_MSQL, "import \"test.msql\"\ndatabase test{\n    type: postgres\n" + CUSTOMER_TREE + """
+				    shard transactions {
+				        strategy: hash
+				        key: account_id
+				        buckets: 32
+				        colocate_with: accounts
+				    }
+				    accounts belongs_to customers via customer_id
+				    transactions belongs_to accounts via customer_id
+				}
+				""");
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_026",
+				"'transactions' is colocated with 'accounts', but their rows are placed by different keys: "
+				+ "transactions.account_id and customers.id. Shard 'transactions' by a foreign key that leads to customers.id "
+				+ "and declare it with `transactions belongs_to <parent> via <that column>`.");
+	}
+
+	// same shard key column, but no belongs_to says it references the parent's shard key
+	@Test
+	public void testColocationRootKey_missingLink() throws Exception {
+		Model model = parseShardML(COLOCATION_MSQL, "import \"test.msql\"\ndatabase test{\n    type: postgres\n" + CUSTOMER_TREE + """
+				}
+				""");
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_026",
+				"placed by different keys: accounts.customer_id and customers.id");
+	}
+
+	// belongs_to through a column that is not the shard key does not tie the placement
+	@Test
+	public void testColocationRootKey_linkNotThroughShardKey() throws Exception {
+		Model model = parseShardML(COLOCATION_MSQL, "import \"test.msql\"\ndatabase test{\n    type: postgres\n" + CUSTOMER_TREE + """
+				    shard transactions {
+				        strategy: hash
+				        key: customer_id
+				        buckets: 32
+				        colocate_with: accounts
+				    }
+				    accounts belongs_to customers via customer_id
+				    transactions belongs_to accounts via account_id
+				}
+				""");
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_026",
+				"placed by different keys: transactions.customer_id and customers.id");
+	}
+
+	@Test
+	public void testForeignKeyTypeMismatch() throws Exception {
+		Model model = parseShardML(COLOCATION_MSQL, "import \"test.msql\"\ndatabase test{\n    type: postgres\n" + CUSTOMER_TREE + """
+				    shard cards {
+				        strategy: hash
+				        key: customer_id
+				        buckets: 32
+				        colocate_with: customers
+				    }
+				    accounts belongs_to customers via customer_id
+				    cards belongs_to customers via customer_id
+				}
+				""");
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.BELONGS_TO, "SHML_027",
+				"Foreign key cards.customer_id is INT, but the shard key it references, customers.id, is BIGINT. "
+				+ "Colocated tables need the same type at every link.");
+		// the link is still followed, so the placement itself is not reported again
+		validationTestHelper.assertNoIssue(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_026");
+	}
 }

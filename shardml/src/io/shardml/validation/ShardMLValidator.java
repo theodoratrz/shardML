@@ -59,6 +59,8 @@ public class ShardMLValidator extends AbstractShardMLValidator {
 	private static final String RELATIONSHIP_NOT_COLOCATED = "SHML_023";
 	private static final String UNIQUE_WITHOUT_SHARD_KEY  = "SHML_024";
 	private static final String UNSUPPORTED_TARGET        = "SHML_025";
+	private static final String COLOCATION_ROOT_MISMATCH  = "SHML_026";
+	private static final String FOREIGN_KEY_TYPE_MISMATCH = "SHML_027";
 
 	// restrict validation to shardML only
 	@Override
@@ -97,6 +99,47 @@ public class ShardMLValidator extends AbstractShardMLValidator {
 
 	private static boolean isHashed(ShardDecl shard) {
 		return shard.getStrategy() == Strategy.HASH || shard.getStrategy() == Strategy.CONS_HASH;
+	}
+
+	private static boolean hasKey(ShardDecl shard) {
+		return shard != null && isHashed(shard) && shard.getId() != null && !shard.getId().eIsProxy();
+	}
+
+	// Helper: the `belongs_to ... via <shard key>` that ties a table's shard key to a
+	// hash-sharded parent's shard key, or null
+	private static BelongsTo keyLink(Database db, ShardDecl shard) {
+		if (!hasKey(shard))
+			return null;
+		for (Relationship rel : db.getRelationships()) {
+			if (rel instanceof BelongsTo belongsTo && belongsTo.getSubject() == shard.getEntity()
+					&& belongsTo.getVia() == shard.getId() && hasKey(shardFor(db, belongsTo.getBelongs())))
+				return belongsTo;
+		}
+		return null;
+	}
+
+	// Helper: the column that decides where a table's rows live. That is its shard key,
+	// unless the shard key is a foreign key to the parent's shard key; then it is the parent's root key
+	private static Column rootKey(Database db, ShardDecl shard) {
+		Set<ShardDecl> visited = new HashSet<>();
+		ShardDecl current = shard;
+		BelongsTo link;
+		while (visited.add(current) && (link = keyLink(db, current)) != null)
+			current = shardFor(db, link.getBelongs());
+		return current.getId();
+	}
+
+	private static String qualified(Column column) {
+		return ((Table) column.eContainer()).getName() + "." + column.getName();
+	}
+
+	// varchar length does not matter for hashing, so VARCHAR(50) matches VARCHAR(100)
+	private static String typeOf(Column column) {
+		return column.getVarchar() != null ? "VARCHAR" : column.getSimpleType().getLiteral();
+	}
+
+	private static String typeName(Column column) {
+		return column.getVarchar() != null ? "VARCHAR(" + column.getVarchar().getSize() + ")" : typeOf(column);
 	}
 
 	// no meaning in a database without shard declarations
@@ -300,6 +343,44 @@ public class ShardMLValidator extends AbstractShardMLValidator {
 					}
 				}
 			}
+		}
+	}
+
+	// colocate_with only aligns shard boundaries; each row still lands where its own shard key
+	// hashes. Rows of two colocated tables meet only if both are placed by the same root key
+	@Check
+	public void checkColocationRootKey(ShardDecl shard) {
+		if (shard.getColocate() == null || !hasKey(shard))
+			return;
+		Database db = (Database) shard.eContainer();
+		ShardDecl target = shardFor(db, shard.getColocate());
+		if (!hasKey(target) || target == shard)
+			return;
+		Column root = rootKey(db, shard);
+		Column targetRoot = rootKey(db, target);
+		if (root != targetRoot) {
+			String table = shard.getEntity().getName();
+			error("'" + table + "' is colocated with '" + target.getEntity().getName()
+					+ "', but their rows are placed by different keys: " + qualified(root) + " and " + qualified(targetRoot)
+					+ ". Shard '" + table + "' by a foreign key that leads to " + qualified(targetRoot)
+					+ " and declare it with `" + table + " belongs_to <parent> via <that column>`.",
+					shard, ShardMLPackage.Literals.SHARD_DECL__COLOCATE, COLOCATION_ROOT_MISMATCH);
+		}
+	}
+
+	// A foreign key that links two shard keys must have the parent key's type; Citus
+	// hashes each type differently, so equal values would land on different shards
+	@Check
+	public void checkForeignKeyType(BelongsTo rel) {
+		Database db = (Database) rel.eContainer();
+		ShardDecl subject = shardFor(db, rel.getSubject());
+		if (subject == null || keyLink(db, subject) != rel)
+			return;
+		Column parentKey = shardFor(db, rel.getBelongs()).getId();
+		if (!typeOf(rel.getVia()).equals(typeOf(parentKey))) {
+			error("Foreign key " + qualified(rel.getVia()) + " is " + typeName(rel.getVia()) + ", but the shard key it references, "
+					+ qualified(parentKey) + ", is " + typeName(parentKey) + ". Colocated tables need the same type at every link.",
+					rel, ShardMLPackage.Literals.BELONGS_TO__VIA, FOREIGN_KEY_TYPE_MISMATCH);
 		}
 	}
 
