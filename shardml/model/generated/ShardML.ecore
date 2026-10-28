@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="shardML" nsURI="http://shardml.io/ShardML" nsPrefix="shardML">
+  <eClassifiers xsi:type="ecore:EClass" name="Model">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="imports" upperBound="-1"
+        eType="#//Import" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="db" eType="#//Database"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Import">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="importURI" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Database">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="type" eType="#//DatabaseType"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="shard_decl" upperBound="-1"
+        eType="#//ShardDecl" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="route_rules" upperBound="-1"
+        eType="#//RouteRule" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="relationships" upperBound="-1"
+        eType="#//Relationship" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="DatabaseType">
+    <eLiterals name="POSTGRES" literal="postgres"/>
+    <eLiterals name="MYSQL" value="1" literal="mysql"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Relationship">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="subject" eType="ecore:EClass SQL.ecore#//Table"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="HasMany" eSuperTypes="#//Relationship">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="many" eType="ecore:EClass SQL.ecore#//Table"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="HasOne" eSuperTypes="#//Relationship">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="one" eType="ecore:EClass SQL.ecore#//Table"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="BelongsTo" eSuperTypes="#//Relationship">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="belongs" eType="ecore:EClass SQL.ecore#//Table"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ShardDecl">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="entity" eType="ecore:EClass SQL.ecore#//Table"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="strategy" eType="#//Strategy"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="id" eType="ecore:EClass SQL.ecore#//Column"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="buckets" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="colocate" eType="ecore:EClass SQL.ecore#//Table"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="Strategy">
+    <eLiterals name="HASH" literal="hash"/>
+    <eLiterals name="CONS_HASH" value="1" literal="consistent_hash"/>
+    <eLiterals name="REPLICATED" value="2" literal="replicated"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="RouteRule">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="entity" eType="ecore:EClass SQL.ecore#//Table"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="policy" eType="#//Policy"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="condtions" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="queries" upperBound="-1"
+        eType="#//QueryPattern" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="Policy">
+    <eLiterals name="ALLOW" literal="allow"/>
+    <eLiterals name="WARN" value="1" literal="warn"/>
+    <eLiterals name="DENY" value="2" literal="deny"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="QueryPattern">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="queryType" eType="#//QueryType"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="where" eType="#//WhereClause"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="sort" eType="#//SortClause"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="group" eType="#//GroupBy"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="distinct" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="QueryType">
+    <eLiterals name="READ" literal="read"/>
+    <eLiterals name="WRITE" value="1" literal="write"/>
+    <eLiterals name="DELETE" value="2" literal="delete"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="WhereClause">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="first" eType="#//WhereCondition"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="link" unique="false" upperBound="-1"
+        eType="#//Link"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="rest" upperBound="-1" eType="#//WhereCondition"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="WhereCondition">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="field" eType="ecore:EClass SQL.ecore#//Column"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="op" eType="#//Operator"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="Operator">
+    <eLiterals name="EQ" literal="="/>
+    <eLiterals name="GE" value="1" literal=">"/>
+    <eLiterals name="LE" value="2" literal="&lt;"/>
+    <eLiterals name="LEQ" value="3" literal="&lt;="/>
+    <eLiterals name="GEQ" value="4" literal=">="/>
+    <eLiterals name="NEQ" value="5" literal="!="/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="Link">
+    <eLiterals name="AND" literal="AND"/>
+    <eLiterals name="OR" value="1" literal="OR"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="SortClause">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="field" eType="ecore:EClass SQL.ecore#//Column"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="order" eType="#//SortOrder"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="SortOrder">
+    <eLiterals name="ASC" literal="ASC"/>
+    <eLiterals name="DESC" value="1" literal="DESC"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="GroupBy">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="field" eType="ecore:EClass SQL.ecore#//Column"/>
+  </eClassifiers>
+</ecore:EPackage>
