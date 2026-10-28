@@ -18,14 +18,14 @@ database banking {
    
     shard transactions {
         strategy: hash
-        key: account_id
+        key: customer_id
         buckets: 32
         colocate_with: accounts
     }
 
     shard cards {
         strategy: hash
-        key: id
+        key: customer_id
         buckets: 32
         colocate_with: customers
     }
@@ -35,7 +35,7 @@ database banking {
 
         query FindTransactionsByAccount {
             type: read
-            where: account_id = ?
+            where: customer_id = ? AND account_id = ?
         }
 
         query FindLargeTransactions {
@@ -49,7 +49,7 @@ database banking {
         
         query FindTransactionsSortedByAmount {
             type: read
-            where: account_id = ?
+            where: customer_id = ? AND account_id = ?
             sort: amount ASC
         }
 
@@ -61,7 +61,7 @@ database banking {
 
 
 
-    accounts belongs_to customers
-    transactions belongs_to accounts
-    cards belongs_to customers
+    accounts belongs_to customers via customer_id
+    transactions belongs_to accounts via customer_id
+    cards belongs_to customers via customer_id
 }

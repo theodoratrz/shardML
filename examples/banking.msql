@@ -1,27 +1,54 @@
+/*
+ * Every table is distributed by the customer, so each one has a composite
+ * primary key that starts with the customer column (Citus requires the
+ * distribution column in every PRIMARY KEY / UNIQUE, SHML_024).
+ */
+
 CREATE TABLE customers (
     id BIGINT PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE,
+    /*
+     * Globally unique, but not the distribution column, so Citus cannot
+     * enforce UNIQUE here. Option used: a lookup table
+     * customer_emails(email PRIMARY KEY, customer_id), distributed by email
+     * and written in the same transaction; login reads it to find the
+     * customer anyway.
+     */
+    email VARCHAR(255),
     created_at TIMESTAMP
 )
 
 CREATE TABLE accounts (
-    id BIGINT PRIMARY KEY,
+    id BIGINT NOT NULL,
     customer_id BIGINT NOT NULL,
     balance DECIMAL,
-    created_at TIMESTAMP
+    created_at TIMESTAMP,
+    PRIMARY KEY (customer_id, id)
 )
 
+/*
+ * customer_id is copied from the account at insert time, so a transaction
+ * lives on its account's shard.
+ */
 CREATE TABLE transactions (
-    id BIGINT PRIMARY KEY,
+    id BIGINT NOT NULL,
+    customer_id BIGINT NOT NULL,
     account_id BIGINT NOT NULL,
     amount DECIMAL NOT NULL,
-    created_at TIMESTAMP
+    created_at TIMESTAMP,
+    PRIMARY KEY (customer_id, id)
 )
 
 CREATE TABLE cards (
-    id BIGINT PRIMARY KEY,
+    id BIGINT NOT NULL,
     customer_id BIGINT NOT NULL,
-    card_number VARCHAR(255) UNIQUE,
-    expires_at TIMESTAMP
+    /*
+     * Globally unique, but not the distribution column, so Citus cannot
+     * enforce UNIQUE here. Option used: a lookup table
+     * card_numbers(card_number PRIMARY KEY, customer_id), distributed by
+     * card_number and written in the same transaction.
+     */
+    card_number VARCHAR(255),
+    expires_at TIMESTAMP,
+    PRIMARY KEY (customer_id, id)
 )

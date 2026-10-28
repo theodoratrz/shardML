@@ -17,14 +17,14 @@
         },
         {
             "name": "transactions",
-            "distribution_column": "account_id",
+            "distribution_column": "customer_id",
             "shard_count": 32,
             "distribution_type": "hash"
             ,"colocate_with": "accounts"
         },
         {
             "name": "cards",
-            "distribution_column": "id",
+            "distribution_column": "customer_id",
             "shard_count": 32,
             "distribution_type": "hash"
             ,"colocate_with": "customers"
