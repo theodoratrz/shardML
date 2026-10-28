@@ -10,6 +10,7 @@ import org.eclipse.xtext.testing.InjectWith;
 import org.eclipse.xtext.testing.extensions.InjectionExtension;
 import org.eclipse.xtext.testing.util.ParseHelper;
 import org.eclipse.xtext.testing.validation.ValidationTestHelper;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -754,5 +755,91 @@ public class ShardMLParsingTest {
 				}
 				""");
 		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_016", "Long colocation chain found.");
+	}
+
+	private static final String KEYS_MSQL = """
+			CREATE TABLE customers (
+			    id BIGINT PRIMARY KEY,
+			    email VARCHAR(255) UNIQUE
+			)
+			CREATE TABLE accounts (
+			    id BIGINT NOT NULL,
+			    customer_id BIGINT NOT NULL,
+			    iban VARCHAR(34),
+			    PRIMARY KEY (customer_id, id),
+			    UNIQUE (iban)
+			)
+			""";
+
+	@Test
+	public void testUniqueWithoutShardKey_columnConstraint() throws Exception {
+		Model model = parseShardML(KEYS_MSQL, """
+				import "test.msql"
+				database test{
+				    type: postgres
+				    shard customers {
+				        strategy: hash
+				        key: id
+				        buckets: 32
+				    }
+				}
+				""");
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_024",
+				"UNIQUE (email) on 'customers' does not include the shard key 'id'. "
+				+ "Citus enforces uniqueness only within one shard, so it cannot enforce this constraint. Options: "
+				+ "enforce it in the application; "
+				+ "a lookup table with PRIMARY KEY (email), distributed by email and written in the same transaction; "
+				+ "or, if 'customers' is small, make it a reference table (strategy: replicated).");
+	}
+
+	@Test
+	public void testUniqueWithoutShardKey_primaryKey() throws Exception {
+		Model model = parseShardML(KEYS_MSQL, """
+				import "test.msql"
+				database test{
+				    type: postgres
+				    shard customers {
+				        strategy: hash
+				        key: email
+				        buckets: 32
+				    }
+				}
+				""");
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_024",
+				"PRIMARY KEY (id) on 'customers' does not include the shard key 'email'.");
+	}
+
+	@Test
+	public void testUniqueWithoutShardKey_tableConstraint() throws Exception {
+		Model model = parseShardML(KEYS_MSQL, """
+				import "test.msql"
+				database test{
+				    type: postgres
+				    shard accounts {
+				        strategy: hash
+				        key: customer_id
+				        buckets: 32
+				    }
+				}
+				""");
+		// the composite primary key includes customer_id; only UNIQUE (iban) is reported
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_024",
+				"UNIQUE (iban) on 'accounts' does not include the shard key 'customer_id'.");
+		Assertions.assertEquals(1, validationTestHelper.validate(model).stream()
+				.filter(i -> "SHML_024".equals(i.getCode())).count());
+	}
+
+	@Test
+	public void testUniqueWithoutShardKey_replicated() throws Exception {
+		Model model = parseShardML(KEYS_MSQL, """
+				import "test.msql"
+				database test{
+				    type: postgres
+				    shard customers {
+				        strategy: replicated
+				    }
+				}
+				""");
+		validationTestHelper.assertNoIssue(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_024");
 	}
 }

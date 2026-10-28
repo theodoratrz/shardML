@@ -1,8 +1,10 @@
 package io.shardml.validation;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.eclipse.xtext.validation.Check;
 
@@ -21,7 +23,13 @@ import io.shardml.shardML.ShardMLPackage;
 import io.shardml.shardML.Strategy;
 import io.shardml.shardML.WhereCondition;
 import io.shardml.sql.AllTypes;
+import io.shardml.sql.Column;
+import io.shardml.sql.Constraint;
+import io.shardml.sql.PrimaryAnnotation;
+import io.shardml.sql.PrimaryKey;
 import io.shardml.sql.Table;
+import io.shardml.sql.TableConstraint;
+import io.shardml.sql.UniqueAnnotation;
 
 public class ShardMLValidator extends AbstractShardMLValidator {
 
@@ -49,6 +57,7 @@ public class ShardMLValidator extends AbstractShardMLValidator {
 	private static final String SUBOPTIMAL_KEY_TYPE       = "SHML_021";
 	private static final String MISSING_ROUTE_RULE        = "SHML_022";
 	private static final String RELATIONSHIP_NOT_COLOCATED = "SHML_023";
+	private static final String UNIQUE_WITHOUT_SHARD_KEY  = "SHML_024";
 	private static final String UNSUPPORTED_TARGET        = "SHML_025";
 
 	// restrict validation to shardML only
@@ -151,6 +160,41 @@ public class ShardMLValidator extends AbstractShardMLValidator {
 						ShardMLPackage.Literals.SHARD_DECL__ID, SHARD_KEY_NOT_IN_TABLE);
 			}
 		}
+	}
+
+	// Citus enforces PRIMARY KEY / UNIQUE only within one shard, so every such
+	// constraint on a distributed table must include the distribution column
+	@Check
+	public void checkUniqueIncludesShardKey(ShardDecl shard) {
+		Table table = shard.getEntity();
+		Column key = shard.getId();
+		if (!isHashed(shard) || table == null || table.eIsProxy() || key == null || key.eIsProxy())
+			return;
+		for (Column column : table.getColumns()) {
+			for (Constraint constraint : column.getConstraint()) {
+				if (constraint instanceof PrimaryAnnotation)
+					checkUniqueColumns(shard, "PRIMARY KEY", List.of(column));
+				else if (constraint instanceof UniqueAnnotation)
+					checkUniqueColumns(shard, "UNIQUE", List.of(column));
+			}
+		}
+		for (TableConstraint constraint : table.getConstraints())
+			checkUniqueColumns(shard, constraint instanceof PrimaryKey ? "PRIMARY KEY" : "UNIQUE", constraint.getColumns());
+	}
+
+	private void checkUniqueColumns(ShardDecl shard, String kind, List<Column> columns) {
+		if (columns.contains(shard.getId()))
+			return;
+		String table = shard.getEntity().getName();
+		String key = shard.getId().getName();
+		String names = columns.stream().map(Column::getName).collect(Collectors.joining(", "));
+		error(kind + " (" + names + ") on '" + table + "' does not include the shard key '" + key + "'. "
+				+ "Citus enforces uniqueness only within one shard, so it cannot enforce this constraint. Options: "
+				+ "enforce it in the application; "
+				+ "a lookup table with PRIMARY KEY (" + names + "), distributed by " + columns.get(0).getName()
+				+ " and written in the same transaction; "
+				+ "or, if '" + table + "' is small, make it a reference table (strategy: replicated).",
+				shard, ShardMLPackage.Literals.SHARD_DECL__ID, UNIQUE_WITHOUT_SHARD_KEY);
 	}
 
 	// Helper: issue warning or error based on the route rule policy
