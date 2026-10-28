@@ -19,30 +19,25 @@ import io.shardml.sql.Schema;
 import io.shardml.sql.Table;
 import io.shardml.sql.UniqueAnnotation;
 
-/*Produces 3 output files per model:
- * 1. A platform specific json sharding config
- * 2. A SQL schema script with the imported tables (only for Citus)
- * 3. A SQL distribution script (only for Citus)
- * The generator dispatches on database type to avoid vendor lock in.
+/*Produces 3 output files per model, all for Citus:
+ * 1. A json sharding config
+ * 2. A SQL schema script with the imported tables
+ * 3. A SQL distribution script
+ * Citus (postgres) is the only supported target; the validator rejects
+ * mysql models (SHML_025), so they never reach the generator.
  */
 public class ShardMLGenerator extends AbstractGenerator {
 
-	// generate both output files
+	// generate all three output files
 	@Override
 	public void doGenerate(Resource resource, IFileSystemAccess2 fsa, IGeneratorContext context) {
 		Model model = (Model) resource.getContents().get(0);
 		Database database = model.getDb();
-		fsa.generateFile(database.getName() + "-sharding.json", generateJson(database));
-		if (database.getType() == DatabaseType.POSTGRES)
-			fsa.generateFile(database.getName() + "-schema.sql", schemaDefinitions(ImportedSchema.of(model)));
-		fsa.generateFile(database.getName() + "-distribution.sql", generateSQL(database));
-	}
-
-	public CharSequence generateJson(Database db) {
-		if (db.getType() == DatabaseType.POSTGRES)
-			return PostgresJSON(db);
-		else
-			return MySQLJSON(db);
+		if (database.getType() != DatabaseType.POSTGRES)
+			return;
+		fsa.generateFile(database.getName() + "-sharding.json", PostgresJSON(database));
+		fsa.generateFile(database.getName() + "-schema.sql", schemaDefinitions(ImportedSchema.of(model)));
+		fsa.generateFile(database.getName() + "-distribution.sql", distributionDefinitions(database));
 	}
 
 	private static boolean isHashed(ShardDecl shard) {
@@ -73,40 +68,6 @@ public class ShardMLGenerator extends AbstractGenerator {
 					out.append("            ,\"colocate_with\": \"").append(shard.getColocate().getName()).append("\"\n");
 			} else {
 				out.append("            \"distribution_type\": \"reference\"\n");
-			}
-		}
-		if (!first)
-			out.append("        }\n");
-		out.append("    ]\n");
-		out.append("}\n");
-		return out;
-	}
-
-	// Generates a Vitess-compatible json configuration
-	// uses vindex and vindex-type fields following Vitess VSchema conventions
-	// colocate_with field is optional and is included when a colocation directive is presented
-	public CharSequence MySQLJSON(Database db) {
-		StringBuilder out = new StringBuilder();
-		out.append("{\n");
-		out.append("    \"database\": \"").append(db.getName()).append("\",\n");
-		out.append("    \"target\": \"vitess\",\n");
-		out.append("    \"keyspace\": \"").append(db.getName()).append("\",\n");
-		out.append("    \"tables\": [\n");
-		boolean first = true;
-		for (ShardDecl shard : db.getShard_decl()) {
-			if (!first)
-				out.append("        },\n");
-			first = false;
-			out.append("        {\n");
-			out.append("            \"name\": \"").append(shard.getEntity().getName()).append("\",\n");
-			if (isHashed(shard)) {
-				out.append("            \"vindex\": \"").append(shard.getId().getName()).append("\",\n");
-				out.append("            \"vindex_type\": \"hash\",\n");
-				out.append("            \"buckets\": ").append(shard.getBuckets()).append("\n");
-				if (shard.getColocate() != null)
-					out.append("            ,\"colocate_with\": \"").append(shard.getColocate().getName()).append("\"\n");
-			} else {
-				out.append("            \"vindex_type\": \"reference\"\n");
 			}
 		}
 		if (!first)
@@ -153,13 +114,6 @@ public class ShardMLGenerator extends AbstractGenerator {
 		if (constraint instanceof NotNull)
 			return "NOT NULL";
 		throw new IllegalArgumentException("Unknown constraint: " + constraint.eClass().getName());
-	}
-
-	// generates SQL distribution script.
-	public CharSequence generateSQL(Database db) {
-		if (db.getType() == DatabaseType.POSTGRES)
-			return distributionDefinitions(db);
-		return "";
 	}
 
 	// generates Citus distribution commands for each sharded table.

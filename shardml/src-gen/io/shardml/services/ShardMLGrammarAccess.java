@@ -766,7 +766,7 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 		private final EnumLiteralDeclaration cMYSQLEnumLiteralDeclaration_1 = (EnumLiteralDeclaration)cAlternatives.eContents().get(1);
 		private final Keyword cMYSQLMysqlKeyword_1_0 = (Keyword)cMYSQLEnumLiteralDeclaration_1.eContents().get(0);
 		
-		//// Supported target platforms
+		//// Target platforms; only postgres is supported
 		//enum DatabaseType:
 		//    POSTGRES='postgres' | MYSQL='mysql'
 		//;
@@ -1136,7 +1136,7 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 		return getDatabaseAccess().getRule();
 	}
 	
-	//// Supported target platforms
+	//// Target platforms; only postgres is supported
 	//enum DatabaseType:
 	//    POSTGRES='postgres' | MYSQL='mysql'
 	//;

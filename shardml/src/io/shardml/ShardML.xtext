@@ -2,7 +2,8 @@
  * A DMSL for designing and validating database sharding configurations.
  * Imports existing SQL schema and allow engineers to declare sharding
  * strategies, query patterns and table relationships.
- * Output is generated for PostgresSQL (citus) and MySQL (Vitess).
+ * Output is generated for PostgreSQL (Citus). 'mysql' still parses so the
+ * validator can reject it with a clear message (SHML_025).
  * 
  */
 
@@ -33,7 +34,7 @@ Database:
     relationships += Relationship* '}'
 ;
 
-// Supported target platforms
+// Target platforms; only postgres is supported
 enum DatabaseType:
     POSTGRES='postgres' | MYSQL='mysql'
 ;

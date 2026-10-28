@@ -8,6 +8,7 @@ import org.eclipse.xtext.validation.Check;
 
 import io.shardml.shardML.BelongsTo;
 import io.shardml.shardML.Database;
+import io.shardml.shardML.DatabaseType;
 import io.shardml.shardML.HasMany;
 import io.shardml.shardML.HasOne;
 import io.shardml.shardML.Link;
@@ -48,6 +49,7 @@ public class ShardMLValidator extends AbstractShardMLValidator {
 	private static final String SUBOPTIMAL_KEY_TYPE       = "SHML_021";
 	private static final String MISSING_ROUTE_RULE        = "SHML_022";
 	private static final String RELATIONSHIP_NOT_COLOCATED = "SHML_023";
+	private static final String UNSUPPORTED_TARGET        = "SHML_025";
 
 	// restrict validation to shardML only
 	@Override
@@ -94,6 +96,15 @@ public class ShardMLValidator extends AbstractShardMLValidator {
 		if (db.getShard_decl().isEmpty()) {
 			error("Database has no shard declarations.", db,
 					ShardMLPackage.Literals.DATABASE__SHARD_DECL, EMPTY_DATABASE);
+		}
+	}
+
+	// Citus is the only target; Vitess (mysql) output was dropped
+	@Check
+	public void checkSupportedTarget(Database db) {
+		if (db.getType() == DatabaseType.MYSQL) {
+			error("Target 'mysql' (Vitess) is not supported; only 'postgres' (Citus) is.", db,
+					ShardMLPackage.Literals.DATABASE__TYPE, UNSUPPORTED_TARGET);
 		}
 	}
 

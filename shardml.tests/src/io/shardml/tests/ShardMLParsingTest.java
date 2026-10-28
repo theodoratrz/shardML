@@ -97,7 +97,7 @@ public class ShardMLParsingTest {
 		Model model = parseShardML(TEST_MSQL, """
 				import "test.msql"
 				database test{
-				    type: mysql
+				    type: postgres
 				    shard test_table {
 				        strategy: hash
 				        key: id
@@ -113,7 +113,7 @@ public class ShardMLParsingTest {
 		Model model = parseShardML(TEST_MSQL, """
 				import "test.msql"
 				database test{
-				    type: mysql
+				    type: postgres
 				    shard test_table {
 				        strategy: hash
 				        key: id
@@ -129,7 +129,7 @@ public class ShardMLParsingTest {
 		Model model = parseShardML(TEST_MSQL, """
 				import "test.msql"
 				database test{
-				    type: mysql
+				    type: postgres
 				    shard test_table {
 				        strategy: hash
 				        key: id
@@ -146,7 +146,7 @@ public class ShardMLParsingTest {
 		Model model = parseShardML(TEST_MSQL, """
 				import "test.msql"
 				database test{
-				    type: mysql
+				    type: postgres
 				    shard test_table {
 				        strategy: hash
 				        buckets: 32
@@ -161,7 +161,7 @@ public class ShardMLParsingTest {
 		Model model = parseShardML(TEST_MSQL, """
 				import "test.msql"
 				database test{
-				    type: mysql
+				    type: postgres
 				    shard test_table {
 				        strategy: replicated
 				        key: id
@@ -177,7 +177,7 @@ public class ShardMLParsingTest {
 		Model model = parseShardML(TEST_MSQL, """
 				import "test.msql"
 				database test{
-				    type: mysql
+				    type: postgres
 				    shard test_table {
 				        strategy: hash
 				        key: id
@@ -198,7 +198,7 @@ public class ShardMLParsingTest {
 		Model model = parseShardML(TEST_MSQL, """
 				import "test.msql"
 				database test{
-				    type: mysql
+				    type: postgres
 				    shard test_table {
 				        strategy: hash
 				        key: id
@@ -222,7 +222,7 @@ public class ShardMLParsingTest {
 		Model model = parseShardML(TEST_MSQL, """
 				import "test.msql"
 				database test{
-				    type: mysql
+				    type: postgres
 				    shard test_table {
 				        strategy: hash
 				        key: wrong_id
@@ -238,7 +238,7 @@ public class ShardMLParsingTest {
 		Model model = parseShardML(TEST_MSQL, """
 				import "test.msql"
 				database test{
-				    type: mysql
+				    type: postgres
 				    shard test_table {
 				        strategy: hash
 				        key: id
@@ -260,7 +260,7 @@ public class ShardMLParsingTest {
 		Model model = parseShardML(TEST_MSQL, """
 				import "test.msql"
 				database test{
-				    type: mysql
+				    type: postgres
 				    shard test_table {
 				        strategy: hash
 				        key: id
@@ -282,7 +282,7 @@ public class ShardMLParsingTest {
 		Model model = parseShardML(TEST_MSQL, """
 				import "test.msql"
 				database test{
-				    type: mysql
+				    type: postgres
 				    shard test_table {
 				        strategy: hash
 				        key: id
@@ -304,7 +304,7 @@ public class ShardMLParsingTest {
 		Model model = parseShardML(TEST_MSQL, """
 				import "test.msql"
 				database test{
-				    type: mysql
+				    type: postgres
 				    shard test_table {
 				        strategy: hash
 				        key: id
@@ -326,7 +326,7 @@ public class ShardMLParsingTest {
 		Model model = parseShardML(TEST_MSQL, """
 				import "test.msql"
 				database test{
-				    type: mysql
+				    type: postgres
 				    shard test_table {
 				        strategy: hash
 				        key: id
@@ -348,7 +348,7 @@ public class ShardMLParsingTest {
 		Model model = parseShardML(TEST_MSQL, """
 				import "test.msql"
 				database test{
-				    type: mysql
+				    type: postgres
 				    shard test_table {
 				        strategy: hash
 				        key: id
@@ -371,7 +371,7 @@ public class ShardMLParsingTest {
 		Model model = parseShardML(TEST_MSQL, """
 				import "test.msql"
 				database test{
-				    type: mysql
+				    type: postgres
 				    shard test_table {
 				        strategy: hash
 				        key: id
@@ -394,7 +394,7 @@ public class ShardMLParsingTest {
 		Model model = parseShardML(TEST_MSQL, """
 				import "test.msql"
 				database test{
-				    type: mysql
+				    type: postgres
 				    shard test_table {
 				        strategy: hash
 				        key: id
@@ -417,7 +417,7 @@ public class ShardMLParsingTest {
 		Model model = parseShardML(TEST_MSQL, """
 				import "test.msql"
 				database test{
-				    type: mysql
+				    type: postgres
 				    shard test_table {
 				        strategy: hash
 				        key: id
@@ -440,7 +440,7 @@ public class ShardMLParsingTest {
 		Model model = parseShardML(TEST_MSQL, """
 				import "test.msql"
 				database test{
-				    type: mysql
+				    type: postgres
 				    shard test_table {
 				        strategy: hash
 				        key: id
@@ -463,7 +463,7 @@ public class ShardMLParsingTest {
 		Model model = parseShardML(TEST_MSQL, """
 				import "test.msql"
 				database test{
-				    type: mysql
+				    type: postgres
 				    shard test_table {
 				        strategy: hash
 				        key: id
@@ -486,7 +486,7 @@ public class ShardMLParsingTest {
 		Model model = parseShardML(TEST_MSQL, """
 				import "test.msql"
 				database test{
-				    type: mysql
+				    type: postgres
 				    shard test_table {
 				        strategy: hash
 				        key: id
@@ -509,7 +509,7 @@ public class ShardMLParsingTest {
 		Model model = parseShardML(TEST_MSQL, """
 				import "test.msql"
 				database test{
-				    type: mysql
+				    type: postgres
 				    shard test_table {
 				        strategy: hash
 				        key: id
@@ -532,7 +532,7 @@ public class ShardMLParsingTest {
 		Model model = parseShardML(TEST_MSQL, """
 				import "test.msql"
 				database test{
-				    type: mysql
+				    type: postgres
 				    shard test_table {
 				        strategy: hash
 				        key: id
@@ -587,6 +587,22 @@ public class ShardMLParsingTest {
 				}
 				""");
 		validationTestHelper.assertError(model, ShardMLPackage.Literals.DATABASE, "SHML_001", "Database has no shard declarations.");
+	}
+
+	@Test
+	public void testUnsupportedTarget() throws Exception {
+		Model model = parseShardML(TEST_MSQL, """
+				import "test.msql"
+				database test{
+				    type: mysql
+				    shard test_table {
+				        strategy: hash
+				        key: id
+				        buckets: 32
+				    }
+				}
+				""");
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.DATABASE, "SHML_025", "Target 'mysql' (Vitess) is not supported; only 'postgres' (Citus) is.");
 	}
 
 	@Test

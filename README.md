@@ -1,6 +1,6 @@
 # ShardML
 
-A domain-specific language (DSL) for planning, validating, and generating database sharding configurations targeting PostgreSQL/Citus and MySQL/Vitess.
+A domain-specific language (DSL) for planning, validating, and generating database sharding configurations for PostgreSQL/Citus.
 
 Built with **Xtext**; the scoping, validation and generation code is plain Java.
 
@@ -10,16 +10,16 @@ Built with **Xtext**; the scoping, validation and generation code is plain Java.
 
 Most large-scale applications banks, social platforms, logistics systems, rely on horizontal partitioning to handle growing data volumes. Sharding decisions are typically expressed directly in platform-specific configuration files, with little support for early validation. Errors are usually caught at deployment, when they are far more costly to fix.
 
-ShardML addresses the gap between sharding intent and deployment correctness. Engineers declare their distribution strategy, query access patterns, and table relationships in a single model. The language validates the model against the imported SQL schema before anything is deployed, and generates deployment-ready configurations for both Citus and Vitess from one source.
+ShardML addresses the gap between sharding intent and deployment correctness. Engineers declare their distribution strategy, query access patterns, and table relationships in a single model. The language validates the model against the imported SQL schema before anything is deployed, and generates deployment-ready Citus configuration from one source.
 
 ---
 
 ## Features
 
 - **Declarative syntax**: describe what to shard and how, not low-level middleware configuration
-- **23 validators** covering structural correctness, colocation consistency, performance anti-patterns, and query pattern analysis
+- **24 validators** covering structural correctness, colocation consistency, performance anti-patterns, and query pattern analysis
 - **Policy-aware query analysis**: route rules support `allow`, `warn`, `deny` to control strictness per table
-- **Multi-platform code generation**: produces Citus JSON + SQL and Vitess VSchema JSON from a single model
+- **Citus code generation**: produces the schema and distribution SQL, plus a JSON summary, from a single model
 - **Cross-schema import**: reference an existing `.msql` SQL schema file; all table and column references are resolved and validated against it
 - **Command-line tool**: `shardml validate` and `shardml generate`, with `file:line` diagnostics and a non-zero exit code on model errors
 
@@ -61,8 +61,8 @@ database banking {
 
 | File | Contents |
 |---|---|
-| `<database>-sharding.json` | Platform-specific distribution config (Citus or Vitess format) |
-| `<database>-schema.sql` | `CREATE TABLE` statements for the imported schema (Citus only; apply before the distribution script) |
+| `<database>-sharding.json` | Distribution config in JSON |
+| `<database>-schema.sql` | `CREATE TABLE` statements for the imported schema (apply before the distribution script) |
 | `<database>-distribution.sql` | Citus SQL commands (`create_distributed_table`, `create_reference_table`) |
 
 ---
@@ -72,7 +72,8 @@ database banking {
 | Platform | Underlying DBMS |
 |---|---|
 | Citus | PostgreSQL |
-| Vitess | MySQL |
+
+Earlier versions also generated Vitess output for `type: mysql`. It was not a valid VSchema (no `sharded` flag, no `vindexes` map, per-table bucket counts Vitess has no notion of), so it was dropped rather than kept as fake support. `type: mysql` still parses and is rejected with SHML_025.
 
 ---
 
@@ -88,9 +89,9 @@ shardml/                               # Language runtime
     scoping/
       ShardMLScopeProvider.java        # Cross-resource reference resolution
     validation/
-      ShardMLValidator.java            # 23 validation rules
+      ShardMLValidator.java            # 24 validation rules
     generator/
-      ShardMLGenerator.java            # Citus/Vitess output generation
+      ShardMLGenerator.java            # Citus output generation
   src-gen/                             # Xtext-generated parser infrastructure
   model/generated/                     # Generated Ecore metamodels
 
@@ -98,8 +99,8 @@ shardml.tests/                         # JUnit 5 test suite (40 tests)
 shardml.cli/                           # Command-line front end
 
 examples/
-  banking.msql / banking.shardml       # PostgreSQL/Citus scenario
-  social.msql  / social.shardml        # MySQL/Vitess scenario
+  banking.msql / banking.shardml       # Banking scenario
+  social.msql  / social.shardml        # Social network scenario
   src-gen/                             # Generated output for both
 ```
 
@@ -174,5 +175,5 @@ The tests cover all major validators and the generator, including multi-resource
 ## Limitations
 
 - The SQL grammar supports a subset of DDL (no ALTER, no indices, no composite primary keys).
-- Vitess distribution SQL is intentionally omitted, Vitess uses VSchema JSON for distribution rather than SQL DDL commands.
+- Citus is the only target; Vitess is not supported.
 - Query patterns are declared manually and must be kept in sync with application code.

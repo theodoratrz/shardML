@@ -42,8 +42,8 @@ public final class ShardMLCli {
 			"  shardml validate <model.shardml>",
 			"  shardml generate <model.shardml> [-o <output-dir>]",
 			"",
-			"generate writes <output-dir>/<database>-sharding.json and, for postgres",
-			"targets, <output-dir>/<database>-schema.sql (apply first) and",
+			"generate writes <output-dir>/<database>-sharding.json,",
+			"<output-dir>/<database>-schema.sql (apply first) and",
 			"<output-dir>/<database>-distribution.sql. The default output",
 			"directory is src-gen/ next to the model file.");
 

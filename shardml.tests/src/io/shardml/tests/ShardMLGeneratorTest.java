@@ -188,63 +188,10 @@ public class ShardMLGeneratorTest {
 				""", sql, "Schema script should create every imported table, including unsharded ones");
 	}
 
-	// --- Vitess (mysql) output ---
+	// --- mysql (unsupported) ---
 
 	@Test
-	public void testMysqlJsonContainsKeyspace() throws IOException {
-		String json = file(generate("""
-				import "test.msql"
-				database social {
-				    type: mysql
-				    shard customers {
-				        strategy: hash
-				        key: id
-				        buckets: 32
-				    }
-				}
-				"""), "social-sharding.json");
-		Assertions.assertNotNull(json, "Vitess JSON file should be generated");
-		Assertions.assertTrue(json.contains("\"target\": \"vitess\""), "JSON should target vitess");
-		Assertions.assertTrue(json.contains("\"keyspace\": \"social\""), "JSON should include keyspace");
-	}
-
-	@Test
-	public void testMysqlJsonHashTable() throws IOException {
-		String json = file(generate("""
-				import "test.msql"
-				database social {
-				    type: mysql
-				    shard customers {
-				        strategy: hash
-				        key: id
-				        buckets: 16
-				    }
-				}
-				"""), "social-sharding.json");
-		Assertions.assertTrue(json.contains("\"vindex\": \"id\""), "Should include vindex column");
-		Assertions.assertTrue(json.contains("\"vindex_type\": \"hash\""), "Should use hash vindex type");
-		Assertions.assertTrue(json.contains("\"buckets\": 16"), "Should include bucket count");
-	}
-
-	@Test
-	public void testMysqlSqlFileIsEmpty() throws IOException {
-		String sql = file(generate("""
-				import "test.msql"
-				database social {
-				    type: mysql
-				    shard customers {
-				        strategy: hash
-				        key: id
-				        buckets: 32
-				    }
-				}
-				"""), "social-distribution.sql");
-		Assertions.assertNotNull(sql, "SQL file should be generated even for Vitess");
-		Assertions.assertTrue(sql.trim().isEmpty(), "Vitess SQL file should be empty (Vitess uses VSchema, not SQL DDL)");
-	}
-
-	@Test
-	public void testMysqlHasNoSchemaScript() throws IOException {
+	public void testMysqlGeneratesNothing() throws IOException {
 		Map<String, CharSequence> files = generate("""
 				import "test.msql"
 				database social {
@@ -256,6 +203,6 @@ public class ShardMLGeneratorTest {
 				    }
 				}
 				""");
-		Assertions.assertNull(file(files, "social-schema.sql"), "Schema script is Citus only");
+		Assertions.assertTrue(files.isEmpty(), "mysql is rejected by the validator and has no output");
 	}
 }
