@@ -62,6 +62,7 @@ public class ShardMLValidator extends AbstractShardMLValidator {
 	private static final String COLOCATION_ROOT_MISMATCH  = "SHML_026";
 	private static final String FOREIGN_KEY_TYPE_MISMATCH = "SHML_027";
 	private static final String COLOCATED_BUCKET_MISMATCH = "SHML_028";
+	private static final String UNSUPPORTED_STRATEGY      = "SHML_029";
 
 	// restrict validation to shardML only
 	@Override
@@ -158,6 +159,17 @@ public class ShardMLValidator extends AbstractShardMLValidator {
 		if (db.getType() == DatabaseType.MYSQL) {
 			error("Target 'mysql' (Vitess) is not supported; only 'postgres' (Citus) is.", db,
 					ShardMLPackage.Literals.DATABASE__TYPE, UNSUPPORTED_TARGET);
+		}
+	}
+
+	// Citus has one hash distribution (fixed hash ranges per shard); there is no consistent
+	// hashing to generate, and emitting plain hash would silently change the semantics
+	@Check
+	public void checkConsistentHashTarget(ShardDecl shard) {
+		Database db = (Database) shard.eContainer();
+		if (shard.getStrategy() == Strategy.CONS_HASH && db.getType() == DatabaseType.POSTGRES) {
+			error("Strategy 'consistent_hash' is not supported by Citus (postgres); use 'hash'.", shard,
+					ShardMLPackage.Literals.SHARD_DECL__STRATEGY, UNSUPPORTED_STRATEGY);
 		}
 	}
 

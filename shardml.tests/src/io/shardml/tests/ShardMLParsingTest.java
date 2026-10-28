@@ -1126,4 +1126,21 @@ public class ShardMLParsingTest {
 				""");
 		validationTestHelper.assertNoIssue(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_028");
 	}
+
+	@Test
+	public void testConsistentHashOnPostgres() throws Exception {
+		Model model = parseShardML(TEST_MSQL, """
+				import "test.msql"
+				database test{
+				    type: postgres
+				    shard test_table {
+				        strategy: consistent_hash
+				        key: id
+				        buckets: 32
+				    }
+				}
+				""");
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_029",
+				"Strategy 'consistent_hash' is not supported by Citus (postgres); use 'hash'.");
+	}
 }
