@@ -32,6 +32,10 @@ no password (`trust` authentication), so the port is bound to localhost only.
 There are no volumes: every `up.sh` starts from an empty cluster, and `down.sh`
 deletes everything.
 
+Every node runs with `wal_level=logical`. Citus needs it for online shard moves
+and splits; with the Postgres default (`replica`), `shard_transfer_mode => 'auto'`
+falls back to blocking writes without any error.
+
 ## Requirements
 
 - Docker with Compose v2 (`docker compose`, not `docker-compose`).
