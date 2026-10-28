@@ -7,8 +7,6 @@ import org.eclipse.xtext.scoping.IScope;
 import org.eclipse.xtext.scoping.Scopes;
 import org.eclipse.xtext.scoping.impl.AbstractDeclarativeScopeProvider;
 
-import com.google.common.collect.Iterables;
-
 import io.shardml.shardML.BelongsTo;
 import io.shardml.shardML.GroupBy;
 import io.shardml.shardML.HasMany;
@@ -33,14 +31,6 @@ public class ShardMLScopeProvider extends AbstractDeclarativeScopeProvider {
 		if (schema == null)
 			return IScope.NULLSCOPE;
 		return Scopes.scopeFor(schema.getTables());
-	}
-
-	// returns a scope containing all columns from all tables of the imported schema
-	public IScope columnScope(EObject context) {
-		Schema schema = getSchema(context);
-		if (schema == null)
-			return IScope.NULLSCOPE;
-		return Scopes.scopeFor(Iterables.concat(Iterables.transform(schema.getTables(), t -> t.getColumns())));
 	}
 
 	// tables cross-references
@@ -95,26 +85,24 @@ public class ShardMLScopeProvider extends AbstractDeclarativeScopeProvider {
 		return Scopes.scopeFor(context.getSubject().getColumns());
 	}
 
-	// scope where, sort and group by column references to the columns of the table
-	// declared in ShardDecl. So that the query patterns are validated against the correct table
+	// scope where, sort and group by column references to the columns of the routed table,
+	// so query patterns are validated against the table the route rule is for
+	public IScope routedColumnScope(EObject context) {
+		RouteRule route = EcoreUtil2.getContainerOfType(context, RouteRule.class);
+		if (route == null || route.getEntity() == null || route.getEntity().eIsProxy())
+			return IScope.NULLSCOPE;
+		return Scopes.scopeFor(route.getEntity().getColumns());
+	}
+
 	public IScope scope_WhereCondition_field(WhereCondition context, EReference ref) {
-		ShardDecl shard = EcoreUtil2.getContainerOfType(context, ShardDecl.class);
-		if (shard == null || shard.getEntity() == null || shard.getEntity().eIsProxy())
-			return columnScope(context);
-		return Scopes.scopeFor(shard.getEntity().getColumns());
+		return routedColumnScope(context);
 	}
 
 	public IScope scope_SortClause_field(SortClause context, EReference ref) {
-		ShardDecl shard = EcoreUtil2.getContainerOfType(context, ShardDecl.class);
-		if (shard == null || shard.getEntity() == null || shard.getEntity().eIsProxy())
-			return columnScope(context);
-		return Scopes.scopeFor(shard.getEntity().getColumns());
+		return routedColumnScope(context);
 	}
 
 	public IScope scope_GroupBy_field(GroupBy context, EReference ref) {
-		ShardDecl shard = EcoreUtil2.getContainerOfType(context, ShardDecl.class);
-		if (shard == null || shard.getEntity() == null || shard.getEntity().eIsProxy())
-			return columnScope(context);
-		return Scopes.scopeFor(shard.getEntity().getColumns());
+		return routedColumnScope(context);
 	}
 }

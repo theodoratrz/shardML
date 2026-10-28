@@ -21,6 +21,7 @@ import com.google.inject.Provider;
 import io.shardml.SQLStandaloneSetup;
 import io.shardml.shardML.BelongsTo;
 import io.shardml.shardML.Model;
+import io.shardml.shardML.QueryPattern;
 import io.shardml.shardML.ShardMLPackage;
 import io.shardml.sql.Table;
 
@@ -1018,5 +1019,65 @@ public class ShardMLParsingTest {
 				+ "Colocated tables need the same type at every link.");
 		// the link is still followed, so the placement itself is not reported again
 		validationTestHelper.assertNoIssue(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_026");
+	}
+
+	// `id` exists on every test table; it must resolve on the routed table (second_table),
+	// otherwise the shard-key check compares against test_table.id and warns falsely
+	@Test
+	public void testQueryColumnsScopedToRoutedTable() throws Exception {
+		Model model = parseShardML(TEST_MSQL, """
+				import "test.msql"
+				database test{
+				    type: postgres
+				    shard second_table {
+				        strategy: hash
+				        key: id
+				        buckets: 32
+				    }
+				    route second_table {
+				        policy: deny
+				        query QueryExample {
+				            type: read
+				            where: id = ?
+				            sort: id ASC
+				            group_by: id
+				        }
+				    }
+				}
+				""");
+		validationTestHelper.assertNoErrors(model);
+		QueryPattern query = model.getDb().getRoute_rules().get(0).getQueries().get(0);
+		Table routed = model.getDb().getRoute_rules().get(0).getEntity();
+		Assertions.assertSame(routed, query.getWhere().getFirst().getField().eContainer());
+		Assertions.assertSame(routed, query.getSort().getField().eContainer());
+		Assertions.assertSame(routed, query.getGroup().getField().eContainer());
+	}
+
+	// sec_id and body belong to other tables, not to second_table
+	@Test
+	public void testQueryColumnsOfOtherTable() throws Exception {
+		Model model = parseShardML(TEST_MSQL, """
+				import "test.msql"
+				database test{
+				    type: postgres
+				    shard second_table {
+				        strategy: hash
+				        key: id
+				        buckets: 32
+				    }
+				    route second_table {
+				        policy: warn
+				        query QueryExample {
+				            type: read
+				            where: sec_id = ?
+				            sort: body ASC
+				            group_by: sec_id
+				        }
+				    }
+				}
+				""");
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.WHERE_CONDITION, Diagnostic.LINKING_DIAGNOSTIC, "sec_id");
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.SORT_CLAUSE, Diagnostic.LINKING_DIAGNOSTIC, "body");
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.GROUP_BY, Diagnostic.LINKING_DIAGNOSTIC, "sec_id");
 	}
 }
