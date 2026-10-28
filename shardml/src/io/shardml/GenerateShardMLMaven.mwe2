@@ -77,8 +77,8 @@ Workflow {
 				generateXtendStub = true
 			}
 			scopeProvider = {
-				// Same reason: ShardMLScopeProvider.xtend.
-				generateXtendStub = true
+				// Java, so the fragment finds ShardMLScopeProvider.java and leaves it alone.
+				generateXtendStub = false
 			}
 			generator = {
 				generateXtendStub = true
