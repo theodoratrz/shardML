@@ -49,3 +49,19 @@ falls back to blocking writes without any error.
 - **Apple Silicon:** enable *Use Rosetta for x86_64/amd64 emulation on Apple
   Silicon* (Settings → General). Without it Docker falls back to QEMU, which is
   much slower.
+
+## Integration test
+
+```sh
+mvn install                              # builds the CLI jar
+bench/integration/test-examples.sh       # every examples/*.shardml
+bench/integration/test-examples.sh path/to/model.shardml
+```
+
+Starts the cluster if needed, then for each model generates the Citus SQL and
+applies `<db>-schema.sql` and `<db>-distribution.sql` in a fresh schema named
+after the database. It then runs `<model>.probe.sql` if one sits next to the
+model. Every statement runs on its own and is reported, and any error fails
+the run. Probe files hold the joins the application relies on: Citus refuses a
+join between distributed tables that is not on their distribution columns, so
+a probe catches colocation that is declared but does not hold.
