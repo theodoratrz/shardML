@@ -1,0 +1,41 @@
+# Citus test cluster: one coordinator and three workers.
+# Start with ./up.sh and stop with ./down.sh; see README.md.
+#
+# The image is amd64-only. On Apple Silicon it runs under emulation, so
+# timings measured here are not representative (see README.md).
+
+name: shardml-bench
+
+x-citus: &citus
+  image: citusdata/citus:14.2.0-pg17
+  platform: linux/amd64
+  environment:
+    POSTGRES_USER: postgres
+    # Local benchmark cluster only: no passwords anywhere.
+    POSTGRES_HOST_AUTH_METHOD: trust
+  healthcheck:
+    test: ["CMD-SHELL", "pg_isready -U postgres -h localhost"]
+    interval: 2s
+    timeout: 5s
+    retries: 60
+    start_period: 10s
+  # No volumes: every `up` starts from an empty cluster.
+
+services:
+  coordinator:
+    <<: *citus
+    hostname: coordinator
+    ports:
+      - "127.0.0.1:${CITUS_PORT:-5433}:5432"
+
+  worker1:
+    <<: *citus
+    hostname: worker1
+
+  worker2:
+    <<: *citus
+    hostname: worker2
+
+  worker3:
+    <<: *citus
+    hostname: worker3
