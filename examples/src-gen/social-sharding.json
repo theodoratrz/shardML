@@ -1,38 +1,37 @@
 {
     "database": "social",
-    "target": "vitess",
-    "keyspace": "social",
+    "target": "citus",
     "tables": [
         {
             "name": "users",
-            "vindex": "id",
-            "vindex_type": "hash",
-            "buckets": 32
+            "distribution_column": "id",
+            "shard_count": 32,
+            "distribution_type": "hash"
         },
         {
             "name": "posts",
-            "vindex": "user_id",
-            "vindex_type": "hash",
-            "buckets": 32
+            "distribution_column": "user_id",
+            "shard_count": 32,
+            "distribution_type": "hash"
             ,"colocate_with": "users"
         },
         {
             "name": "comments",
-            "vindex": "user_id",
-            "vindex_type": "hash",
-            "buckets": 32
+            "distribution_column": "user_id",
+            "shard_count": 32,
+            "distribution_type": "hash"
             ,"colocate_with": "posts"
         },
         {
             "name": "likes",
-            "vindex": "user_id",
-            "vindex_type": "hash",
-            "buckets": 32
+            "distribution_column": "user_id",
+            "shard_count": 32,
+            "distribution_type": "hash"
             ,"colocate_with": "users"
         },
         {
             "name": "countries",
-            "vindex_type": "reference"
+            "distribution_type": "reference"
         }
     ]
 }

@@ -1,7 +1,7 @@
 import "social.msql"
 
 database social {
-    type: mysql
+    type: postgres
 
     shard users {
         strategy: hash
