@@ -1,9 +1,7 @@
 package io.shardml.scoping;
 
-import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
-import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.xtext.EcoreUtil2;
 import org.eclipse.xtext.scoping.IScope;
 import org.eclipse.xtext.scoping.Scopes;
@@ -15,7 +13,6 @@ import io.shardml.shardML.BelongsTo;
 import io.shardml.shardML.GroupBy;
 import io.shardml.shardML.HasMany;
 import io.shardml.shardML.HasOne;
-import io.shardml.shardML.Model;
 import io.shardml.shardML.RouteRule;
 import io.shardml.shardML.ShardDecl;
 import io.shardml.shardML.SortClause;
@@ -25,20 +22,8 @@ import io.shardml.sql.Schema;
 /* resolves cross-references between ShardML and imported sql schema. */
 public class ShardMLScopeProvider extends AbstractDeclarativeScopeProvider {
 
-	// manual resolve URI, because Shardml uses a custom import rather than Xtext's built-in
 	public Schema getSchema(EObject obj) {
-		EObject root = EcoreUtil2.getRootContainer(obj);
-		if (!(root instanceof Model model))
-			return null;
-		if (model.getImports().isEmpty())
-			return null;
-		String importURI = model.getImports().get(0).getImportURI();
-		URI baseURI = obj.eResource().getURI();
-		URI uri = URI.createURI(importURI).resolve(baseURI);
-		Resource importedSource = obj.eResource().getResourceSet().getResource(uri, true);
-		if (importedSource == null)
-			return null;
-		return (Schema) importedSource.getContents().get(0);
+		return ImportedSchema.of(obj);
 	}
 
 	// return the scope containing all teblaes from the imported SQL schema

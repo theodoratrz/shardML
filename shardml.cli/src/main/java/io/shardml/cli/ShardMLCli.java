@@ -43,7 +43,8 @@ public final class ShardMLCli {
 			"  shardml generate <model.shardml> [-o <output-dir>]",
 			"",
 			"generate writes <output-dir>/<database>-sharding.json and, for postgres",
-			"targets, <output-dir>/<database>-distribution.sql. The default output",
+			"targets, <output-dir>/<database>-schema.sql (apply first) and",
+			"<output-dir>/<database>-distribution.sql. The default output",
 			"directory is src-gen/ next to the model file.");
 
 	/** Exit codes: 0 ok, 1 model error, 2 bad invocation or I/O failure. */

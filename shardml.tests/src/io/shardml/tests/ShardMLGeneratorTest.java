@@ -161,6 +161,33 @@ public class ShardMLGeneratorTest {
 		Assertions.assertTrue(sql.contains("create_reference_table"), "Replicated table should use create_reference_table");
 	}
 
+	@Test
+	public void testPostgresSchemaScript() throws IOException {
+		String sql = file(generate("""
+				import "test.msql"
+				database mybank {
+				    type: postgres
+				    shard customers {
+				        strategy: hash
+				        key: id
+				        buckets: 32
+				    }
+				}
+				"""), "mybank-schema.sql");
+		Assertions.assertEquals("""
+				CREATE TABLE customers (
+				    id BIGINT PRIMARY KEY,
+				    name VARCHAR(255) NOT NULL
+				);
+
+				CREATE TABLE orders (
+				    id BIGINT PRIMARY KEY,
+				    customer_id BIGINT NOT NULL,
+				    total DECIMAL
+				);
+				""", sql, "Schema script should create every imported table, including unsharded ones");
+	}
+
 	// --- Vitess (mysql) output ---
 
 	@Test
@@ -214,5 +241,21 @@ public class ShardMLGeneratorTest {
 				"""), "social-distribution.sql");
 		Assertions.assertNotNull(sql, "SQL file should be generated even for Vitess");
 		Assertions.assertTrue(sql.trim().isEmpty(), "Vitess SQL file should be empty (Vitess uses VSchema, not SQL DDL)");
+	}
+
+	@Test
+	public void testMysqlHasNoSchemaScript() throws IOException {
+		Map<String, CharSequence> files = generate("""
+				import "test.msql"
+				database social {
+				    type: mysql
+				    shard customers {
+				        strategy: hash
+				        key: id
+				        buckets: 32
+				    }
+				}
+				""");
+		Assertions.assertNull(file(files, "social-schema.sql"), "Schema script is Citus only");
 	}
 }

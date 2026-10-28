@@ -10,10 +10,19 @@ import io.shardml.shardML.DatabaseType;
 import io.shardml.shardML.Model;
 import io.shardml.shardML.ShardDecl;
 import io.shardml.shardML.Strategy;
+import io.shardml.scoping.ImportedSchema;
+import io.shardml.sql.Column;
+import io.shardml.sql.Constraint;
+import io.shardml.sql.NotNull;
+import io.shardml.sql.PrimaryAnnotation;
+import io.shardml.sql.Schema;
+import io.shardml.sql.Table;
+import io.shardml.sql.UniqueAnnotation;
 
-/*Produces 2 output files per model:
+/*Produces 3 output files per model:
  * 1. A platform specific json sharding config
- * 2. A SQL distribution script (only for Citus)
+ * 2. A SQL schema script with the imported tables (only for Citus)
+ * 3. A SQL distribution script (only for Citus)
  * The generator dispatches on database type to avoid vendor lock in.
  */
 public class ShardMLGenerator extends AbstractGenerator {
@@ -24,6 +33,8 @@ public class ShardMLGenerator extends AbstractGenerator {
 		Model model = (Model) resource.getContents().get(0);
 		Database database = model.getDb();
 		fsa.generateFile(database.getName() + "-sharding.json", generateJson(database));
+		if (database.getType() == DatabaseType.POSTGRES)
+			fsa.generateFile(database.getName() + "-schema.sql", schemaDefinitions(ImportedSchema.of(model)));
 		fsa.generateFile(database.getName() + "-distribution.sql", generateSQL(database));
 	}
 
@@ -103,6 +114,45 @@ public class ShardMLGenerator extends AbstractGenerator {
 		out.append("    ]\n");
 		out.append("}\n");
 		return out;
+	}
+
+	// generates CREATE TABLE statements for every table of the imported schema,
+	// so the schema and distribution scripts together deploy to an empty database.
+	public CharSequence schemaDefinitions(Schema schema) {
+		StringBuilder out = new StringBuilder();
+		if (schema == null)
+			return out;
+		for (Table table : schema.getTables()) {
+			if (out.length() > 0)
+				out.append("\n");
+			out.append("CREATE TABLE ").append(table.getName()).append(" (\n");
+			for (int i = 0; i < table.getColumns().size(); i++) {
+				Column column = table.getColumns().get(i);
+				out.append("    ").append(column.getName()).append(" ").append(columnType(column));
+				for (Constraint constraint : column.getConstraint())
+					out.append(" ").append(constraintSQL(constraint));
+				out.append(i < table.getColumns().size() - 1 ? ",\n" : "\n");
+			}
+			out.append(");\n");
+		}
+		return out;
+	}
+
+	private static String columnType(Column column) {
+		// simpleType defaults to INT when unset, so the varchar check must come first
+		if (column.getVarchar() != null)
+			return "VARCHAR(" + column.getVarchar().getSize() + ")";
+		return column.getSimpleType().getLiteral();
+	}
+
+	private static String constraintSQL(Constraint constraint) {
+		if (constraint instanceof PrimaryAnnotation)
+			return "PRIMARY KEY";
+		if (constraint instanceof UniqueAnnotation)
+			return "UNIQUE";
+		if (constraint instanceof NotNull)
+			return "NOT NULL";
+		throw new IllegalArgumentException("Unknown constraint: " + constraint.eClass().getName());
 	}
 
 	// generates SQL distribution script.

@@ -62,6 +62,7 @@ database banking {
 | File | Contents |
 |---|---|
 | `<database>-sharding.json` | Platform-specific distribution config (Citus or Vitess format) |
+| `<database>-schema.sql` | `CREATE TABLE` statements for the imported schema (Citus only; apply before the distribution script) |
 | `<database>-distribution.sql` | Citus SQL commands (`create_distributed_table`, `create_reference_table`) |
 
 ---
