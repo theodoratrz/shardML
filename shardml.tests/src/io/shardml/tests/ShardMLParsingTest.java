@@ -973,14 +973,17 @@ public class ShardMLParsingTest {
 				+ "and declare it with `transactions belongs_to <parent> via <that column>`.");
 	}
 
-	// same shard key column, but no belongs_to says it references the parent's shard key
+	// no belongs_to says accounts.customer_id references customers.id: a warning, not an error
 	@Test
 	public void testColocationRootKey_missingLink() throws Exception {
 		Model model = parseShardML(COLOCATION_MSQL, "import \"test.msql\"\ndatabase test{\n    type: postgres\n" + CUSTOMER_TREE + """
 				}
 				""");
-		validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_026",
-				"placed by different keys: accounts.customer_id and customers.id");
+		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_030",
+				"'accounts' is colocated with 'customers', but no `accounts belongs_to <parent> via customer_id` "
+				+ "ties its shard key to customers.id, so ShardML cannot check that related rows share a shard. "
+				+ "Declare the relationship if accounts.customer_id references that key.");
+		validationTestHelper.assertNoIssue(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_026");
 	}
 
 	// belongs_to through a column that is not the shard key does not tie the placement
@@ -1142,5 +1145,66 @@ public class ShardMLParsingTest {
 				""");
 		validationTestHelper.assertError(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_029",
 				"Strategy 'consistent_hash' is not supported by Citus (postgres); use 'hash'.");
+	}
+
+	private static final String VARCHAR_KEYS_MSQL = """
+			CREATE TABLE tenants (
+			    code VARCHAR(100) PRIMARY KEY
+			)
+			CREATE TABLE projects (
+			    id INT NOT NULL,
+			    tenant_code VARCHAR(50) NOT NULL,
+			    PRIMARY KEY (tenant_code, id)
+			)
+			CREATE TABLE notes (
+			    id INT NOT NULL,
+			    tenant_code TEXT NOT NULL,
+			    PRIMARY KEY (tenant_code, id)
+			)
+			""";
+
+	private static final String TENANT_TREE = """
+			import "test.msql"
+			database test{
+			    type: postgres
+			    shard tenants {
+			        strategy: hash
+			        key: code
+			        buckets: 32
+			    }
+			""";
+
+	// Citus colocates VARCHAR(50) with VARCHAR(100): the length is not part of the type it compares
+	@Test
+	public void testForeignKeyType_varcharLength() throws Exception {
+		Model model = parseShardML(VARCHAR_KEYS_MSQL, TENANT_TREE + """
+				    shard projects {
+				        strategy: hash
+				        key: tenant_code
+				        buckets: 32
+				        colocate_with: tenants
+				    }
+				    projects belongs_to tenants via tenant_code
+				}
+				""");
+		validationTestHelper.assertNoIssue(model, ShardMLPackage.Literals.BELONGS_TO, "SHML_027");
+		validationTestHelper.assertNoIssue(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_026");
+	}
+
+	// Citus rejects colocating TEXT with VARCHAR
+	@Test
+	public void testForeignKeyType_textVsVarchar() throws Exception {
+		Model model = parseShardML(VARCHAR_KEYS_MSQL, TENANT_TREE + """
+				    shard notes {
+				        strategy: hash
+				        key: tenant_code
+				        buckets: 32
+				        colocate_with: tenants
+				    }
+				    notes belongs_to tenants via tenant_code
+				}
+				""");
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.BELONGS_TO, "SHML_027",
+				"Foreign key notes.tenant_code is TEXT, but the shard key it references, tenants.code, is VARCHAR(100).");
 	}
 }

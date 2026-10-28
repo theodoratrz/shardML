@@ -63,6 +63,7 @@ public class ShardMLValidator extends AbstractShardMLValidator {
 	private static final String FOREIGN_KEY_TYPE_MISMATCH = "SHML_027";
 	private static final String COLOCATED_BUCKET_MISMATCH = "SHML_028";
 	private static final String UNSUPPORTED_STRATEGY      = "SHML_029";
+	private static final String COLOCATION_WITHOUT_LINK   = "SHML_030";
 
 	// restrict validation to shardML only
 	@Override
@@ -135,7 +136,8 @@ public class ShardMLValidator extends AbstractShardMLValidator {
 		return ((Table) column.eContainer()).getName() + "." + column.getName();
 	}
 
-	// varchar length does not matter for hashing, so VARCHAR(50) matches VARCHAR(100)
+	// Citus compares the type without its length: VARCHAR(50) colocates with VARCHAR(100),
+	// but VARCHAR with TEXT or INT with BIGINT is rejected (checked on Citus 14.2)
 	private static String typeOf(Column column) {
 		return column.getVarchar() != null ? "VARCHAR" : column.getSimpleType().getLiteral();
 	}
@@ -359,8 +361,21 @@ public class ShardMLValidator extends AbstractShardMLValidator {
 		}
 	}
 
+	// Helper: whether the table declares a belongs_to on any hash-sharded table
+	private static boolean hasShardedParent(Database db, Table table) {
+		for (Relationship rel : db.getRelationships()) {
+			if (rel instanceof BelongsTo belongsTo && belongsTo.getSubject() == table
+					&& hasKey(shardFor(db, belongsTo.getBelongs())))
+				return true;
+		}
+		return false;
+	}
+
 	// colocate_with only aligns shard boundaries; each row still lands where its own shard key
-	// hashes. Rows of two colocated tables meet only if both are placed by the same root key
+	// hashes. Rows of two colocated tables meet only if both are placed by the same root key.
+	// A table with no belongs_to at all only gets a warning: its key may well reference the
+	// other table's, the model just does not say so. A belongs_to that does not go through the
+	// shard key, or leads to another root, is a declared join on the wrong column: an error
 	@Check
 	public void checkColocationRootKey(ShardDecl shard) {
 		if (shard.getColocate() == null || !hasKey(shard))
@@ -371,8 +386,16 @@ public class ShardMLValidator extends AbstractShardMLValidator {
 			return;
 		Column root = rootKey(db, shard);
 		Column targetRoot = rootKey(db, target);
-		if (root != targetRoot) {
-			String table = shard.getEntity().getName();
+		if (root == targetRoot)
+			return;
+		String table = shard.getEntity().getName();
+		if (keyLink(db, shard) == null && !hasShardedParent(db, shard.getEntity())) {
+			warning("'" + table + "' is colocated with '" + target.getEntity().getName() + "', but no `" + table
+					+ " belongs_to <parent> via " + shard.getId().getName() + "` ties its shard key to " + qualified(targetRoot)
+					+ ", so ShardML cannot check that related rows share a shard. Declare the relationship if "
+					+ qualified(shard.getId()) + " references that key.",
+					shard, ShardMLPackage.Literals.SHARD_DECL__COLOCATE, COLOCATION_WITHOUT_LINK);
+		} else {
 			error("'" + table + "' is colocated with '" + target.getEntity().getName()
 					+ "', but their rows are placed by different keys: " + qualified(root) + " and " + qualified(targetRoot)
 					+ ". Shard '" + table + "' by a foreign key that leads to " + qualified(targetRoot)
