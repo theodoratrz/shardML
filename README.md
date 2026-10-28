@@ -10,18 +10,18 @@ Built with **Xtext** and **Xtend**.
 
 Most large-scale applications banks, social platforms, logistics systems, rely on horizontal partitioning to handle growing data volumes. Sharding decisions are typically expressed directly in platform-specific configuration files, with little support for early validation. Errors are usually caught at deployment, when they are far more costly to fix.
 
-ShardML addresses the gap between sharding intent and deployment correctness. Engineers declare their distribution strategy, query access patterns, and table relationships in a single model. The language validates the model against the imported SQL schema at edit time, directly in the IDE, and generates deployment-ready configurations for both Citus and Vitess from one source.
+ShardML addresses the gap between sharding intent and deployment correctness. Engineers declare their distribution strategy, query access patterns, and table relationships in a single model. The language validates the model against the imported SQL schema before anything is deployed, and generates deployment-ready configurations for both Citus and Vitess from one source.
 
 ---
 
 ## Features
 
 - **Declarative syntax**: describe what to shard and how, not low-level middleware configuration
-- **25 validators** covering structural correctness, colocation consistency, performance anti-patterns, and query pattern analysis
+- **23 validators** covering structural correctness, colocation consistency, performance anti-patterns, and query pattern analysis
 - **Policy-aware query analysis**: route rules support `allow`, `warn`, `deny` to control strictness per table
 - **Multi-platform code generation**: produces Citus JSON + SQL and Vitess VSchema JSON from a single model
 - **Cross-schema import**: reference an existing `.msql` SQL schema file; all table and column references are resolved and validated against it
-- **Eclipse IDE integration**: errors and warnings appear inline as you type
+- **Command-line tool**: `shardml validate` and `shardml generate`, with `file:line` diagnostics and a non-zero exit code on model errors
 
 ---
 
@@ -78,27 +78,28 @@ database banking {
 ## Project Structure
 
 ```
-uk.ac.kcl.inf.mdd1.ShardML/           # Core language plugin
-  src/
-    uk/ac/kcl/inf/mdd1/
-      SQL.xtext                        # Lightweight DDL parser (.msql schema files)
-      ShardML.xtext                    # ShardML language grammar (.shardml)
-      scoping/
-        ShardMLScopeProvider.xtend     # Cross-resource reference resolution
-      validation/
-        ShardMLValidator.xtend         # 25 validation rules
-      generator/
-        ShardMLGenerator.xtend         # Citus/Vitess output generation
+shardml/                               # Language runtime
+  src/io/shardml/
+    SQL.xtext                          # Lightweight DDL parser (.msql schema files)
+    ShardML.xtext                      # ShardML language grammar (.shardml)
+    GenerateSQLMaven.mwe2              # Xtext generation, step 1 (SQL)
+    GenerateShardMLMaven.mwe2          # Xtext generation, step 2 (ShardML)
+    scoping/
+      ShardMLScopeProvider.xtend       # Cross-resource reference resolution
+    validation/
+      ShardMLValidator.xtend           # 23 validation rules
+    generator/
+      ShardMLGenerator.xtend           # Citus/Vitess output generation
   src-gen/                             # Xtext-generated parser infrastructure
+  model/generated/                     # Generated Ecore metamodels
 
-uk.ac.kcl.inf.mdd1.ShardML.ide/       # IDE content-assist support
-uk.ac.kcl.inf.mdd1.ShardML.ui/        # Eclipse editor integration
-uk.ac.kcl.inf.mdd1.ShardML.tests/     # JUnit test suite (32 tests)
-uk.ac.kcl.inf.mdd1.ShardML.ui.tests/  # UI-level tests
+shardml.tests/                         # JUnit 5 test suite (40 tests)
+shardml.cli/                           # Command-line front end
 
-TestShard/                             # Example project
+examples/
   banking.msql / banking.shardml       # PostgreSQL/Citus scenario
   social.msql  / social.shardml        # MySQL/Vitess scenario
+  src-gen/                             # Generated output for both
 ```
 
 ---
@@ -109,7 +110,7 @@ TestShard/                             # Example project
 
 ShardML uses a custom `ImportURI`-style import rather than Xtext's built-in global scope mechanism. When a `.shardml` file declares `import "schema.msql"`, the `ShardMLScopeProvider` manually resolves the URI relative to the importing resource, loads the target resource from the `ResourceSet`, and builds scopes from the resulting EMF model objects.
 
-This was necessary because Xtext's default `ImportedNamespaceAwareLocalScopeProvider` resolves names by qualified ID, it cannot navigate a cross-metamodel reference to `sql::Table` objects defined in a separate grammar. The custom provider instead builds `IScope` instances directly from the imported `Schema`'s `Table` and `Column` lists, which makes cross-grammar references transparent to the validator and IDE.
+This was necessary because Xtext's default `ImportedNamespaceAwareLocalScopeProvider` resolves names by qualified ID, it cannot navigate a cross-metamodel reference to `sql::Table` objects defined in a separate grammar. The custom provider instead builds `IScope` instances directly from the imported `Schema`'s `Table` and `Column` lists, which makes cross-grammar references transparent to the validator and generator.
 
 A notable detail: shard key references (`key: column_name`) are scoped to the *specific table* declared in that `ShardDecl`, not the full column namespace. This prevents false name collisions when multiple tables share a column name (e.g. `id`), a common case that Xtext's flat scoping would have gotten wrong.
 
@@ -125,30 +126,47 @@ The trade-off is maintainability: query patterns must be kept in sync with appli
 
 ---
 
+## Building
+
+Requires Java 21 and Maven. The build regenerates the parsers from the grammars, compiles everything and runs the tests:
+
+```sh
+mvn clean install
+```
+
+On macOS, if `java` on your `PATH` is not 21, set `JAVA_HOME=$(/usr/libexec/java_home -v 21)` first.
+
+---
+
 ## Running the Examples
 
-1. Clone the repository and import all projects into Eclipse (File → Import → Existing Projects into Workspace)
-2. Right-click `uk.ac.kcl.inf.mdd1.ShardML` → **Run As** → **Eclipse Application**
-3. In the runtime Eclipse, import `TestShard` as an existing project
-4. Open `banking.shardml` or `social.shardml` — validators run automatically as you type
-5. Save (Ctrl+S) to trigger code generation; output files appear in `TestShard/src-gen/`
+`mvn install` produces a self-contained jar at `shardml.cli/target/shardml.cli-<version>-cli.jar`:
+
+```sh
+java -jar shardml.cli/target/*-cli.jar validate examples/banking.shardml
+java -jar shardml.cli/target/*-cli.jar generate examples/banking.shardml [-o <dir>]
+```
+
+`validate` prints diagnostics as `file:line: severity: message [SHML_0xx]` and exits 1 if the model has errors. `generate` validates first, then writes the output files to `src-gen/` next to the model (or to `-o`).
 
 ---
 
 ## Running the Tests
 
-Right-click `uk.ac.kcl.inf.mdd1.ShardML.tests` → **Run As** → **JUnit Test**
+```sh
+mvn test                                                   # all 40 tests
+mvn -pl shardml.tests test -Dtest=ShardMLParsingTest       # one class
+```
 
-32 tests covering all major validators, including multi-resource scenarios requiring a full `ResourceSet`.
+The tests cover all major validators and the generator, including multi-resource scenarios that load the `.msql` schema and the `.shardml` model into one `ResourceSet`.
 
 ---
 
 ## Development Environment
 
-- Eclipse DSL Edition 4.39.0 (2026-03)
-- Java 21 (Eclipse Adoptium)
+- Java 21
+- Maven
 - Xtext / Xtend 2.42.0
-- macOS aarch64
 
 ---
 
