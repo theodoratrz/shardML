@@ -1,0 +1,197 @@
+[
+  {
+    "op": "move",
+    "sql": "SELECT citus_move_shard_placement(102008, 'worker1', 5432, 'worker2', 5432, shard_transfer_mode => 'auto')",
+    "op_error": "",
+    "duration_s": 3.362818375004281,
+    "focus_group": "affected",
+    "baseline_p50_ms": 1.5919999999987056,
+    "baseline_p99_ms": 7.911000000000001,
+    "max_latency_s": 0.5904679999999978,
+    "longest_gap_s": 0.5904779999999974,
+    "longest_gap_at_s": [
+      2.9310496670015773,
+      3.5215276670015747
+    ],
+    "errors_during": 0,
+    "errors_after": 0,
+    "error_messages": [],
+    "threshold_s": 1.0,
+    "verdict": "online",
+    "shards_after": 32,
+    "distribution_column_after": "k",
+    "versions": {
+      "citus": "Citus 14.2.0 on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit",
+      "postgres": "17.10 (Debian 17.10-1.pgdg13+1)"
+    },
+    "shardid": 102008,
+    "hash_range": [
+      -2147483648,
+      -2013265921
+    ],
+    "affected_keys": 3066,
+    "from": "worker1",
+    "to": "worker2",
+    "unaffected": {
+      "baseline_writes_per_s": 1385.8421995489964,
+      "during_writes_per_s": 1218.0259363531002,
+      "during_pct_of_baseline": 87.89066581674956,
+      "min_bin_pct_of_baseline": 44.882454885730965,
+      "baseline_min_bin_pct": 50.51080131834674,
+      "baseline_p5_bin_pct": 54.69598199900976,
+      "max_latency_s": 0.02532199999999918,
+      "longest_gap_s": 0.013963000000000392
+    }
+  },
+  {
+    "op": "split",
+    "sql": "SELECT citus_split_shard_by_split_points(102008, ARRAY['-2080374785'], ARRAY[2::int, 3::int], shard_transfer_mode => 'auto')",
+    "op_error": "timed out after 300s and was cancelled: canceling statement due to statement timeout",
+    "duration_s": 300.0345494170033,
+    "focus_group": "affected",
+    "baseline_p50_ms": 1.4959999999994977,
+    "baseline_p99_ms": 6.832999999999867,
+    "max_latency_s": 0.4968330000000094,
+    "longest_gap_s": 0.49684500000000753,
+    "longest_gap_at_s": [
+      117.12137408300089,
+      117.6182190830009
+    ],
+    "errors_during": 0,
+    "errors_after": 0,
+    "error_messages": [],
+    "threshold_s": 1.0,
+    "verdict": "did not complete",
+    "shards_after": 32,
+    "distribution_column_after": "k",
+    "versions": {
+      "citus": "Citus 14.2.0 on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit",
+      "postgres": "17.10 (Debian 17.10-1.pgdg13+1)"
+    },
+    "shardid": 102008,
+    "hash_range": [
+      -2147483648,
+      -2013265921
+    ],
+    "affected_keys": 3066,
+    "split_point": -2080374785,
+    "halves_on": [
+      "worker1",
+      "worker2"
+    ],
+    "diagnostics": [
+      "split-60s.txt",
+      "split-240s.txt"
+    ],
+    "unaffected": {
+      "baseline_writes_per_s": 1520.9082969539347,
+      "during_writes_per_s": 1450.9029071680966,
+      "during_pct_of_baseline": 95.39713275770508,
+      "min_bin_pct_of_baseline": 1.446504042621206,
+      "baseline_min_bin_pct": 47.60313303898877,
+      "baseline_p5_bin_pct": 62.59417493524491,
+      "max_latency_s": 0.5208700000000022,
+      "longest_gap_s": 0.48619099999999094
+    }
+  },
+  {
+    "op": "split_remote",
+    "sql": "SELECT citus_split_shard_by_split_points(102008, ARRAY['-2080374785'], ARRAY[3::int, 4::int], shard_transfer_mode => 'auto')",
+    "op_error": "",
+    "duration_s": 5.946026083998731,
+    "focus_group": "affected",
+    "baseline_p50_ms": 1.6890000000007177,
+    "baseline_p99_ms": 9.551999999999339,
+    "max_latency_s": 1.3732429999999987,
+    "longest_gap_s": 1.3732480000000002,
+    "longest_gap_at_s": [
+      4.7638424590018715,
+      6.137090459001872
+    ],
+    "errors_during": 0,
+    "errors_after": 0,
+    "error_messages": [],
+    "threshold_s": 1.0,
+    "verdict": "blocks writes",
+    "shards_after": 33,
+    "distribution_column_after": "k",
+    "versions": {
+      "citus": "Citus 14.2.0 on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit",
+      "postgres": "17.10 (Debian 17.10-1.pgdg13+1)"
+    },
+    "shardid": 102008,
+    "hash_range": [
+      -2147483648,
+      -2013265921
+    ],
+    "affected_keys": 3066,
+    "split_point": -2080374785,
+    "halves_on": [
+      "worker2",
+      "worker3"
+    ],
+    "diagnostics": [],
+    "unaffected": {
+      "baseline_writes_per_s": 1191.3725556366278,
+      "during_writes_per_s": 935.2464858782121,
+      "during_pct_of_baseline": 78.50159729241447,
+      "min_bin_pct_of_baseline": 35.75707682575922,
+      "baseline_min_bin_pct": 0.8393680006046765,
+      "baseline_p5_bin_pct": 36.59644482636389,
+      "max_latency_s": 0.036940000000001305,
+      "longest_gap_s": 0.019868999999999915
+    }
+  },
+  {
+    "op": "shard_count",
+    "sql": "SELECT alter_distributed_table('t', shard_count := 64)",
+    "op_error": "",
+    "duration_s": 4.469648083002539,
+    "focus_group": "all",
+    "baseline_p50_ms": 1.8779999999978259,
+    "baseline_p99_ms": 9.403000000000716,
+    "max_latency_s": 4.515376,
+    "longest_gap_s": 4.480411,
+    "longest_gap_at_s": [
+      0.021524165999103673,
+      4.501935165999104
+    ],
+    "errors_during": 0,
+    "errors_after": 0,
+    "error_messages": [],
+    "threshold_s": 1.0,
+    "verdict": "blocks writes",
+    "shards_after": 64,
+    "distribution_column_after": "k",
+    "versions": {
+      "citus": "Citus 14.2.0 on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit",
+      "postgres": "17.10 (Debian 17.10-1.pgdg13+1)"
+    }
+  },
+  {
+    "op": "dist_column",
+    "sql": "SELECT alter_distributed_table('t', distribution_column := 'id')",
+    "op_error": "",
+    "duration_s": 3.0476698339989525,
+    "focus_group": "all",
+    "baseline_p50_ms": 1.7630000000004031,
+    "baseline_p99_ms": 10.056000000000509,
+    "max_latency_s": 3.080832000000001,
+    "longest_gap_s": 3.0647209999999987,
+    "longest_gap_at_s": [
+      0.019995583999765643,
+      3.0847165839997643
+    ],
+    "errors_during": 0,
+    "errors_after": 0,
+    "error_messages": [],
+    "threshold_s": 1.0,
+    "verdict": "blocks writes",
+    "shards_after": 32,
+    "distribution_column_after": "id",
+    "versions": {
+      "citus": "Citus 14.2.0 on x86_64-pc-linux-gnu, compiled by gcc (Debian 14.2.0-19) 14.2.0, 64-bit",
+      "postgres": "17.10 (Debian 17.10-1.pgdg13+1)"
+    }
+  }
+]

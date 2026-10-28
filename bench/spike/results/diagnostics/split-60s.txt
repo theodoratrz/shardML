@@ -1,0 +1,453 @@
+# split: diagnostics at 60s into the operation
+
+## coordinator: pg_stat_activity
+ pid |          backend_type          | state  | wait_event_type | wait_event |     xact_age     |    query_age     |                                                                         query                                                                          
+-----+--------------------------------+--------+-----------------+------------+------------------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------
+ 165 | client backend                 | active | Extension       | Extension  | 00:01:00.466714  | 00:01:00.463767  | SELECT citus_split_shard_by_split_points($1, ARRAY[$2], ARRAY[$3::int, $4::int], shard_transfer_mode => 'auto')
+ 185 | client backend                 | active | Client          | ClientRead | -00:00:00.080577 | -00:00:00.080679 | INSERT INTO t (id, k, v) VALUES ($1, $2, 'new')
+ 184 | client backend                 | active |                 |            | -00:00:00.080973 | -00:00:00.081132 | INSERT INTO t (id, k, v) VALUES ($1, $2, 'new')
+ 187 | client backend                 | active | Client          | ClientRead | -00:00:00.081022 | -00:00:00.081217 | INSERT INTO t (id, k, v) VALUES ($1, $2, 'new')
+ 186 | client backend                 | active | Client          | ClientRead | -00:00:00.081272 | -00:00:00.081388 | UPDATE t SET v = $1 WHERE id = $2 AND k = $3
+  85 | Citus Maintenance Daemon: 5/10 |        | Extension       | Extension  |                  |                  | 
+ 142 | client backend                 | idle   | Client          | ClientRead |                  | 00:00:01.149275  | SELECT waiting_pid, waiting_node_id, waiting_transaction_num, waiting_transaction_stamp, blocking_pid, blocking_node_id, blocking_transaction_num, blo
+ 151 | client backend                 | idle   | Client          | ClientRead |                  | 00:00:00.035084  | SELECT waiting_pid, waiting_node_id, waiting_transaction_num, waiting_transaction_stamp, blocking_pid, blocking_node_id, blocking_transaction_num, blo
+ 166 | client backend                 | idle   | Client          | ClientRead |                  | 00:00:01.135579  | SELECT waiting_pid, waiting_node_id, waiting_transaction_num, waiting_transaction_stamp, blocking_pid, blocking_node_id, blocking_transaction_num, blo
+ 251 | client backend                 | idle   | Client          | ClientRead |                  | 00:00:59.019737  | COMMIT
+ 340 | client backend                 | idle   | Client          | ClientRead |                  | 00:00:31.761524  | SELECT gid FROM pg_prepared_xacts WHERE gid COLLATE pg_catalog.default LIKE 'citus\_0\_%' COLLATE pg_catalog.default AND database = current_database()
+(11 rows)
+
+
+## coordinator: blocked backends
+ pid | blocked_by | wait_event_type | wait_event | query 
+-----+------------+-----------------+------------+-------
+(0 rows)
+
+
+## coordinator: pg_locks (ungranted, advisory, and on t / its shards)
+ pid |  backend_type  | locktype | relation |           mode           | granted | objid | blocked_by 
+-----+----------------+----------+----------+--------------------------+---------+-------+------------
+ 165 | client backend | relation | t        | ShareUpdateExclusiveLock | t       |       | {}
+ 165 | client backend | advisory |          | ExclusiveLock            | t       |     1 | {}
+ 165 | client backend | advisory |          | ExclusiveLock            | t       |     1 | {}
+ 165 | client backend | advisory |          | ExclusiveLock            | t       |     1 | {}
+ 165 | client backend | relation | t        | AccessShareLock          | t       |       | {}
+ 184 | client backend | advisory |          | ShareLock                | t       |     1 | {}
+ 184 | client backend | relation | t        | AccessShareLock          | t       |       | {}
+ 184 | client backend | relation | t        | RowExclusiveLock         | t       |       | {}
+ 185 | client backend | advisory |          | ShareLock                | t       |     1 | {}
+ 185 | client backend | relation | t        | AccessShareLock          | t       |       | {}
+ 185 | client backend | relation | t        | RowExclusiveLock         | t       |       | {}
+(11 rows)
+
+
+## coordinator: citus_lock_waits
+ waiting_gpid | blocking_gpid | blocked_statement | current_statement_in_blocking_process | waiting_nodeid | blocking_nodeid 
+--------------+---------------+-------------------+---------------------------------------+----------------+-----------------
+(0 rows)
+
+
+## worker1: pg_stat_activity
+ pid |          backend_type          |        state        | wait_event_type |     wait_event      |     xact_age     |    query_age     |                                                                         query                                                                          
+-----+--------------------------------+---------------------+-----------------+---------------------+------------------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------
+ 130 | client backend                 | active              | Client          | ClientRead          | -00:00:00.07471  | -00:00:00.075073 | UPDATE public.t_102014 t SET v = 'e68b86f224d86f47'::text WHERE ((id OPERATOR(pg_catalog.=) 652041) AND (k OPERATOR(pg_catalog.=) 52023))
+ 131 | client backend                 | active              | Client          | ClientRead          | -00:00:00.07591  | -00:00:00.076237 | UPDATE public.t_102035 t SET v = '369ecdc9ecff496c'::text WHERE ((id OPERATOR(pg_catalog.=) 113007) AND (k OPERATOR(pg_catalog.=) '13004'::smallint))
+ 132 | client backend                 | active              | Client          | ClientRead          | -00:00:00.07615  | -00:00:00.076338 | UPDATE public.t_102023 t SET v = 'c7cf74f270d5fb03'::text WHERE ((id OPERATOR(pg_catalog.=) 376738) AND (k OPERATOR(pg_catalog.=) 76729))
+ 129 | client backend                 | active              | Client          | ClientRead          | -00:00:00.076542 | -00:00:00.076634 | UPDATE public.t_102008 t SET v = '8aac00a8d8272dd4'::text WHERE ((id OPERATOR(pg_catalog.=) 89117) AND (k OPERATOR(pg_catalog.=) 89117))
+  80 | Citus Maintenance Daemon: 5/10 |                     | Extension       | Extension           |                  |                  | 
+  90 | client backend                 | idle                | Client          | ClientRead          |                  | 00:00:01.061587  | SELECT waiting_pid, waiting_node_id, waiting_transaction_num, waiting_transaction_stamp, blocking_pid, blocking_node_id, blocking_transaction_num, blo
+  92 | client backend                 | idle                | Client          | ClientRead          |                  | 00:00:01.569593  | SELECT waiting_pid, waiting_node_id, waiting_transaction_num, waiting_transaction_stamp, blocking_pid, blocking_node_id, blocking_transaction_num, blo
+ 100 | client backend                 | idle                | Client          | ClientRead          |                  | 00:00:00.459984  | SELECT waiting_pid, waiting_node_id, waiting_transaction_num, waiting_transaction_stamp, blocking_pid, blocking_node_id, blocking_transaction_num, blo
+ 196 | client backend                 | idle                | Client          | ClientRead          |                  | 00:01:01.950699  | SELECT pg_current_wal_lsn()
+ 198 | walsender                      | idle in transaction | Client          | ClientRead          |                  | 00:01:03.096508  | CREATE_REPLICATION_SLOT citus_shard_split_slot_2_10_1 LOGICAL citus EXPORT_SNAPSHOT;
+ 200 | client backend                 | idle                | Client          | ClientRead          |                  | 00:00:00.444834  | SELECT min(latest_end_lsn) FROM pg_stat_subscription WHERE subname IN ('citus_shard_split_subscription_10_1')
+ 204 | client backend                 | idle                | Client          | ClientRead          |                  | 00:01:01.958773  | COMMIT;
+ 207 | walsender                      | active              | Client          | WalSenderWaitForWal |                  | 00:01:01.73865   | START_REPLICATION SLOT "citus_shard_split_slot_3_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication
+ 306 | client backend                 | idle                | Client          | ClientRead          |                  | 00:00:34.961481  | SELECT gid FROM pg_prepared_xacts WHERE gid COLLATE pg_catalog.default LIKE 'citus\_1\_%' COLLATE pg_catalog.default AND database = current_database()
+(14 rows)
+
+
+## worker1: blocked backends
+ pid | blocked_by | wait_event_type | wait_event | query 
+-----+------------+-----------------+------------+-------
+(0 rows)
+
+
+## worker1: pg_locks (ungranted, advisory, and on t / its shards)
+ pid | backend_type | locktype | relation | mode | granted | objid | blocked_by 
+-----+--------------+----------+----------+------+---------+-------+------------
+(0 rows)
+
+
+## worker1: pg_replication_slots
+           slot_name           | plugin | active | active_pid | restart_lsn | confirmed_flush_lsn |    lag    
+-------------------------------+--------+--------+------------+-------------+---------------------+-----------
+ citus_shard_split_slot_2_10_1 | citus  | f      |            | 0/4AA4DA8   | 0/4AA50D0           | 17 MB
+ citus_shard_split_slot_3_10_1 | citus  | t      |        207 | 0/5A5D7D0   | 0/5C1FA80           | 920 bytes
+(2 rows)
+
+
+## worker1: pg_stat_replication
+ pid |          application_name           |   state   | sent_lsn  | write_lsn | flush_lsn | replay_lsn |   write_lag    |   flush_lag    |   replay_lag   
+-----+-------------------------------------+-----------+-----------+-----------+-----------+------------+----------------+----------------+----------------
+ 198 | citus_internal gpid=10000000165     | startup   |           |           |           |            |                |                | 
+ 207 | citus_shard_split_subscription_10_1 | streaming | 0/5C36848 | 0/5C361E0 | 0/5C360C0 | 0/5C361E0  | 00:00:00.00032 | 00:00:00.00032 | 00:00:00.00032
+(2 rows)
+
+
+## worker1: pg_subscription
+               subname               | subenabled |                                          subconninfo                                           
+-------------------------------------+------------+------------------------------------------------------------------------------------------------
+ citus_shard_split_subscription_10_1 | t          | host='worker1' port=5432 user='postgres' dbname='postgres' connect_timeout=20 sslmode=require 
+(1 row)
+
+
+## worker1: pg_stat_subscription
+               subname               | pid | received_lsn | latest_end_lsn |     last_msg_receipt_time     
+-------------------------------------+-----+--------------+----------------+-------------------------------
+ citus_shard_split_subscription_10_1 | 480 |              |                | 2026-10-28 17:24:01.773144+00
+(1 row)
+
+
+## worker1: pg_stat_subscription_stats
+ subid |               subname               | apply_error_count | sync_error_count | stats_reset 
+-------+-------------------------------------+-------------------+------------------+-------------
+ 17453 | citus_shard_split_subscription_10_1 |                14 |                0 | 
+(1 row)
+
+
+## worker1: pg_subscription_rel
+ srsubid | relation | srsubstate | srsublsn 
+---------+----------+------------+----------
+   17453 | t_102040 | r          | 
+   17453 | t_102008 | r          | 
+(2 rows)
+
+
+## worker2: pg_stat_activity
+ pid |           backend_type           | state | wait_event_type |    wait_event    | xact_age |    query_age     |                                                                         query                                                                          
+-----+----------------------------------+-------+-----------------+------------------+----------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------
+  78 | Citus Maintenance Daemon: 5/10   |       | Extension       | Extension        |          |                  | 
+  87 | client backend                   | idle  | Client          | ClientRead       |          | 00:00:01.744675  | SELECT waiting_pid, waiting_node_id, waiting_transaction_num, waiting_transaction_stamp, blocking_pid, blocking_node_id, blocking_transaction_num, blo
+  89 | client backend                   | idle  | Client          | ClientRead       |          | 00:00:01.126758  | SELECT waiting_pid, waiting_node_id, waiting_transaction_num, waiting_transaction_stamp, blocking_pid, blocking_node_id, blocking_transaction_num, blo
+  98 | client backend                   | idle  | Client          | ClientRead       |          | 00:00:01.159709  | SELECT waiting_pid, waiting_node_id, waiting_transaction_num, waiting_transaction_stamp, blocking_pid, blocking_node_id, blocking_transaction_num, blo
+ 101 | client backend                   | idle  | Client          | ClientRead       |          | 00:01:08.231879  | COMMIT
+ 129 | client backend                   | idle  | Client          | ClientRead       |          | -00:00:00.078308 | UPDATE public.t_102015 t SET v = '1038d1ed8453920e'::text WHERE ((id OPERATOR(pg_catalog.=) 337934) AND (k OPERATOR(pg_catalog.=) 37925))
+ 130 | client backend                   | idle  | Client          | ClientRead       |          | -00:00:00.078411 | UPDATE public.t_102039 t SET v = 'b10f0bbb3c8eb143'::text WHERE ((id OPERATOR(pg_catalog.=) 988425) AND (k OPERATOR(pg_catalog.=) 88398))
+ 131 | client backend                   | idle  | Client          | ClientRead       |          | -00:00:00.070399 | UPDATE public.t_102009 t SET v = 'f557641ad66e3ecf'::text WHERE ((id OPERATOR(pg_catalog.=) 122363) AND (k OPERATOR(pg_catalog.=) '22360'::smallint))
+ 196 | client backend                   | idle  | Client          | ClientRead       |          | 00:01:06.661383  | ALTER SUBSCRIPTION citus_shard_split_subscription_10_1 ENABLE
+ 199 | logical replication apply worker | idle  | Activity        | LogicalApplyMain |          |                  | 
+ 287 | client backend                   | idle  | Client          | ClientRead       |          | 00:00:38.521175  | SELECT gid FROM pg_prepared_xacts WHERE gid COLLATE pg_catalog.default LIKE 'citus\_2\_%' COLLATE pg_catalog.default AND database = current_database()
+(11 rows)
+
+
+## worker2: blocked backends
+ pid | blocked_by | wait_event_type | wait_event | query 
+-----+------------+-----------------+------------+-------
+(0 rows)
+
+
+## worker2: pg_locks (ungranted, advisory, and on t / its shards)
+ pid |  backend_type  | locktype | relation |       mode       | granted | objid | blocked_by 
+-----+----------------+----------+----------+------------------+---------+-------+------------
+ 129 | client backend | relation | t_102024 | AccessShareLock  | t       |       | {}
+ 129 | client backend | relation | t_102024 | RowExclusiveLock | t       |       | {}
+(2 rows)
+
+
+## worker2: pg_replication_slots
+ slot_name | plugin | active | active_pid | restart_lsn | confirmed_flush_lsn | lag 
+-----------+--------+--------+------------+-------------+---------------------+-----
+(0 rows)
+
+
+## worker2: pg_stat_replication
+ pid | application_name | state | sent_lsn | write_lsn | flush_lsn | replay_lsn | write_lag | flush_lag | replay_lag 
+-----+------------------+-------+----------+-----------+-----------+------------+-----------+-----------+------------
+(0 rows)
+
+
+## worker2: pg_subscription
+               subname               | subenabled |                                          subconninfo                                           
+-------------------------------------+------------+------------------------------------------------------------------------------------------------
+ citus_shard_split_subscription_10_1 | t          | host='worker1' port=5432 user='postgres' dbname='postgres' connect_timeout=20 sslmode=require 
+(1 row)
+
+
+## worker2: pg_stat_subscription
+               subname               | pid | received_lsn | latest_end_lsn |     last_msg_receipt_time     
+-------------------------------------+-----+--------------+----------------+-------------------------------
+ citus_shard_split_subscription_10_1 | 199 | 0/5D5F288    | 0/5D5F288      | 2026-10-28 17:24:06.436828+00
+(1 row)
+
+
+## worker2: pg_stat_subscription_stats
+ subid |               subname               | apply_error_count | sync_error_count | stats_reset 
+-------+-------------------------------------+-------------------+------------------+-------------
+ 17447 | citus_shard_split_subscription_10_1 |                 0 |                0 | 
+(1 row)
+
+
+## worker2: pg_subscription_rel
+ srsubid | relation | srsubstate | srsublsn 
+---------+----------+------------+----------
+   17447 | t_102041 | r          | 
+   17447 | t_102008 | r          | 
+(2 rows)
+
+
+## worker3: pg_stat_activity
+ pid |          backend_type          | state | wait_event_type | wait_event | xact_age |    query_age     |                                                                         query                                                                          
+-----+--------------------------------+-------+-----------------+------------+----------+------------------+--------------------------------------------------------------------------------------------------------------------------------------------------------
+  89 | Citus Maintenance Daemon: 5/10 |       | Extension       | Extension  |          |                  | 
+  90 | client backend                 | idle  | Client          | ClientRead |          | 00:00:01.802276  | SELECT waiting_pid, waiting_node_id, waiting_transaction_num, waiting_transaction_stamp, blocking_pid, blocking_node_id, blocking_transaction_num, blo
+  91 | client backend                 | idle  | Client          | ClientRead |          | 00:00:00.930707  | SELECT waiting_pid, waiting_node_id, waiting_transaction_num, waiting_transaction_stamp, blocking_pid, blocking_node_id, blocking_transaction_num, blo
+  99 | client backend                 | idle  | Client          | ClientRead |          | 00:00:00.405863  | SELECT waiting_pid, waiting_node_id, waiting_transaction_num, waiting_transaction_stamp, blocking_pid, blocking_node_id, blocking_transaction_num, blo
+ 102 | client backend                 | idle  | Client          | ClientRead |          | 00:01:33.728418  | COMMIT PREPARED 'citus_0_165_5_2'
+ 127 | client backend                 | idle  | Client          | ClientRead |          | -00:00:00.064867 | UPDATE public.t_102034 t SET v = 'fb01b3cf53687403'::text WHERE ((id OPERATOR(pg_catalog.=) 746985) AND (k OPERATOR(pg_catalog.=) 46964))
+ 128 | client backend                 | idle  |                 |            |          | -00:00:00.058832 | INSERT INTO public.t_102034 (id, k, v) VALUES ('30103011288330'::bigint, '25084'::bigint, 'new'::text)
+ 134 | client backend                 | idle  | Client          | ClientRead |          | -00:00:00.059209 | UPDATE public.t_102019 t SET v = 'e4ecabab7fa1a11d'::text WHERE ((id OPERATOR(pg_catalog.=) 261015) AND (k OPERATOR(pg_catalog.=) 61009))
+ 286 | client backend                 | idle  | Client          | ClientRead |          | 00:00:42.297396  | SELECT gid FROM pg_prepared_xacts WHERE gid COLLATE pg_catalog.default LIKE 'citus\_3\_%' COLLATE pg_catalog.default AND database = current_database()
+(9 rows)
+
+
+## worker3: blocked backends
+ pid | blocked_by | wait_event_type | wait_event | query 
+-----+------------+-----------------+------------+-------
+(0 rows)
+
+
+## worker3: pg_locks (ungranted, advisory, and on t / its shards)
+ pid |  backend_type  | locktype | relation |       mode       | granted | objid | blocked_by 
+-----+----------------+----------+----------+------------------+---------+-------+------------
+ 127 | client backend | relation | t_102016 | RowExclusiveLock | t       |       | {}
+(1 row)
+
+
+## worker3: pg_replication_slots
+ slot_name | plugin | active | active_pid | restart_lsn | confirmed_flush_lsn | lag 
+-----------+--------+--------+------------+-------------+---------------------+-----
+(0 rows)
+
+
+## worker3: pg_stat_replication
+ pid | application_name | state | sent_lsn | write_lsn | flush_lsn | replay_lsn | write_lag | flush_lag | replay_lag 
+-----+------------------+-------+----------+-----------+-----------+------------+-----------+-----------+------------
+(0 rows)
+
+
+## worker3: pg_subscription
+ subname | subenabled | subconninfo 
+---------+------------+-------------
+(0 rows)
+
+
+## worker3: pg_stat_subscription
+ subname | pid | received_lsn | latest_end_lsn | last_msg_receipt_time 
+---------+-----+--------------+----------------+-----------------------
+(0 rows)
+
+
+## worker3: pg_stat_subscription_stats
+ subid | subname | apply_error_count | sync_error_count | stats_reset 
+-------+---------+-------------------+------------------+-------------
+(0 rows)
+
+
+## worker3: pg_subscription_rel
+ srsubid | relation | srsubstate | srsublsn 
+---------+----------+------------+----------
+(0 rows)
+
+
+## coordinator: container log since the operation started
+coordinator-1  | 2026-10-28T17:22:54.876148255Z 2026-10-28 17:22:54.875 UTC [165] LOG:  performing non-blocking citus_split_shard_by_split_points 
+coordinator-1  | 2026-10-28T17:22:54.876253213Z 2026-10-28 17:22:54.875 UTC [165] STATEMENT:  SELECT citus_split_shard_by_split_points($1, ARRAY[$2], ARRAY[$3::int, $4::int], shard_transfer_mode => 'auto')
+coordinator-1  | 2026-10-28T17:22:55.063349796Z 2026-10-28 17:22:55.062 UTC [165] LOG:  creating child shards for citus_split_shard_by_split_points
+coordinator-1  | 2026-10-28T17:22:55.063650130Z 2026-10-28 17:22:55.062 UTC [165] STATEMENT:  SELECT citus_split_shard_by_split_points($1, ARRAY[$2], ARRAY[$3::int, $4::int], shard_transfer_mode => 'auto')
+coordinator-1  | 2026-10-28T17:22:55.409679088Z 2026-10-28 17:22:55.409 UTC [165] LOG:  creating replication artifacts (publications, replication slots, subscriptions for citus_split_shard_by_split_points
+coordinator-1  | 2026-10-28T17:22:55.409706922Z 2026-10-28 17:22:55.409 UTC [165] STATEMENT:  SELECT citus_split_shard_by_split_points($1, ARRAY[$2], ARRAY[$3::int, $4::int], shard_transfer_mode => 'auto')
+coordinator-1  | 2026-10-28T17:22:56.363367630Z 2026-10-28 17:22:56.363 UTC [165] LOG:  performing copy for citus_split_shard_by_split_points
+coordinator-1  | 2026-10-28T17:22:56.363393922Z 2026-10-28 17:22:56.363 UTC [165] STATEMENT:  SELECT citus_split_shard_by_split_points($1, ARRAY[$2], ARRAY[$3::int, $4::int], shard_transfer_mode => 'auto')
+coordinator-1  | 2026-10-28T17:22:56.727173047Z 2026-10-28 17:22:56.727 UTC [165] LOG:  replicating changes for citus_split_shard_by_split_points
+coordinator-1  | 2026-10-28T17:22:56.727184881Z 2026-10-28 17:22:56.727 UTC [165] STATEMENT:  SELECT citus_split_shard_by_split_points($1, ARRAY[$2], ARRAY[$3::int, $4::int], shard_transfer_mode => 'auto')
+
+## worker1: container log since the operation started
+worker1-1  | 2026-10-28T17:22:55.606485213Z 2026-10-28 17:22:55.605 UTC [198] LOG:  logical decoding found consistent point at 0/4AA4DA8
+worker1-1  | 2026-10-28T17:22:55.606510088Z 2026-10-28 17:22:55.605 UTC [198] DETAIL:  There are no running transactions.
+worker1-1  | 2026-10-28T17:22:55.606519963Z 2026-10-28 17:22:55.605 UTC [198] STATEMENT:  CREATE_REPLICATION_SLOT citus_shard_split_slot_2_10_1 LOGICAL citus EXPORT_SNAPSHOT;
+worker1-1  | 2026-10-28T17:22:55.607493130Z 2026-10-28 17:22:55.607 UTC [198] LOG:  exported logical decoding snapshot: "00000071-00000002-1" with 0 transaction IDs
+worker1-1  | 2026-10-28T17:22:55.607500088Z 2026-10-28 17:22:55.607 UTC [198] STATEMENT:  CREATE_REPLICATION_SLOT citus_shard_split_slot_2_10_1 LOGICAL citus EXPORT_SNAPSHOT;
+worker1-1  | 2026-10-28T17:22:56.464222089Z 2026-10-28 17:22:56.463 UTC [204] LOG:  performing copy from shard public.t_102008 to [public.t_102040 (nodeId: 2), public.t_102041 (nodeId: 3)]
+worker1-1  | 2026-10-28T17:22:56.464251089Z 2026-10-28 17:22:56.463 UTC [204] STATEMENT:  SELECT pg_catalog.worker_split_copy(102008, 'k', ARRAY[ROW(102040, -2147483648, -2080374785, 2)::pg_catalog.split_copy_info,ROW(102041, -2080374784, -2013265921, 3)::pg_catalog.split_copy_info]);
+worker1-1  | 2026-10-28T17:22:56.756108589Z 2026-10-28 17:22:56.755 UTC [205] LOG:  logical replication apply worker for subscription "citus_shard_split_subscription_10_1" has started
+worker1-1  | 2026-10-28T17:22:56.946822881Z 2026-10-28 17:22:56.946 UTC [206] LOG:  starting logical decoding for slot "citus_shard_split_slot_2_10_1"
+worker1-1  | 2026-10-28T17:22:56.946839839Z 2026-10-28 17:22:56.946 UTC [206] DETAIL:  Streaming transactions committing after 0/4AA4DE0, reading WAL from 0/4AA4DA8.
+worker1-1  | 2026-10-28T17:22:56.946842381Z 2026-10-28 17:22:56.946 UTC [206] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:22:56.948039297Z 2026-10-28 17:22:56.947 UTC [207] LOG:  starting logical decoding for slot "citus_shard_split_slot_3_10_1"
+worker1-1  | 2026-10-28T17:22:56.948053756Z 2026-10-28 17:22:56.947 UTC [207] DETAIL:  Streaming transactions committing after 0/4AA4DE0, reading WAL from 0/4AA4DA8.
+worker1-1  | 2026-10-28T17:22:56.948056589Z 2026-10-28 17:22:56.947 UTC [207] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_3_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_3_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:22:56.950103964Z 2026-10-28 17:22:56.950 UTC [206] LOG:  logical decoding found consistent point at 0/4AA4DA8
+worker1-1  | 2026-10-28T17:22:56.950114839Z 2026-10-28 17:22:56.950 UTC [206] DETAIL:  There are no running transactions.
+worker1-1  | 2026-10-28T17:22:56.950116756Z 2026-10-28 17:22:56.950 UTC [206] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:22:56.950684339Z 2026-10-28 17:22:56.950 UTC [207] LOG:  logical decoding found consistent point at 0/4AA4DA8
+worker1-1  | 2026-10-28T17:22:56.950688881Z 2026-10-28 17:22:56.950 UTC [207] DETAIL:  There are no running transactions.
+worker1-1  | 2026-10-28T17:22:56.950690631Z 2026-10-28 17:22:56.950 UTC [207] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_3_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_3_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:22:56.964938714Z 2026-10-28 17:22:56.964 UTC [205] ERROR:  publisher did not send replica identity column expected by the logical replication target relation "public.t_102040"
+worker1-1  | 2026-10-28T17:22:56.964952797Z 2026-10-28 17:22:56.964 UTC [205] CONTEXT:  processing remote data for replication origin "pg_17453" during message type "UPDATE" for replication target relation "public.t_102040" in transaction 21097, finished at 0/4AA5138
+worker1-1  | 2026-10-28T17:22:56.983814631Z 2026-10-28 17:22:56.983 UTC [1] LOG:  background worker "logical replication apply worker" (PID 205) exited with exit code 1
+worker1-1  | 2026-10-28T17:23:01.758144675Z 2026-10-28 17:23:01.757 UTC [224] LOG:  logical replication apply worker for subscription "citus_shard_split_subscription_10_1" has started
+worker1-1  | 2026-10-28T17:23:01.913066383Z 2026-10-28 17:23:01.912 UTC [225] LOG:  starting logical decoding for slot "citus_shard_split_slot_2_10_1"
+worker1-1  | 2026-10-28T17:23:01.913081550Z 2026-10-28 17:23:01.912 UTC [225] DETAIL:  Streaming transactions committing after 0/4AA50D0, reading WAL from 0/4AA4DA8.
+worker1-1  | 2026-10-28T17:23:01.913083300Z 2026-10-28 17:23:01.912 UTC [225] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:23:01.916977675Z 2026-10-28 17:23:01.916 UTC [225] LOG:  logical decoding found consistent point at 0/4AA4DA8
+worker1-1  | 2026-10-28T17:23:01.916990591Z 2026-10-28 17:23:01.916 UTC [225] DETAIL:  There are no running transactions.
+worker1-1  | 2026-10-28T17:23:01.916992841Z 2026-10-28 17:23:01.916 UTC [225] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:23:01.927011591Z 2026-10-28 17:23:01.926 UTC [224] ERROR:  publisher did not send replica identity column expected by the logical replication target relation "public.t_102040"
+worker1-1  | 2026-10-28T17:23:01.927028050Z 2026-10-28 17:23:01.926 UTC [224] CONTEXT:  processing remote data for replication origin "pg_17453" during message type "UPDATE" for replication target relation "public.t_102040" in transaction 21097, finished at 0/4AA5138
+worker1-1  | 2026-10-28T17:23:01.935771966Z 2026-10-28 17:23:01.935 UTC [1] LOG:  background worker "logical replication apply worker" (PID 224) exited with exit code 1
+worker1-1  | 2026-10-28T17:23:06.771189969Z 2026-10-28 17:23:06.769 UTC [241] LOG:  logical replication apply worker for subscription "citus_shard_split_subscription_10_1" has started
+worker1-1  | 2026-10-28T17:23:06.980954344Z 2026-10-28 17:23:06.980 UTC [242] LOG:  starting logical decoding for slot "citus_shard_split_slot_2_10_1"
+worker1-1  | 2026-10-28T17:23:06.981128427Z 2026-10-28 17:23:06.980 UTC [242] DETAIL:  Streaming transactions committing after 0/4AA50D0, reading WAL from 0/4AA4DA8.
+worker1-1  | 2026-10-28T17:23:06.981133010Z 2026-10-28 17:23:06.980 UTC [242] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:23:06.987024260Z 2026-10-28 17:23:06.986 UTC [242] LOG:  logical decoding found consistent point at 0/4AA4DA8
+worker1-1  | 2026-10-28T17:23:06.987040677Z 2026-10-28 17:23:06.986 UTC [242] DETAIL:  There are no running transactions.
+worker1-1  | 2026-10-28T17:23:06.987042469Z 2026-10-28 17:23:06.986 UTC [242] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:23:07.009025760Z 2026-10-28 17:23:07.007 UTC [241] ERROR:  publisher did not send replica identity column expected by the logical replication target relation "public.t_102040"
+worker1-1  | 2026-10-28T17:23:07.009043135Z 2026-10-28 17:23:07.007 UTC [241] CONTEXT:  processing remote data for replication origin "pg_17453" during message type "UPDATE" for replication target relation "public.t_102040" in transaction 21097, finished at 0/4AA5138
+worker1-1  | 2026-10-28T17:23:07.027579219Z 2026-10-28 17:23:07.027 UTC [1] LOG:  background worker "logical replication apply worker" (PID 241) exited with exit code 1
+worker1-1  | 2026-10-28T17:23:11.759135138Z 2026-10-28 17:23:11.758 UTC [259] LOG:  logical replication apply worker for subscription "citus_shard_split_subscription_10_1" has started
+worker1-1  | 2026-10-28T17:23:11.936297430Z 2026-10-28 17:23:11.935 UTC [260] LOG:  starting logical decoding for slot "citus_shard_split_slot_2_10_1"
+worker1-1  | 2026-10-28T17:23:11.936316763Z 2026-10-28 17:23:11.935 UTC [260] DETAIL:  Streaming transactions committing after 0/4AA50D0, reading WAL from 0/4AA4DA8.
+worker1-1  | 2026-10-28T17:23:11.936319596Z 2026-10-28 17:23:11.935 UTC [260] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:23:11.938958638Z 2026-10-28 17:23:11.937 UTC [260] LOG:  logical decoding found consistent point at 0/4AA4DA8
+worker1-1  | 2026-10-28T17:23:11.938967846Z 2026-10-28 17:23:11.937 UTC [260] DETAIL:  There are no running transactions.
+worker1-1  | 2026-10-28T17:23:11.938969721Z 2026-10-28 17:23:11.937 UTC [260] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:23:11.949324346Z 2026-10-28 17:23:11.949 UTC [259] ERROR:  publisher did not send replica identity column expected by the logical replication target relation "public.t_102040"
+worker1-1  | 2026-10-28T17:23:11.949345013Z 2026-10-28 17:23:11.949 UTC [259] CONTEXT:  processing remote data for replication origin "pg_17453" during message type "UPDATE" for replication target relation "public.t_102040" in transaction 21097, finished at 0/4AA5138
+worker1-1  | 2026-10-28T17:23:11.959396763Z 2026-10-28 17:23:11.959 UTC [1] LOG:  background worker "logical replication apply worker" (PID 259) exited with exit code 1
+worker1-1  | 2026-10-28T17:23:16.901470376Z 2026-10-28 17:23:16.900 UTC [277] LOG:  logical replication apply worker for subscription "citus_shard_split_subscription_10_1" has started
+worker1-1  | 2026-10-28T17:23:17.136253501Z 2026-10-28 17:23:17.135 UTC [278] LOG:  starting logical decoding for slot "citus_shard_split_slot_2_10_1"
+worker1-1  | 2026-10-28T17:23:17.136293001Z 2026-10-28 17:23:17.135 UTC [278] DETAIL:  Streaming transactions committing after 0/4AA50D0, reading WAL from 0/4AA4DA8.
+worker1-1  | 2026-10-28T17:23:17.136297209Z 2026-10-28 17:23:17.135 UTC [278] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:23:17.141448209Z 2026-10-28 17:23:17.141 UTC [278] LOG:  logical decoding found consistent point at 0/4AA4DA8
+worker1-1  | 2026-10-28T17:23:17.141481376Z 2026-10-28 17:23:17.141 UTC [278] DETAIL:  There are no running transactions.
+worker1-1  | 2026-10-28T17:23:17.141484418Z 2026-10-28 17:23:17.141 UTC [278] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:23:17.157976793Z 2026-10-28 17:23:17.157 UTC [277] ERROR:  publisher did not send replica identity column expected by the logical replication target relation "public.t_102040"
+worker1-1  | 2026-10-28T17:23:17.157999626Z 2026-10-28 17:23:17.157 UTC [277] CONTEXT:  processing remote data for replication origin "pg_17453" during message type "UPDATE" for replication target relation "public.t_102040" in transaction 21097, finished at 0/4AA5138
+worker1-1  | 2026-10-28T17:23:17.174236501Z 2026-10-28 17:23:17.174 UTC [1] LOG:  background worker "logical replication apply worker" (PID 277) exited with exit code 1
+worker1-1  | 2026-10-28T17:23:21.773219295Z 2026-10-28 17:23:21.772 UTC [296] LOG:  logical replication apply worker for subscription "citus_shard_split_subscription_10_1" has started
+worker1-1  | 2026-10-28T17:23:21.939249253Z 2026-10-28 17:23:21.938 UTC [297] LOG:  starting logical decoding for slot "citus_shard_split_slot_2_10_1"
+worker1-1  | 2026-10-28T17:23:21.939271212Z 2026-10-28 17:23:21.938 UTC [297] DETAIL:  Streaming transactions committing after 0/4AA50D0, reading WAL from 0/4AA4DA8.
+worker1-1  | 2026-10-28T17:23:21.939273837Z 2026-10-28 17:23:21.938 UTC [297] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:23:21.942610545Z 2026-10-28 17:23:21.942 UTC [297] LOG:  logical decoding found consistent point at 0/4AA4DA8
+worker1-1  | 2026-10-28T17:23:21.942622753Z 2026-10-28 17:23:21.942 UTC [297] DETAIL:  There are no running transactions.
+worker1-1  | 2026-10-28T17:23:21.942625212Z 2026-10-28 17:23:21.942 UTC [297] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:23:21.955312420Z 2026-10-28 17:23:21.954 UTC [296] ERROR:  publisher did not send replica identity column expected by the logical replication target relation "public.t_102040"
+worker1-1  | 2026-10-28T17:23:21.955334212Z 2026-10-28 17:23:21.954 UTC [296] CONTEXT:  processing remote data for replication origin "pg_17453" during message type "UPDATE" for replication target relation "public.t_102040" in transaction 21097, finished at 0/4AA5138
+worker1-1  | 2026-10-28T17:23:21.965747587Z 2026-10-28 17:23:21.965 UTC [1] LOG:  background worker "logical replication apply worker" (PID 296) exited with exit code 1
+worker1-1  | 2026-10-28T17:23:26.779380214Z 2026-10-28 17:23:26.777 UTC [314] LOG:  logical replication apply worker for subscription "citus_shard_split_subscription_10_1" has started
+worker1-1  | 2026-10-28T17:23:26.936806297Z 2026-10-28 17:23:26.936 UTC [315] LOG:  starting logical decoding for slot "citus_shard_split_slot_2_10_1"
+worker1-1  | 2026-10-28T17:23:26.936820756Z 2026-10-28 17:23:26.936 UTC [315] DETAIL:  Streaming transactions committing after 0/4AA50D0, reading WAL from 0/4AA4DA8.
+worker1-1  | 2026-10-28T17:23:26.936822922Z 2026-10-28 17:23:26.936 UTC [315] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:23:26.938639089Z 2026-10-28 17:23:26.938 UTC [315] LOG:  logical decoding found consistent point at 0/4AA4DA8
+worker1-1  | 2026-10-28T17:23:26.938646131Z 2026-10-28 17:23:26.938 UTC [315] DETAIL:  There are no running transactions.
+worker1-1  | 2026-10-28T17:23:26.938653381Z 2026-10-28 17:23:26.938 UTC [315] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:23:26.948647631Z 2026-10-28 17:23:26.948 UTC [314] ERROR:  publisher did not send replica identity column expected by the logical replication target relation "public.t_102040"
+worker1-1  | 2026-10-28T17:23:26.948661922Z 2026-10-28 17:23:26.948 UTC [314] CONTEXT:  processing remote data for replication origin "pg_17453" during message type "UPDATE" for replication target relation "public.t_102040" in transaction 21097, finished at 0/4AA5138
+worker1-1  | 2026-10-28T17:23:26.957194006Z 2026-10-28 17:23:26.957 UTC [1] LOG:  background worker "logical replication apply worker" (PID 314) exited with exit code 1
+worker1-1  | 2026-10-28T17:23:31.776494716Z 2026-10-28 17:23:31.775 UTC [330] LOG:  logical replication apply worker for subscription "citus_shard_split_subscription_10_1" has started
+worker1-1  | 2026-10-28T17:23:31.948521133Z 2026-10-28 17:23:31.948 UTC [331] LOG:  starting logical decoding for slot "citus_shard_split_slot_2_10_1"
+worker1-1  | 2026-10-28T17:23:31.948540383Z 2026-10-28 17:23:31.948 UTC [331] DETAIL:  Streaming transactions committing after 0/4AA50D0, reading WAL from 0/4AA4DA8.
+worker1-1  | 2026-10-28T17:23:31.948542966Z 2026-10-28 17:23:31.948 UTC [331] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:23:31.951619216Z 2026-10-28 17:23:31.951 UTC [331] LOG:  logical decoding found consistent point at 0/4AA4DA8
+worker1-1  | 2026-10-28T17:23:31.951625966Z 2026-10-28 17:23:31.951 UTC [331] DETAIL:  There are no running transactions.
+worker1-1  | 2026-10-28T17:23:31.951636633Z 2026-10-28 17:23:31.951 UTC [331] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:23:31.974671966Z 2026-10-28 17:23:31.973 UTC [330] ERROR:  publisher did not send replica identity column expected by the logical replication target relation "public.t_102040"
+worker1-1  | 2026-10-28T17:23:31.974682758Z 2026-10-28 17:23:31.973 UTC [330] CONTEXT:  processing remote data for replication origin "pg_17453" during message type "UPDATE" for replication target relation "public.t_102040" in transaction 21097, finished at 0/4AA5138
+worker1-1  | 2026-10-28T17:23:31.986281508Z 2026-10-28 17:23:31.986 UTC [1] LOG:  background worker "logical replication apply worker" (PID 330) exited with exit code 1
+worker1-1  | 2026-10-28T17:23:36.832226094Z 2026-10-28 17:23:36.831 UTC [340] LOG:  logical replication apply worker for subscription "citus_shard_split_subscription_10_1" has started
+worker1-1  | 2026-10-28T17:23:37.123607802Z 2026-10-28 17:23:37.123 UTC [347] LOG:  starting logical decoding for slot "citus_shard_split_slot_2_10_1"
+worker1-1  | 2026-10-28T17:23:37.123639511Z 2026-10-28 17:23:37.123 UTC [347] DETAIL:  Streaming transactions committing after 0/4AA50D0, reading WAL from 0/4AA4DA8.
+worker1-1  | 2026-10-28T17:23:37.123643011Z 2026-10-28 17:23:37.123 UTC [347] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:23:37.127072719Z 2026-10-28 17:23:37.126 UTC [347] LOG:  logical decoding found consistent point at 0/4AA4DA8
+worker1-1  | 2026-10-28T17:23:37.127107511Z 2026-10-28 17:23:37.126 UTC [347] DETAIL:  There are no running transactions.
+worker1-1  | 2026-10-28T17:23:37.127110136Z 2026-10-28 17:23:37.126 UTC [347] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:23:37.145191927Z 2026-10-28 17:23:37.145 UTC [340] ERROR:  publisher did not send replica identity column expected by the logical replication target relation "public.t_102040"
+worker1-1  | 2026-10-28T17:23:37.145209511Z 2026-10-28 17:23:37.145 UTC [340] CONTEXT:  processing remote data for replication origin "pg_17453" during message type "UPDATE" for replication target relation "public.t_102040" in transaction 21097, finished at 0/4AA5138
+worker1-1  | 2026-10-28T17:23:37.158876386Z 2026-10-28 17:23:37.158 UTC [1] LOG:  background worker "logical replication apply worker" (PID 340) exited with exit code 1
+worker1-1  | 2026-10-28T17:23:41.818229304Z 2026-10-28 17:23:41.817 UTC [359] LOG:  logical replication apply worker for subscription "citus_shard_split_subscription_10_1" has started
+worker1-1  | 2026-10-28T17:23:42.125975971Z 2026-10-28 17:23:42.122 UTC [360] LOG:  starting logical decoding for slot "citus_shard_split_slot_2_10_1"
+worker1-1  | 2026-10-28T17:23:42.126016513Z 2026-10-28 17:23:42.122 UTC [360] DETAIL:  Streaming transactions committing after 0/4AA50D0, reading WAL from 0/4AA4DA8.
+worker1-1  | 2026-10-28T17:23:42.126019555Z 2026-10-28 17:23:42.122 UTC [360] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:23:42.126102471Z 2026-10-28 17:23:42.124 UTC [360] LOG:  logical decoding found consistent point at 0/4AA4DA8
+worker1-1  | 2026-10-28T17:23:42.126106013Z 2026-10-28 17:23:42.124 UTC [360] DETAIL:  There are no running transactions.
+worker1-1  | 2026-10-28T17:23:42.126107596Z 2026-10-28 17:23:42.124 UTC [360] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:23:42.150459638Z 2026-10-28 17:23:42.150 UTC [359] ERROR:  publisher did not send replica identity column expected by the logical replication target relation "public.t_102040"
+worker1-1  | 2026-10-28T17:23:42.150525555Z 2026-10-28 17:23:42.150 UTC [359] CONTEXT:  processing remote data for replication origin "pg_17453" during message type "UPDATE" for replication target relation "public.t_102040" in transaction 21097, finished at 0/4AA5138
+worker1-1  | 2026-10-28T17:23:42.167841971Z 2026-10-28 17:23:42.167 UTC [1] LOG:  background worker "logical replication apply worker" (PID 359) exited with exit code 1
+worker1-1  | 2026-10-28T17:23:46.792888334Z 2026-10-28 17:23:46.792 UTC [376] LOG:  logical replication apply worker for subscription "citus_shard_split_subscription_10_1" has started
+worker1-1  | 2026-10-28T17:23:46.984553126Z 2026-10-28 17:23:46.984 UTC [377] LOG:  starting logical decoding for slot "citus_shard_split_slot_2_10_1"
+worker1-1  | 2026-10-28T17:23:46.984580918Z 2026-10-28 17:23:46.984 UTC [377] DETAIL:  Streaming transactions committing after 0/4AA50D0, reading WAL from 0/4AA4DA8.
+worker1-1  | 2026-10-28T17:23:46.984585876Z 2026-10-28 17:23:46.984 UTC [377] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:23:46.986384418Z 2026-10-28 17:23:46.986 UTC [377] LOG:  logical decoding found consistent point at 0/4AA4DA8
+worker1-1  | 2026-10-28T17:23:46.986395793Z 2026-10-28 17:23:46.986 UTC [377] DETAIL:  There are no running transactions.
+worker1-1  | 2026-10-28T17:23:46.986398251Z 2026-10-28 17:23:46.986 UTC [377] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:23:46.998909126Z 2026-10-28 17:23:46.998 UTC [376] ERROR:  publisher did not send replica identity column expected by the logical replication target relation "public.t_102040"
+worker1-1  | 2026-10-28T17:23:46.998966709Z 2026-10-28 17:23:46.998 UTC [376] CONTEXT:  processing remote data for replication origin "pg_17453" during message type "UPDATE" for replication target relation "public.t_102040" in transaction 21097, finished at 0/4AA5138
+worker1-1  | 2026-10-28T17:23:47.010274584Z 2026-10-28 17:23:47.009 UTC [1] LOG:  background worker "logical replication apply worker" (PID 376) exited with exit code 1
+worker1-1  | 2026-10-28T17:23:51.788589128Z 2026-10-28 17:23:51.788 UTC [395] LOG:  logical replication apply worker for subscription "citus_shard_split_subscription_10_1" has started
+worker1-1  | 2026-10-28T17:23:51.970617378Z 2026-10-28 17:23:51.970 UTC [396] LOG:  starting logical decoding for slot "citus_shard_split_slot_2_10_1"
+worker1-1  | 2026-10-28T17:23:51.970644628Z 2026-10-28 17:23:51.970 UTC [396] DETAIL:  Streaming transactions committing after 0/4AA50D0, reading WAL from 0/4AA4DA8.
+worker1-1  | 2026-10-28T17:23:51.970659170Z 2026-10-28 17:23:51.970 UTC [396] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:23:51.976362670Z 2026-10-28 17:23:51.976 UTC [396] LOG:  logical decoding found consistent point at 0/4AA4DA8
+worker1-1  | 2026-10-28T17:23:51.976376753Z 2026-10-28 17:23:51.976 UTC [396] DETAIL:  There are no running transactions.
+worker1-1  | 2026-10-28T17:23:51.976379003Z 2026-10-28 17:23:51.976 UTC [396] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:23:51.996348920Z 2026-10-28 17:23:51.995 UTC [395] ERROR:  publisher did not send replica identity column expected by the logical replication target relation "public.t_102040"
+worker1-1  | 2026-10-28T17:23:51.996368420Z 2026-10-28 17:23:51.995 UTC [395] CONTEXT:  processing remote data for replication origin "pg_17453" during message type "UPDATE" for replication target relation "public.t_102040" in transaction 21097, finished at 0/4AA5138
+worker1-1  | 2026-10-28T17:23:52.005611837Z 2026-10-28 17:23:52.005 UTC [1] LOG:  background worker "logical replication apply worker" (PID 395) exited with exit code 1
+worker1-1  | 2026-10-28T17:23:56.818905256Z 2026-10-28 17:23:56.817 UTC [412] LOG:  logical replication apply worker for subscription "citus_shard_split_subscription_10_1" has started
+worker1-1  | 2026-10-28T17:23:57.038969381Z 2026-10-28 17:23:57.038 UTC [413] LOG:  starting logical decoding for slot "citus_shard_split_slot_2_10_1"
+worker1-1  | 2026-10-28T17:23:57.038982756Z 2026-10-28 17:23:57.038 UTC [413] DETAIL:  Streaming transactions committing after 0/4AA50D0, reading WAL from 0/4AA4DA8.
+worker1-1  | 2026-10-28T17:23:57.038984922Z 2026-10-28 17:23:57.038 UTC [413] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:23:57.042231381Z 2026-10-28 17:23:57.042 UTC [413] LOG:  logical decoding found consistent point at 0/4AA4DA8
+worker1-1  | 2026-10-28T17:23:57.042237089Z 2026-10-28 17:23:57.042 UTC [413] DETAIL:  There are no running transactions.
+worker1-1  | 2026-10-28T17:23:57.042238422Z 2026-10-28 17:23:57.042 UTC [413] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:23:57.053127256Z 2026-10-28 17:23:57.052 UTC [412] ERROR:  publisher did not send replica identity column expected by the logical replication target relation "public.t_102040"
+worker1-1  | 2026-10-28T17:23:57.053143214Z 2026-10-28 17:23:57.052 UTC [412] CONTEXT:  processing remote data for replication origin "pg_17453" during message type "UPDATE" for replication target relation "public.t_102040" in transaction 21097, finished at 0/4AA5138
+worker1-1  | 2026-10-28T17:23:57.065570256Z 2026-10-28 17:23:57.065 UTC [1] LOG:  background worker "logical replication apply worker" (PID 412) exited with exit code 1
+worker1-1  | 2026-10-28T17:24:01.805281716Z 2026-10-28 17:24:01.805 UTC [480] LOG:  logical replication apply worker for subscription "citus_shard_split_subscription_10_1" has started
+worker1-1  | 2026-10-28T17:24:02.066961883Z 2026-10-28 17:24:02.066 UTC [481] LOG:  starting logical decoding for slot "citus_shard_split_slot_2_10_1"
+worker1-1  | 2026-10-28T17:24:02.066990633Z 2026-10-28 17:24:02.066 UTC [481] DETAIL:  Streaming transactions committing after 0/4AA50D0, reading WAL from 0/4AA4DA8.
+worker1-1  | 2026-10-28T17:24:02.066993425Z 2026-10-28 17:24:02.066 UTC [481] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:24:02.073536008Z 2026-10-28 17:24:02.073 UTC [481] LOG:  logical decoding found consistent point at 0/4AA4DA8
+worker1-1  | 2026-10-28T17:24:02.073640883Z 2026-10-28 17:24:02.073 UTC [481] DETAIL:  There are no running transactions.
+worker1-1  | 2026-10-28T17:24:02.073645883Z 2026-10-28 17:24:02.073 UTC [481] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:24:02.090026216Z 2026-10-28 17:24:02.089 UTC [480] ERROR:  publisher did not send replica identity column expected by the logical replication target relation "public.t_102040"
+worker1-1  | 2026-10-28T17:24:02.090051508Z 2026-10-28 17:24:02.089 UTC [480] CONTEXT:  processing remote data for replication origin "pg_17453" during message type "UPDATE" for replication target relation "public.t_102040" in transaction 21097, finished at 0/4AA5138
+worker1-1  | 2026-10-28T17:24:02.137190133Z 2026-10-28 17:24:02.137 UTC [1] LOG:  background worker "logical replication apply worker" (PID 480) exited with exit code 1
+worker1-1  | 2026-10-28T17:24:06.808389677Z 2026-10-28 17:24:06.808 UTC [514] LOG:  logical replication apply worker for subscription "citus_shard_split_subscription_10_1" has started
+worker1-1  | 2026-10-28T17:24:06.988881344Z 2026-10-28 17:24:06.988 UTC [515] LOG:  starting logical decoding for slot "citus_shard_split_slot_2_10_1"
+worker1-1  | 2026-10-28T17:24:06.988907135Z 2026-10-28 17:24:06.988 UTC [515] DETAIL:  Streaming transactions committing after 0/4AA50D0, reading WAL from 0/4AA4DA8.
+worker1-1  | 2026-10-28T17:24:06.988910010Z 2026-10-28 17:24:06.988 UTC [515] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:24:06.992583594Z 2026-10-28 17:24:06.992 UTC [515] LOG:  logical decoding found consistent point at 0/4AA4DA8
+worker1-1  | 2026-10-28T17:24:06.992613010Z 2026-10-28 17:24:06.992 UTC [515] DETAIL:  There are no running transactions.
+worker1-1  | 2026-10-28T17:24:06.992618969Z 2026-10-28 17:24:06.992 UTC [515] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:24:07.007792010Z 2026-10-28 17:24:07.006 UTC [514] ERROR:  publisher did not send replica identity column expected by the logical replication target relation "public.t_102040"
+worker1-1  | 2026-10-28T17:24:07.007807427Z 2026-10-28 17:24:07.006 UTC [514] CONTEXT:  processing remote data for replication origin "pg_17453" during message type "UPDATE" for replication target relation "public.t_102040" in transaction 21097, finished at 0/4AA5138
+worker1-1  | 2026-10-28T17:24:07.030242469Z 2026-10-28 17:24:07.030 UTC [1] LOG:  background worker "logical replication apply worker" (PID 514) exited with exit code 1
+worker1-1  | 2026-10-28T17:24:11.795277304Z 2026-10-28 17:24:11.794 UTC [533] LOG:  logical replication apply worker for subscription "citus_shard_split_subscription_10_1" has started
+worker1-1  | 2026-10-28T17:24:11.963467971Z 2026-10-28 17:24:11.963 UTC [534] LOG:  starting logical decoding for slot "citus_shard_split_slot_2_10_1"
+worker1-1  | 2026-10-28T17:24:11.963527055Z 2026-10-28 17:24:11.963 UTC [534] DETAIL:  Streaming transactions committing after 0/4AA50D0, reading WAL from 0/4AA4DA8.
+worker1-1  | 2026-10-28T17:24:11.963529221Z 2026-10-28 17:24:11.963 UTC [534] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:24:11.967449263Z 2026-10-28 17:24:11.967 UTC [534] LOG:  logical decoding found consistent point at 0/4AA4DA8
+worker1-1  | 2026-10-28T17:24:11.967459013Z 2026-10-28 17:24:11.967 UTC [534] DETAIL:  There are no running transactions.
+worker1-1  | 2026-10-28T17:24:11.967460763Z 2026-10-28 17:24:11.967 UTC [534] STATEMENT:  START_REPLICATION SLOT "citus_shard_split_slot_2_10_1" LOGICAL 0/0 (proto_version '4', origin 'any', publication_names '"citus_shard_split_publication_2_10_1"', binary 'true')
+worker1-1  | 2026-10-28T17:24:11.979029096Z 2026-10-28 17:24:11.978 UTC [533] ERROR:  publisher did not send replica identity column expected by the logical replication target relation "public.t_102040"
+worker1-1  | 2026-10-28T17:24:11.979044555Z 2026-10-28 17:24:11.978 UTC [533] CONTEXT:  processing remote data for replication origin "pg_17453" during message type "UPDATE" for replication target relation "public.t_102040" in transaction 21097, finished at 0/4AA5138
+worker1-1  | 2026-10-28T17:24:11.994929555Z 2026-10-28 17:24:11.994 UTC [1] LOG:  background worker "logical replication apply worker" (PID 533) exited with exit code 1
+
+## worker2: container log since the operation started
+worker2-1  | 2026-10-28T17:22:56.756600422Z 2026-10-28 17:22:56.756 UTC [199] LOG:  logical replication apply worker for subscription "citus_shard_split_subscription_10_1" has started
+
+## worker3: container log since the operation started
+
