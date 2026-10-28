@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.shardml</groupId>
+        <artifactId>shardml-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>shardml.tests</artifactId>
+    <name>ShardML (tests)</name>
+    <description>Validator and generator tests. Sources live in src/ and src-gen/ as test code.</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>io.shardml</groupId>
+            <artifactId>shardml</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.xtext</groupId>
+            <artifactId>org.eclipse.xtext.testing</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.xtext</groupId>
+            <artifactId>org.eclipse.xtext.xbase.testing</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-engine</artifactId>
+            <scope>test</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <!-- Not the Maven default layout: everything here is test code. -->
+        <testSourceDirectory>src</testSourceDirectory>
+
+        <plugins>
+            <!-- Generated injector providers in src-gen are test sources too. -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-test-src-gen</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>add-test-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>src-gen</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.eclipse.xtend</groupId>
+                <artifactId>xtend-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>xtend-test-compile</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                        <configuration>
+                            <testOutputDirectory>${project.basedir}/xtend-gen</testOutputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <configuration>
+                    <filesets>
+                        <fileset>
+                            <directory>xtend-gen</directory>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+</project>

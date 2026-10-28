@@ -1,0 +1,212 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>io.shardml</groupId>
+        <artifactId>shardml-parent</artifactId>
+        <version>1.0.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>shardml</artifactId>
+    <name>ShardML (language runtime)</name>
+    <description>Grammars, scoping, validation and generator.</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.eclipse.xtext</groupId>
+            <artifactId>org.eclipse.xtext</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.xtext</groupId>
+            <artifactId>org.eclipse.xtext.xbase.lib</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.emf</groupId>
+            <artifactId>org.eclipse.emf.ecore</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.antlr</groupId>
+            <artifactId>antlr-runtime</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <!-- src/ and src-gen/, not the Maven default layout. -->
+        <sourceDirectory>src</sourceDirectory>
+        <resources>
+            <resource>
+                <!-- The MWE2 workflow is loaded off the classpath by Mwe2Launcher. -->
+                <directory>src</directory>
+                <includes>
+                    <include>**/*.mwe2</include>
+                </includes>
+            </resource>
+            <resource>
+                <!-- Serialized grammar and ANTLR token files are read at runtime. -->
+                <directory>src-gen</directory>
+                <excludes>
+                    <exclude>**/*.java</exclude>
+                    <exclude>**/*.g</exclude>
+                </excludes>
+            </resource>
+        </resources>
+
+        <plugins>
+            <!-- 0. Wipe the generated trees first. EMF does not overwrite an existing
+                    .ecore / .genmodel, it writes a numbered copy ("ShardML 3.ecore")
+                    beside it, so generation has to start from an empty directory. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-clean</id>
+                        <configuration>
+                            <filesets>
+                                <fileset>
+                                    <directory>xtend-gen</directory>
+                                </fileset>
+                            </filesets>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>clean-generated</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                        <configuration>
+                            <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                            <filesets>
+                                <fileset>
+                                    <directory>src-gen</directory>
+                                </fileset>
+                                <fileset>
+                                    <directory>model/generated</directory>
+                                </fileset>
+                                <!-- Written by the same MWE2 runs (runtimeTest project). -->
+                                <fileset>
+                                    <directory>${project.basedir}/../shardml.tests/src-gen</directory>
+                                </fileset>
+                            </filesets>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- 1. Regenerate parser / EMF infrastructure from the two grammars.
+                    Two runs, in this order: SQL writes model/generated/SQL.ecore,
+                    which ShardML.xtext imports. One workflow with both languages
+                    does not work, because XtextGenerator parses every configured
+                    grammar before generating any of them. -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>mwe2-generate-sql</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>
+                                <argument>${project.basedir}/src/io/shardml/GenerateSQLMaven.mwe2</argument>
+                                <argument>-p</argument>
+                                <argument>rootPath=${project.basedir}/..</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>mwe2-generate-shardml</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>
+                                <argument>${project.basedir}/src/io/shardml/GenerateShardMLMaven.mwe2</argument>
+                                <argument>-p</argument>
+                                <argument>rootPath=${project.basedir}/..</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+                <configuration>
+                    <mainClass>org.eclipse.emf.mwe2.launch.runtime.Mwe2Launcher</mainClass>
+                    <classpathScope>compile</classpathScope>
+                    <includePluginDependencies>true</includePluginDependencies>
+                    <!-- target/classes is still empty at generate-sources time. -->
+                    <additionalClasspathElements>
+                        <additionalClasspathElement>${project.basedir}/src</additionalClasspathElement>
+                    </additionalClasspathElements>
+                    <cleanupDaemonThreads>false</cleanupDaemonThreads>
+                </configuration>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.eclipse.emf</groupId>
+                        <artifactId>org.eclipse.emf.mwe2.launch</artifactId>
+                        <version>${mwe2.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.eclipse.xtext</groupId>
+                        <artifactId>org.eclipse.xtext.xtext.generator</artifactId>
+                        <version>${xtext.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.eclipse.xtext</groupId>
+                        <artifactId>org.eclipse.xtext.xbase</artifactId>
+                        <version>${xtext.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.eclipse.xtext</groupId>
+                        <artifactId>xtext-antlr-generator</artifactId>
+                        <version>${xtext-antlr-generator.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+
+            <!-- 2. src-gen holds generated Java and is compiled alongside src. -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>add-src-gen</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>src-gen</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- 3. Compile .xtend (scope provider, validator, generator) to xtend-gen. -->
+            <plugin>
+                <groupId>org.eclipse.xtend</groupId>
+                <artifactId>xtend-maven-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>xtend-compile</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.basedir}/xtend-gen</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+        </plugins>
+    </build>
+</project>

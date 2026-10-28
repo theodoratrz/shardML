@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>io.shardml</groupId>
+    <artifactId>shardml-parent</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>ShardML (parent)</name>
+    <description>Standalone build for the ShardML sharding DSL: Xtext runtime, tests and CLI.</description>
+
+    <modules>
+        <module>shardml</module>
+        <module>shardml.tests</module>
+        <module>shardml.cli</module>
+    </modules>
+
+    <properties>
+        <maven.compiler.release>21</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+                <xtext.version>2.42.0</xtext.version>
+        <!-- Plugin dependencies are not covered by the imported BOM, so these are explicit.
+             mwe2 2.25.0 is the version xtext-dev-bom:2.42.0 pairs with. -->
+        <mwe2.version>2.25.0</mwe2.version>
+        <xtext-antlr-generator.version>2.1.1</xtext-antlr-generator.version>
+
+        <exec-plugin.version>3.6.4</exec-plugin.version>
+        <build-helper-plugin.version>3.6.2</build-helper-plugin.version>
+        <compiler-plugin.version>3.16.0</compiler-plugin.version>
+        <surefire-plugin.version>3.5.6</surefire-plugin.version>
+        <shade-plugin.version>3.6.2</shade-plugin.version>
+        <clean-plugin.version>3.5.0</clean-plugin.version>
+        <jar-plugin.version>3.4.2</jar-plugin.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Pins Xtext, MWE2, ANTLR, JUnit 5 and the Xtext ANTLR generator consistently. -->
+            <dependency>
+                <groupId>org.eclipse.xtext</groupId>
+                <artifactId>xtext-dev-bom</artifactId>
+                <version>${xtext.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- The BOM manages Xtext's third-party dependencies, not Xtext itself. -->
+            <dependency>
+                <groupId>org.eclipse.xtext</groupId>
+                <artifactId>org.eclipse.xtext</artifactId>
+                <version>${xtext.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.xtext</groupId>
+                <artifactId>org.eclipse.xtext.xbase.lib</artifactId>
+                <version>${xtext.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.xtext</groupId>
+                <artifactId>org.eclipse.xtext.testing</artifactId>
+                <version>${xtext.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.eclipse.xtext</groupId>
+                <artifactId>org.eclipse.xtext.xbase.testing</artifactId>
+                <version>${xtext.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${compiler-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${surefire-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>${clean-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <version>${jar-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-shade-plugin</artifactId>
+                    <version>${shade-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>exec-maven-plugin</artifactId>
+                    <version>${exec-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.codehaus.mojo</groupId>
+                    <artifactId>build-helper-maven-plugin</artifactId>
+                    <version>${build-helper-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.eclipse.xtend</groupId>
+                    <artifactId>xtend-maven-plugin</artifactId>
+                    <version>${xtext.version}</version>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>
