@@ -16,6 +16,9 @@
 #                             between distributed tables that are not on their
 #                             distribution columns, so a probe fails when
 #                             colocation is declared but the keys do not match.
+#                             Not run if step 2 had a failure: the tables would
+#                             still be local, so every join would succeed. The
+#                             probe file then counts as one failure.
 #
 # Every statement runs on its own, so one failure does not hide the next.
 set -uo pipefail
@@ -68,10 +71,13 @@ label_of() {
 
 failures=0
 statements=0
+file_failures=0
 
 # Runs every statement of one file in the given schema and reports each one.
+# Sets file_failures to the number of statements of this file that failed.
 apply_file() {
 	local schema="$1" file="$2" stmt out
+	file_failures=0
 	echo "  $(basename "$file")"
 	while IFS= read -r -d '' stmt; do
 		[[ "$stmt" =~ [^[:space:]] ]] || continue
@@ -80,6 +86,7 @@ apply_file() {
 			echo "    ok    $(label_of "$stmt")"
 		else
 			failures=$((failures + 1))
+			file_failures=$((file_failures + 1))
 			echo "    FAIL  $(label_of "$stmt")"
 			sed -E 's/^psql:<stdin>:[0-9]+: //; s/^/            /' <<<"$out"
 		fi
@@ -109,7 +116,11 @@ for model in "${models[@]}"; do
 	apply_file "$db" "${schema_sql[0]}"
 	apply_file "$db" "$out_dir/$db-distribution.sql"
 	probe="${model%.shardml}.probe.sql"
-	if [[ -f "$probe" ]]; then
+	if [[ -f "$probe" && $file_failures -gt 0 ]]; then
+		failures=$((failures + 1))
+		echo "  $(basename "$probe")"
+		echo "    FAIL  not run: $file_failures distribution statement(s) failed, so the joins would run on local tables"
+	elif [[ -f "$probe" ]]; then
 		apply_file "$db" "$probe"
 	fi
 	rm -rf "$out_dir"
