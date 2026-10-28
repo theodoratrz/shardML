@@ -99,6 +99,7 @@ shardml.tests/                         # JUnit 5 test suite (40 tests)
 shardml.cli/                           # Command-line front end
 
 examples/
+  README.md                            # What each example shows
   banking.msql / banking.shardml       # Banking scenario
   social.msql  / social.shardml        # Social network scenario
   src-gen/                             # Generated output for both
