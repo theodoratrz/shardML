@@ -71,13 +71,11 @@ Workflow {
 			}
 			validator = {
 				generateDeprecationValidation = true
-				// The implementation is ShardMLValidator.xtend; without this the
-				// fragment looks for a .java stub, does not find one, and writes a
-				// second copy of the class into src/.
-				generateXtendStub = true
+				// Java stubs, so the fragment finds ShardMLValidator.java (and the
+				// scope provider and generator below) and leaves them alone.
+				generateXtendStub = false
 			}
 			scopeProvider = {
-				// Java, so the fragment finds ShardMLScopeProvider.java and leaves it alone.
 				generateXtendStub = false
 			}
 			generator = {
