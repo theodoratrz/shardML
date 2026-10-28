@@ -5,6 +5,7 @@ import java.io.IOException;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.xtext.diagnostics.Diagnostic;
 import org.eclipse.xtext.resource.XtextResourceSet;
 import org.eclipse.xtext.testing.InjectWith;
 import org.eclipse.xtext.testing.extensions.InjectionExtension;
@@ -18,8 +19,10 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 import io.shardml.SQLStandaloneSetup;
+import io.shardml.shardML.BelongsTo;
 import io.shardml.shardML.Model;
 import io.shardml.shardML.ShardMLPackage;
+import io.shardml.sql.Table;
 
 @ExtendWith(InjectionExtension.class)
 @InjectWith(ShardMLInjectorProvider.class)
@@ -573,7 +576,7 @@ public class ShardMLParsingTest {
 				        key: id
 				        buckets: 32
 				    }
-				    test_table belongs_to third_table
+				    test_table belongs_to third_table via id
 				}
 				""");
 		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.DATABASE, "SHML_013", "Tables related to each other should be colocated");
@@ -711,7 +714,7 @@ public class ShardMLParsingTest {
 				        key: id
 				        buckets: 32
 				    }
-				    test_table belongs_to third_table
+				    test_table belongs_to third_table via id
 				}
 				""");
 		validationTestHelper.assertWarning(model, ShardMLPackage.Literals.DATABASE, "SHML_023", "have a relationship, but are not colocated");
@@ -841,5 +844,57 @@ public class ShardMLParsingTest {
 				}
 				""");
 		validationTestHelper.assertNoIssue(model, ShardMLPackage.Literals.SHARD_DECL, "SHML_024");
+	}
+
+	@Test
+	public void testBelongsToVia() throws Exception {
+		Model model = parseShardML(KEYS_MSQL, """
+				import "test.msql"
+				database test{
+				    type: postgres
+				    shard customers {
+				        strategy: replicated
+				    }
+				    accounts belongs_to customers via customer_id
+				}
+				""");
+		validationTestHelper.assertNoErrors(model);
+		BelongsTo rel = (BelongsTo) model.getDb().getRelationships().get(0);
+		Assertions.assertEquals("customer_id", rel.getVia().getName());
+		Assertions.assertSame(rel.getSubject(), rel.getVia().eContainer());
+	}
+
+	// `id` exists on both tables; via must resolve on the subject (accounts), not the parent
+	@Test
+	public void testBelongsToVia_scopedToSubject() throws Exception {
+		Model model = parseShardML(KEYS_MSQL, """
+				import "test.msql"
+				database test{
+				    type: postgres
+				    shard customers {
+				        strategy: replicated
+				    }
+				    accounts belongs_to customers via id
+				    customers belongs_to accounts via customer_id
+				}
+				""");
+		BelongsTo rel = (BelongsTo) model.getDb().getRelationships().get(0);
+		Assertions.assertEquals("accounts", ((Table) rel.getVia().eContainer()).getName());
+		validationTestHelper.assertError(model, ShardMLPackage.Literals.BELONGS_TO, Diagnostic.LINKING_DIAGNOSTIC, "customer_id");
+	}
+
+	@Test
+	public void testBelongsToVia_required() throws Exception {
+		Model model = parseShardML(KEYS_MSQL, """
+				import "test.msql"
+				database test{
+				    type: postgres
+				    shard customers {
+				        strategy: replicated
+				    }
+				    accounts belongs_to customers
+				}
+				""");
+		Assertions.assertFalse(model.eResource().getErrors().isEmpty(), "belongs_to without via should not parse");
 	}
 }

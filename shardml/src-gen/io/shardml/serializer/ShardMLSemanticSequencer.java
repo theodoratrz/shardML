@@ -95,7 +95,7 @@ public class ShardMLSemanticSequencer extends AbstractDelegatingSemanticSequence
 	 *     BelongsTo returns BelongsTo
 	 *
 	 * Constraint:
-	 *     (subject=[Table|ID] belongs=[Table|ID])
+	 *     (subject=[Table|ID] belongs=[Table|ID] via=[Column|ID])
 	 * </pre>
 	 */
 	protected void sequence_BelongsTo(ISerializationContext context, BelongsTo semanticObject) {
@@ -104,10 +104,13 @@ public class ShardMLSemanticSequencer extends AbstractDelegatingSemanticSequence
 				errorAcceptor.accept(diagnosticProvider.createFeatureValueMissing(semanticObject, ShardMLPackage.Literals.RELATIONSHIP__SUBJECT));
 			if (transientValues.isValueTransient(semanticObject, ShardMLPackage.Literals.BELONGS_TO__BELONGS) == ValueTransient.YES)
 				errorAcceptor.accept(diagnosticProvider.createFeatureValueMissing(semanticObject, ShardMLPackage.Literals.BELONGS_TO__BELONGS));
+			if (transientValues.isValueTransient(semanticObject, ShardMLPackage.Literals.BELONGS_TO__VIA) == ValueTransient.YES)
+				errorAcceptor.accept(diagnosticProvider.createFeatureValueMissing(semanticObject, ShardMLPackage.Literals.BELONGS_TO__VIA));
 		}
 		SequenceFeeder feeder = createSequencerFeeder(context, semanticObject);
 		feeder.accept(grammarAccess.getBelongsToAccess().getSubjectTableIDTerminalRuleCall_0_0_1(), semanticObject.eGet(ShardMLPackage.Literals.RELATIONSHIP__SUBJECT, false));
 		feeder.accept(grammarAccess.getBelongsToAccess().getBelongsTableIDTerminalRuleCall_2_0_1(), semanticObject.eGet(ShardMLPackage.Literals.BELONGS_TO__BELONGS, false));
+		feeder.accept(grammarAccess.getBelongsToAccess().getViaColumnIDTerminalRuleCall_4_0_1(), semanticObject.eGet(ShardMLPackage.Literals.BELONGS_TO__VIA, false));
 		feeder.finish();
 	}
 	

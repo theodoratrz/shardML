@@ -35,6 +35,7 @@
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="BelongsTo" eSuperTypes="#//Relationship">
     <eStructuralFeatures xsi:type="ecore:EReference" name="belongs" eType="ecore:EClass SQL.ecore#//Table"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="via" eType="ecore:EClass SQL.ecore#//Column"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="ShardDecl">
     <eStructuralFeatures xsi:type="ecore:EReference" name="entity" eType="ecore:EClass SQL.ecore#//Table"/>

@@ -472,6 +472,17 @@ public class ShardMLPackageImpl extends EPackageImpl implements ShardMLPackage
    * @generated
    */
   @Override
+  public EReference getBelongsTo_Via()
+  {
+    return (EReference)belongsToEClass.getEStructuralFeatures().get(1);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
   public EClass getShardDecl()
   {
     return shardDeclEClass;
@@ -929,6 +940,7 @@ public class ShardMLPackageImpl extends EPackageImpl implements ShardMLPackage
 
     belongsToEClass = createEClass(BELONGS_TO);
     createEReference(belongsToEClass, BELONGS_TO__BELONGS);
+    createEReference(belongsToEClass, BELONGS_TO__VIA);
 
     shardDeclEClass = createEClass(SHARD_DECL);
     createEReference(shardDeclEClass, SHARD_DECL__ENTITY);
@@ -1039,6 +1051,7 @@ public class ShardMLPackageImpl extends EPackageImpl implements ShardMLPackage
 
     initEClass(belongsToEClass, BelongsTo.class, "BelongsTo", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
     initEReference(getBelongsTo_Belongs(), theSqlPackage.getTable(), null, "belongs", null, 0, 1, BelongsTo.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_COMPOSITE, IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEReference(getBelongsTo_Via(), theSqlPackage.getColumn(), null, "via", null, 0, 1, BelongsTo.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_COMPOSITE, IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
     initEClass(shardDeclEClass, ShardDecl.class, "ShardDecl", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
     initEReference(getShardDecl_Entity(), theSqlPackage.getTable(), null, "entity", null, 0, 1, ShardDecl.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_COMPOSITE, IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);

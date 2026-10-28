@@ -6,6 +6,7 @@ package io.shardml.shardML.impl;
 import io.shardml.shardML.BelongsTo;
 import io.shardml.shardML.ShardMLPackage;
 
+import io.shardml.sql.Column;
 import io.shardml.sql.Table;
 
 import org.eclipse.emf.common.notify.Notification;
@@ -24,6 +25,7 @@ import org.eclipse.emf.ecore.impl.ENotificationImpl;
  * </p>
  * <ul>
  *   <li>{@link io.shardml.shardML.impl.BelongsToImpl#getBelongs <em>Belongs</em>}</li>
+ *   <li>{@link io.shardml.shardML.impl.BelongsToImpl#getVia <em>Via</em>}</li>
  * </ul>
  *
  * @generated
@@ -39,6 +41,16 @@ public class BelongsToImpl extends RelationshipImpl implements BelongsTo
    * @ordered
    */
   protected Table belongs;
+
+  /**
+   * The cached value of the '{@link #getVia() <em>Via</em>}' reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #getVia()
+   * @generated
+   * @ordered
+   */
+  protected Column via;
 
   /**
    * <!-- begin-user-doc -->
@@ -112,6 +124,51 @@ public class BelongsToImpl extends RelationshipImpl implements BelongsTo
    * @generated
    */
   @Override
+  public Column getVia()
+  {
+    if (via != null && via.eIsProxy())
+    {
+      InternalEObject oldVia = (InternalEObject)via;
+      via = (Column)eResolveProxy(oldVia);
+      if (via != oldVia)
+      {
+        if (eNotificationRequired())
+          eNotify(new ENotificationImpl(this, Notification.RESOLVE, ShardMLPackage.BELONGS_TO__VIA, oldVia, via));
+      }
+    }
+    return via;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  public Column basicGetVia()
+  {
+    return via;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public void setVia(Column newVia)
+  {
+    Column oldVia = via;
+    via = newVia;
+    if (eNotificationRequired())
+      eNotify(new ENotificationImpl(this, Notification.SET, ShardMLPackage.BELONGS_TO__VIA, oldVia, via));
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
   public Object eGet(int featureID, boolean resolve, boolean coreType)
   {
     switch (featureID)
@@ -119,6 +176,9 @@ public class BelongsToImpl extends RelationshipImpl implements BelongsTo
       case ShardMLPackage.BELONGS_TO__BELONGS:
         if (resolve) return getBelongs();
         return basicGetBelongs();
+      case ShardMLPackage.BELONGS_TO__VIA:
+        if (resolve) return getVia();
+        return basicGetVia();
     }
     return super.eGet(featureID, resolve, coreType);
   }
@@ -135,6 +195,9 @@ public class BelongsToImpl extends RelationshipImpl implements BelongsTo
     {
       case ShardMLPackage.BELONGS_TO__BELONGS:
         setBelongs((Table)newValue);
+        return;
+      case ShardMLPackage.BELONGS_TO__VIA:
+        setVia((Column)newValue);
         return;
     }
     super.eSet(featureID, newValue);
@@ -153,6 +216,9 @@ public class BelongsToImpl extends RelationshipImpl implements BelongsTo
       case ShardMLPackage.BELONGS_TO__BELONGS:
         setBelongs((Table)null);
         return;
+      case ShardMLPackage.BELONGS_TO__VIA:
+        setVia((Column)null);
+        return;
     }
     super.eUnset(featureID);
   }
@@ -169,6 +235,8 @@ public class BelongsToImpl extends RelationshipImpl implements BelongsTo
     {
       case ShardMLPackage.BELONGS_TO__BELONGS:
         return belongs != null;
+      case ShardMLPackage.BELONGS_TO__VIA:
+        return via != null;
     }
     return super.eIsSet(featureID);
   }

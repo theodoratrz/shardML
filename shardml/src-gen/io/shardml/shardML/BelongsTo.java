@@ -3,6 +3,7 @@
  */
 package io.shardml.shardML;
 
+import io.shardml.sql.Column;
 import io.shardml.sql.Table;
 
 /**
@@ -15,6 +16,7 @@ import io.shardml.sql.Table;
  * </p>
  * <ul>
  *   <li>{@link io.shardml.shardML.BelongsTo#getBelongs <em>Belongs</em>}</li>
+ *   <li>{@link io.shardml.shardML.BelongsTo#getVia <em>Via</em>}</li>
  * </ul>
  *
  * @see io.shardml.shardML.ShardMLPackage#getBelongsTo()
@@ -44,5 +46,27 @@ public interface BelongsTo extends Relationship
    * @generated
    */
   void setBelongs(Table value);
+
+  /**
+   * Returns the value of the '<em><b>Via</b></em>' reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the value of the '<em>Via</em>' reference.
+   * @see #setVia(Column)
+   * @see io.shardml.shardML.ShardMLPackage#getBelongsTo_Via()
+   * @model
+   * @generated
+   */
+  Column getVia();
+
+  /**
+   * Sets the value of the '{@link io.shardml.shardML.BelongsTo#getVia <em>Via</em>}' reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @param value the new value of the '<em>Via</em>' reference.
+   * @see #getVia()
+   * @generated
+   */
+  void setVia(Column value);
 
 } // BelongsTo

@@ -53,8 +53,9 @@ HasOne:
     subject=[sql::Table] 'has_one' one = [sql::Table]
 ;
 
+// via names the foreign key column on the subject that points at the parent
 BelongsTo:
-    subject=[sql::Table] 'belongs_to' belongs = [sql::Table]
+    subject=[sql::Table] 'belongs_to' belongs = [sql::Table] 'via' via=[sql::Column]
 ;
 
 // Defines how a table is distributed across shards

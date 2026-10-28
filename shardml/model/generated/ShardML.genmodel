@@ -66,6 +66,7 @@
     </genClasses>
     <genClasses ecoreClass="ShardML.ecore#//BelongsTo">
       <genFeatures notify="false" createChild="false" propertySortChoices="true" ecoreFeature="ecore:EReference ShardML.ecore#//BelongsTo/belongs"/>
+      <genFeatures notify="false" createChild="false" propertySortChoices="true" ecoreFeature="ecore:EReference ShardML.ecore#//BelongsTo/via"/>
     </genClasses>
     <genClasses ecoreClass="ShardML.ecore#//ShardDecl">
       <genFeatures notify="false" createChild="false" propertySortChoices="true" ecoreFeature="ecore:EReference ShardML.ecore#//ShardDecl/entity"/>

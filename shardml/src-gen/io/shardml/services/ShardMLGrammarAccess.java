@@ -274,13 +274,18 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 		private final Assignment cBelongsAssignment_2 = (Assignment)cGroup.eContents().get(2);
 		private final CrossReference cBelongsTableCrossReference_2_0 = (CrossReference)cBelongsAssignment_2.eContents().get(0);
 		private final RuleCall cBelongsTableIDTerminalRuleCall_2_0_1 = (RuleCall)cBelongsTableCrossReference_2_0.eContents().get(1);
+		private final Keyword cViaKeyword_3 = (Keyword)cGroup.eContents().get(3);
+		private final Assignment cViaAssignment_4 = (Assignment)cGroup.eContents().get(4);
+		private final CrossReference cViaColumnCrossReference_4_0 = (CrossReference)cViaAssignment_4.eContents().get(0);
+		private final RuleCall cViaColumnIDTerminalRuleCall_4_0_1 = (RuleCall)cViaColumnCrossReference_4_0.eContents().get(1);
 		
+		//// via names the foreign key column on the subject that points at the parent
 		//BelongsTo:
-		//    subject=[sql::Table] 'belongs_to' belongs = [sql::Table]
+		//    subject=[sql::Table] 'belongs_to' belongs = [sql::Table] 'via' via=[sql::Column]
 		//;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//subject=[sql::Table] 'belongs_to' belongs = [sql::Table]
+		//subject=[sql::Table] 'belongs_to' belongs = [sql::Table] 'via' via=[sql::Column]
 		public Group getGroup() { return cGroup; }
 		
 		//subject=[sql::Table]
@@ -303,6 +308,18 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 		
 		//ID
 		public RuleCall getBelongsTableIDTerminalRuleCall_2_0_1() { return cBelongsTableIDTerminalRuleCall_2_0_1; }
+		
+		//'via'
+		public Keyword getViaKeyword_3() { return cViaKeyword_3; }
+		
+		//via=[sql::Column]
+		public Assignment getViaAssignment_4() { return cViaAssignment_4; }
+		
+		//[sql::Column]
+		public CrossReference getViaColumnCrossReference_4_0() { return cViaColumnCrossReference_4_0; }
+		
+		//ID
+		public RuleCall getViaColumnIDTerminalRuleCall_4_0_1() { return cViaColumnIDTerminalRuleCall_4_0_1; }
 	}
 	public class ShardDeclElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.ShardML.ShardDecl");
@@ -1183,8 +1200,9 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 		return getHasOneAccess().getRule();
 	}
 	
+	//// via names the foreign key column on the subject that points at the parent
 	//BelongsTo:
-	//    subject=[sql::Table] 'belongs_to' belongs = [sql::Table]
+	//    subject=[sql::Table] 'belongs_to' belongs = [sql::Table] 'via' via=[sql::Column]
 	//;
 	public BelongsToElements getBelongsToAccess() {
 		return pBelongsTo;

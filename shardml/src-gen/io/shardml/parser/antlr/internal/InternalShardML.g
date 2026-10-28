@@ -477,6 +477,23 @@ ruleBelongsTo returns [EObject current=null]
 				}
 			)
 		)
+		otherlv_3='via'
+		{
+			newLeafNode(otherlv_3, grammarAccess.getBelongsToAccess().getViaKeyword_3());
+		}
+		(
+			(
+				{
+					if ($current==null) {
+						$current = createModelElement(grammarAccess.getBelongsToRule());
+					}
+				}
+				otherlv_4=RULE_ID
+				{
+					newLeafNode(otherlv_4, grammarAccess.getBelongsToAccess().getViaColumnCrossReference_4_0());
+				}
+			)
+		)
 	)
 ;
 

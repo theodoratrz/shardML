@@ -318,13 +318,22 @@ public interface ShardMLPackage extends EPackage
   int BELONGS_TO__BELONGS = RELATIONSHIP_FEATURE_COUNT + 0;
 
   /**
+   * The feature id for the '<em><b>Via</b></em>' reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int BELONGS_TO__VIA = RELATIONSHIP_FEATURE_COUNT + 1;
+
+  /**
    * The number of structural features of the '<em>Belongs To</em>' class.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
    * @generated
    * @ordered
    */
-  int BELONGS_TO_FEATURE_COUNT = RELATIONSHIP_FEATURE_COUNT + 1;
+  int BELONGS_TO_FEATURE_COUNT = RELATIONSHIP_FEATURE_COUNT + 2;
 
   /**
    * The meta object id for the '{@link io.shardml.shardML.impl.ShardDeclImpl <em>Shard Decl</em>}' class.
@@ -940,6 +949,17 @@ public interface ShardMLPackage extends EPackage
   EReference getBelongsTo_Belongs();
 
   /**
+   * Returns the meta object for the reference '{@link io.shardml.shardML.BelongsTo#getVia <em>Via</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the reference '<em>Via</em>'.
+   * @see io.shardml.shardML.BelongsTo#getVia()
+   * @see #getBelongsTo()
+   * @generated
+   */
+  EReference getBelongsTo_Via();
+
+  /**
    * Returns the meta object for class '{@link io.shardml.shardML.ShardDecl <em>Shard Decl</em>}'.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
@@ -1520,6 +1540,14 @@ public interface ShardMLPackage extends EPackage
      * @generated
      */
     EReference BELONGS_TO__BELONGS = eINSTANCE.getBelongsTo_Belongs();
+
+    /**
+     * The meta object literal for the '<em><b>Via</b></em>' reference feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EReference BELONGS_TO__VIA = eINSTANCE.getBelongsTo_Via();
 
     /**
      * The meta object literal for the '{@link io.shardml.shardML.impl.ShardDeclImpl <em>Shard Decl</em>}' class.

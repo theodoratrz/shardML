@@ -88,6 +88,13 @@ public class ShardMLScopeProvider extends AbstractDeclarativeScopeProvider {
 		return tableScope(context);
 	}
 
+	// the foreign key column lives on the subject table
+	public IScope scope_BelongsTo_via(BelongsTo context, EReference ref) {
+		if (context.getSubject() == null || context.getSubject().eIsProxy())
+			return IScope.NULLSCOPE;
+		return Scopes.scopeFor(context.getSubject().getColumns());
+	}
+
 	// scope where, sort and group by column references to the columns of the table
 	// declared in ShardDecl. So that the query patterns are validated against the correct table
 	public IScope scope_WhereCondition_field(WhereCondition context, EReference ref) {
