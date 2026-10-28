@@ -17,7 +17,7 @@ ShardML addresses the gap between sharding intent and deployment correctness. En
 ## Features
 
 - **Declarative syntax**: describe what to shard and how, not low-level middleware configuration
-- **24 validators** covering structural correctness, colocation consistency, performance anti-patterns, and query pattern analysis
+- **29 validators** covering structural correctness, colocation consistency, performance anti-patterns, and query pattern analysis
 - **Policy-aware query analysis**: route rules support `allow`, `warn`, `deny` to control strictness per table
 - **Citus code generation**: produces the schema and distribution SQL, plus a JSON summary, from a single model
 - **Cross-schema import**: reference an existing `.msql` SQL schema file; all table and column references are resolved and validated against it
@@ -51,7 +51,7 @@ database banking {
         }
     }
 
-    accounts belongs_to customers
+    accounts belongs_to customers via customer_id
 }
 ```
 
@@ -115,11 +115,13 @@ ShardML uses a custom `ImportURI`-style import rather than Xtext's built-in glob
 
 This was necessary because Xtext's default `ImportedNamespaceAwareLocalScopeProvider` resolves names by qualified ID, it cannot navigate a cross-metamodel reference to `sql::Table` objects defined in a separate grammar. The custom provider instead builds `IScope` instances directly from the imported `Schema`'s `Table` and `Column` lists, which makes cross-grammar references transparent to the validator and generator.
 
-A notable detail: shard key references (`key: column_name`) are scoped to the *specific table* declared in that `ShardDecl`, not the full column namespace. This prevents false name collisions when multiple tables share a column name (e.g. `id`), a common case that Xtext's flat scoping would have gotten wrong.
+A notable detail: column references are scoped to the *specific table* they belong to, not the full column namespace: a shard key (`key:`) to the table of its `ShardDecl`, a `via` column to the subject of its `belongs_to`, and `where:` / `sort:` / `group_by:` columns to the table of their `route`. This prevents false name collisions when multiple tables share a column name (e.g. `id`), a common case that Xtext's flat scoping would have gotten wrong.
 
 ### Table relationships vs. foreign keys
 
 The `has_many`, `has_one`, and `belongs_to` relationship declarations are **application-level semantic relationships**, not a mirror of SQL foreign key constraints. The distinction is intentional: sharding decisions are driven by how the application queries data, not just by the schema's referential constraints. A foreign key tells you data is related; a relationship declaration in ShardML tells the validator which tables will be joined at the application layer, enabling colocation warnings when those tables land on different shards.
+
+`belongs_to` names the foreign key column on the subject (`accounts belongs_to customers via customer_id`). When that column is the subject's shard key, it ties the subject's placement to the parent's: a table's *root key* is its shard key, followed through such links. Tables joined by `colocate_with` must share a root key, with the same column type at every link (SHML_026, SHML_027); otherwise their related rows hash to different shards and Citus refuses the join.
 
 ### Abstract query patterns
 
