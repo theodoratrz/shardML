@@ -95,7 +95,7 @@ shardml/                               # Language runtime
   src-gen/                             # Xtext-generated parser infrastructure
   model/generated/                     # Generated Ecore metamodels
 
-shardml.tests/                         # JUnit 5 test suite (85 tests)
+shardml.tests/                         # JUnit 5 test suite (95 tests)
 shardml.cli/                           # Command-line front end
 
 examples/
@@ -159,7 +159,7 @@ java -jar shardml.cli/target/*-cli.jar generate examples/banking.shardml [-o <di
 ## Running the Tests
 
 ```sh
-mvn test                                                   # all 85 tests
+mvn test                                                   # all 95 tests
 mvn -pl shardml.tests test -Dtest=ShardMLParsingTest       # one class
 ```
 
