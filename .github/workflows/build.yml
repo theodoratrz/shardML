@@ -45,10 +45,6 @@ jobs:
   # (bench/docker-compose.yml) and runs the examples' probe joins.
   integration:
     runs-on: ubuntu-latest
-    # Known to fail until the Phase 1 fixes land (PK/UNIQUE constraints that
-    # miss the distribution column, colocation on mismatched keys); enforce
-    # it once it passes.
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
 

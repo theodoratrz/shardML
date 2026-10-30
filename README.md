@@ -1,6 +1,6 @@
 # ShardML
 
-A domain-specific language (DSL) for planning, validating, and generating database sharding configurations for PostgreSQL/Citus.
+ShardML is a modelling language for distributed data layout: declare how a schema is sharded across a Citus/PostgreSQL cluster, validate the design, and generate deployable configuration. The "ML" stands for "modelling language", not machine learning.
 
 Built with **Xtext**; the scoping, validation and generation code is plain Java.
 
@@ -95,7 +95,7 @@ shardml/                               # Language runtime
   src-gen/                             # Xtext-generated parser infrastructure
   model/generated/                     # Generated Ecore metamodels
 
-shardml.tests/                         # JUnit 5 test suite (40 tests)
+shardml.tests/                         # JUnit 5 test suite (65 tests)
 shardml.cli/                           # Command-line front end
 
 examples/
@@ -159,7 +159,7 @@ java -jar shardml.cli/target/*-cli.jar generate examples/banking.shardml [-o <di
 ## Running the Tests
 
 ```sh
-mvn test                                                   # all 40 tests
+mvn test                                                   # all 65 tests
 mvn -pl shardml.tests test -Dtest=ShardMLParsingTest       # one class
 ```
 
