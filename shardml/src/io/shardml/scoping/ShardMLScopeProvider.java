@@ -8,9 +8,11 @@ import org.eclipse.xtext.scoping.Scopes;
 import org.eclipse.xtext.scoping.impl.AbstractDeclarativeScopeProvider;
 
 import io.shardml.shardML.BelongsTo;
+import io.shardml.shardML.Database;
 import io.shardml.shardML.GroupBy;
 import io.shardml.shardML.HasMany;
 import io.shardml.shardML.HasOne;
+import io.shardml.shardML.PlaceDecl;
 import io.shardml.shardML.RouteRule;
 import io.shardml.shardML.ShardDecl;
 import io.shardml.shardML.SortClause;
@@ -52,6 +54,15 @@ public class ShardMLScopeProvider extends AbstractDeclarativeScopeProvider {
 
 	public IScope scope_RouteRule_entity(RouteRule context, EReference ref) {
 		return tableScope(context);
+	}
+
+	public IScope scope_PlaceDecl_entity(PlaceDecl context, EReference ref) {
+		return tableScope(context);
+	}
+
+	// placement names nodes declared in the same database
+	public IScope scope_PlaceDecl_nodes(PlaceDecl context, EReference ref) {
+		return Scopes.scopeFor(((Database) context.eContainer()).getNodes());
 	}
 
 	public IScope scope_HasMany_subject(HasMany context, EReference ref) {

@@ -91,19 +91,25 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 		private final Keyword cTypeKeyword_3 = (Keyword)cGroup.eContents().get(3);
 		private final Assignment cTypeAssignment_4 = (Assignment)cGroup.eContents().get(4);
 		private final RuleCall cTypeDatabaseTypeEnumRuleCall_4_0 = (RuleCall)cTypeAssignment_4.eContents().get(0);
-		private final Assignment cShard_declAssignment_5 = (Assignment)cGroup.eContents().get(5);
-		private final RuleCall cShard_declShardDeclParserRuleCall_5_0 = (RuleCall)cShard_declAssignment_5.eContents().get(0);
-		private final Assignment cRoute_rulesAssignment_6 = (Assignment)cGroup.eContents().get(6);
-		private final RuleCall cRoute_rulesRouteRuleParserRuleCall_6_0 = (RuleCall)cRoute_rulesAssignment_6.eContents().get(0);
-		private final Assignment cRelationshipsAssignment_7 = (Assignment)cGroup.eContents().get(7);
-		private final RuleCall cRelationshipsRelationshipParserRuleCall_7_0 = (RuleCall)cRelationshipsAssignment_7.eContents().get(0);
-		private final Keyword cRightCurlyBracketKeyword_8 = (Keyword)cGroup.eContents().get(8);
+		private final Assignment cNodesAssignment_5 = (Assignment)cGroup.eContents().get(5);
+		private final RuleCall cNodesNodeParserRuleCall_5_0 = (RuleCall)cNodesAssignment_5.eContents().get(0);
+		private final Assignment cShard_declAssignment_6 = (Assignment)cGroup.eContents().get(6);
+		private final RuleCall cShard_declShardDeclParserRuleCall_6_0 = (RuleCall)cShard_declAssignment_6.eContents().get(0);
+		private final Assignment cPlacementsAssignment_7 = (Assignment)cGroup.eContents().get(7);
+		private final RuleCall cPlacementsPlaceDeclParserRuleCall_7_0 = (RuleCall)cPlacementsAssignment_7.eContents().get(0);
+		private final Assignment cRoute_rulesAssignment_8 = (Assignment)cGroup.eContents().get(8);
+		private final RuleCall cRoute_rulesRouteRuleParserRuleCall_8_0 = (RuleCall)cRoute_rulesAssignment_8.eContents().get(0);
+		private final Assignment cRelationshipsAssignment_9 = (Assignment)cGroup.eContents().get(9);
+		private final RuleCall cRelationshipsRelationshipParserRuleCall_9_0 = (RuleCall)cRelationshipsAssignment_9.eContents().get(0);
+		private final Keyword cRightCurlyBracketKeyword_10 = (Keyword)cGroup.eContents().get(10);
 		
 		//// Top level container for all sharding config
 		//Database:
 		//    'database' name=ID '{'
 		//    'type:' type = DatabaseType
+		//    nodes += Node*
 		//    shard_decl += ShardDecl*
+		//    placements += PlaceDecl*
 		//    route_rules += RouteRule*
 		//    relationships += Relationship* '}'
 		//;
@@ -111,7 +117,9 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 		
 		//'database' name=ID '{'
 		//'type:' type = DatabaseType
+		//nodes += Node*
 		//shard_decl += ShardDecl*
+		//placements += PlaceDecl*
 		//route_rules += RouteRule*
 		//relationships += Relationship* '}'
 		public Group getGroup() { return cGroup; }
@@ -137,26 +145,234 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 		//DatabaseType
 		public RuleCall getTypeDatabaseTypeEnumRuleCall_4_0() { return cTypeDatabaseTypeEnumRuleCall_4_0; }
 		
+		//nodes += Node*
+		public Assignment getNodesAssignment_5() { return cNodesAssignment_5; }
+		
+		//Node
+		public RuleCall getNodesNodeParserRuleCall_5_0() { return cNodesNodeParserRuleCall_5_0; }
+		
 		//shard_decl += ShardDecl*
-		public Assignment getShard_declAssignment_5() { return cShard_declAssignment_5; }
+		public Assignment getShard_declAssignment_6() { return cShard_declAssignment_6; }
 		
 		//ShardDecl
-		public RuleCall getShard_declShardDeclParserRuleCall_5_0() { return cShard_declShardDeclParserRuleCall_5_0; }
+		public RuleCall getShard_declShardDeclParserRuleCall_6_0() { return cShard_declShardDeclParserRuleCall_6_0; }
+		
+		//placements += PlaceDecl*
+		public Assignment getPlacementsAssignment_7() { return cPlacementsAssignment_7; }
+		
+		//PlaceDecl
+		public RuleCall getPlacementsPlaceDeclParserRuleCall_7_0() { return cPlacementsPlaceDeclParserRuleCall_7_0; }
 		
 		//route_rules += RouteRule*
-		public Assignment getRoute_rulesAssignment_6() { return cRoute_rulesAssignment_6; }
+		public Assignment getRoute_rulesAssignment_8() { return cRoute_rulesAssignment_8; }
 		
 		//RouteRule
-		public RuleCall getRoute_rulesRouteRuleParserRuleCall_6_0() { return cRoute_rulesRouteRuleParserRuleCall_6_0; }
+		public RuleCall getRoute_rulesRouteRuleParserRuleCall_8_0() { return cRoute_rulesRouteRuleParserRuleCall_8_0; }
 		
 		//relationships += Relationship*
-		public Assignment getRelationshipsAssignment_7() { return cRelationshipsAssignment_7; }
+		public Assignment getRelationshipsAssignment_9() { return cRelationshipsAssignment_9; }
 		
 		//Relationship
-		public RuleCall getRelationshipsRelationshipParserRuleCall_7_0() { return cRelationshipsRelationshipParserRuleCall_7_0; }
+		public RuleCall getRelationshipsRelationshipParserRuleCall_9_0() { return cRelationshipsRelationshipParserRuleCall_9_0; }
 		
 		//'}'
-		public Keyword getRightCurlyBracketKeyword_8() { return cRightCurlyBracketKeyword_8; }
+		public Keyword getRightCurlyBracketKeyword_10() { return cRightCurlyBracketKeyword_10; }
+	}
+	public class ValidIDElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.ShardML.ValidID");
+		private final Alternatives cAlternatives = (Alternatives)rule.eContents().get(1);
+		private final RuleCall cIDTerminalRuleCall_0 = (RuleCall)cAlternatives.eContents().get(0);
+		private final Keyword cNodeKeyword_1 = (Keyword)cAlternatives.eContents().get(1);
+		private final Keyword cPlaceKeyword_2 = (Keyword)cAlternatives.eContents().get(2);
+		private final Keyword cSpreadKeyword_3 = (Keyword)cAlternatives.eContents().get(3);
+		private final Keyword cPinKeyword_4 = (Keyword)cAlternatives.eContents().get(4);
+		
+		//// Table and column names may also be the bare words placement added as keywords,
+		//// so schemas with a table or column called e.g. 'node' keep working
+		//ValidID:
+		//    ID | 'node' | 'place' | 'spread' | 'pin'
+		//;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//ID | 'node' | 'place' | 'spread' | 'pin'
+		public Alternatives getAlternatives() { return cAlternatives; }
+		
+		//ID
+		public RuleCall getIDTerminalRuleCall_0() { return cIDTerminalRuleCall_0; }
+		
+		//'node'
+		public Keyword getNodeKeyword_1() { return cNodeKeyword_1; }
+		
+		//'place'
+		public Keyword getPlaceKeyword_2() { return cPlaceKeyword_2; }
+		
+		//'spread'
+		public Keyword getSpreadKeyword_3() { return cSpreadKeyword_3; }
+		
+		//'pin'
+		public Keyword getPinKeyword_4() { return cPinKeyword_4; }
+	}
+	public class NodeElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.ShardML.Node");
+		private final Group cGroup = (Group)rule.eContents().get(1);
+		private final Keyword cNodeKeyword_0 = (Keyword)cGroup.eContents().get(0);
+		private final Assignment cNameAssignment_1 = (Assignment)cGroup.eContents().get(1);
+		private final RuleCall cNameValidIDParserRuleCall_1_0 = (RuleCall)cNameAssignment_1.eContents().get(0);
+		private final Keyword cLeftCurlyBracketKeyword_2 = (Keyword)cGroup.eContents().get(2);
+		private final Keyword cHostKeyword_3 = (Keyword)cGroup.eContents().get(3);
+		private final Assignment cHostAssignment_4 = (Assignment)cGroup.eContents().get(4);
+		private final RuleCall cHostSTRINGTerminalRuleCall_4_0 = (RuleCall)cHostAssignment_4.eContents().get(0);
+		private final Keyword cPortKeyword_5 = (Keyword)cGroup.eContents().get(5);
+		private final Assignment cPortAssignment_6 = (Assignment)cGroup.eContents().get(6);
+		private final RuleCall cPortINTTerminalRuleCall_6_0 = (RuleCall)cPortAssignment_6.eContents().get(0);
+		private final Keyword cRightCurlyBracketKeyword_7 = (Keyword)cGroup.eContents().get(7);
+		
+		//// A worker node of the cluster: the logical name the model uses, and where Citus knows it
+		//Node:
+		//    'node' name=ValidID '{'
+		//    'host:' host=STRING
+		//    'port:' port=INT
+		//    '}'
+		//;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//'node' name=ValidID '{'
+		//'host:' host=STRING
+		//'port:' port=INT
+		//'}'
+		public Group getGroup() { return cGroup; }
+		
+		//'node'
+		public Keyword getNodeKeyword_0() { return cNodeKeyword_0; }
+		
+		//name=ValidID
+		public Assignment getNameAssignment_1() { return cNameAssignment_1; }
+		
+		//ValidID
+		public RuleCall getNameValidIDParserRuleCall_1_0() { return cNameValidIDParserRuleCall_1_0; }
+		
+		//'{'
+		public Keyword getLeftCurlyBracketKeyword_2() { return cLeftCurlyBracketKeyword_2; }
+		
+		//'host:'
+		public Keyword getHostKeyword_3() { return cHostKeyword_3; }
+		
+		//host=STRING
+		public Assignment getHostAssignment_4() { return cHostAssignment_4; }
+		
+		//STRING
+		public RuleCall getHostSTRINGTerminalRuleCall_4_0() { return cHostSTRINGTerminalRuleCall_4_0; }
+		
+		//'port:'
+		public Keyword getPortKeyword_5() { return cPortKeyword_5; }
+		
+		//port=INT
+		public Assignment getPortAssignment_6() { return cPortAssignment_6; }
+		
+		//INT
+		public RuleCall getPortINTTerminalRuleCall_6_0() { return cPortINTTerminalRuleCall_6_0; }
+		
+		//'}'
+		public Keyword getRightCurlyBracketKeyword_7() { return cRightCurlyBracketKeyword_7; }
+	}
+	public class PlaceDeclElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.ShardML.PlaceDecl");
+		private final Group cGroup = (Group)rule.eContents().get(1);
+		private final Keyword cPlaceKeyword_0 = (Keyword)cGroup.eContents().get(0);
+		private final Assignment cEntityAssignment_1 = (Assignment)cGroup.eContents().get(1);
+		private final CrossReference cEntityTableCrossReference_1_0 = (CrossReference)cEntityAssignment_1.eContents().get(0);
+		private final RuleCall cEntityTableValidIDParserRuleCall_1_0_1 = (RuleCall)cEntityTableCrossReference_1_0.eContents().get(1);
+		private final Keyword cLeftCurlyBracketKeyword_2 = (Keyword)cGroup.eContents().get(2);
+		private final Keyword cStrategyKeyword_3 = (Keyword)cGroup.eContents().get(3);
+		private final Assignment cStrategyAssignment_4 = (Assignment)cGroup.eContents().get(4);
+		private final RuleCall cStrategyPlacementStrategyEnumRuleCall_4_0 = (RuleCall)cStrategyAssignment_4.eContents().get(0);
+		private final Group cGroup_5 = (Group)cGroup.eContents().get(5);
+		private final Keyword cNodesKeyword_5_0 = (Keyword)cGroup_5.eContents().get(0);
+		private final Assignment cNodesAssignment_5_1 = (Assignment)cGroup_5.eContents().get(1);
+		private final CrossReference cNodesNodeCrossReference_5_1_0 = (CrossReference)cNodesAssignment_5_1.eContents().get(0);
+		private final RuleCall cNodesNodeValidIDParserRuleCall_5_1_0_1 = (RuleCall)cNodesNodeCrossReference_5_1_0.eContents().get(1);
+		private final Group cGroup_5_2 = (Group)cGroup_5.eContents().get(2);
+		private final Keyword cCommaKeyword_5_2_0 = (Keyword)cGroup_5_2.eContents().get(0);
+		private final Assignment cNodesAssignment_5_2_1 = (Assignment)cGroup_5_2.eContents().get(1);
+		private final CrossReference cNodesNodeCrossReference_5_2_1_0 = (CrossReference)cNodesAssignment_5_2_1.eContents().get(0);
+		private final RuleCall cNodesNodeValidIDParserRuleCall_5_2_1_0_1 = (RuleCall)cNodesNodeCrossReference_5_2_1_0.eContents().get(1);
+		private final Keyword cRightCurlyBracketKeyword_6 = (Keyword)cGroup.eContents().get(6);
+		
+		//// Decides which nodes a colocation group's shards live on. Declared on the group's root
+		//// (the table without colocate_with); the colocated tables follow it.
+		//// spread: bucket i goes to the i-th declared node, round-robin over all nodes
+		//// pin: the whole group on one node, or round-robin over the listed nodes
+		//// A root without a place block is spread when nodes are declared
+		//PlaceDecl:
+		//    'place' entity=[sql::Table|ValidID] '{'
+		//    'strategy:' strategy=PlacementStrategy
+		//    ('nodes:' nodes+=[Node|ValidID] (',' nodes+=[Node|ValidID])*)?
+		//    '}'
+		//;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//'place' entity=[sql::Table|ValidID] '{'
+		//'strategy:' strategy=PlacementStrategy
+		//('nodes:' nodes+=[Node|ValidID] (',' nodes+=[Node|ValidID])*)?
+		//'}'
+		public Group getGroup() { return cGroup; }
+		
+		//'place'
+		public Keyword getPlaceKeyword_0() { return cPlaceKeyword_0; }
+		
+		//entity=[sql::Table|ValidID]
+		public Assignment getEntityAssignment_1() { return cEntityAssignment_1; }
+		
+		//[sql::Table|ValidID]
+		public CrossReference getEntityTableCrossReference_1_0() { return cEntityTableCrossReference_1_0; }
+		
+		//ValidID
+		public RuleCall getEntityTableValidIDParserRuleCall_1_0_1() { return cEntityTableValidIDParserRuleCall_1_0_1; }
+		
+		//'{'
+		public Keyword getLeftCurlyBracketKeyword_2() { return cLeftCurlyBracketKeyword_2; }
+		
+		//'strategy:'
+		public Keyword getStrategyKeyword_3() { return cStrategyKeyword_3; }
+		
+		//strategy=PlacementStrategy
+		public Assignment getStrategyAssignment_4() { return cStrategyAssignment_4; }
+		
+		//PlacementStrategy
+		public RuleCall getStrategyPlacementStrategyEnumRuleCall_4_0() { return cStrategyPlacementStrategyEnumRuleCall_4_0; }
+		
+		//('nodes:' nodes+=[Node|ValidID] (',' nodes+=[Node|ValidID])*)?
+		public Group getGroup_5() { return cGroup_5; }
+		
+		//'nodes:'
+		public Keyword getNodesKeyword_5_0() { return cNodesKeyword_5_0; }
+		
+		//nodes+=[Node|ValidID]
+		public Assignment getNodesAssignment_5_1() { return cNodesAssignment_5_1; }
+		
+		//[Node|ValidID]
+		public CrossReference getNodesNodeCrossReference_5_1_0() { return cNodesNodeCrossReference_5_1_0; }
+		
+		//ValidID
+		public RuleCall getNodesNodeValidIDParserRuleCall_5_1_0_1() { return cNodesNodeValidIDParserRuleCall_5_1_0_1; }
+		
+		//(',' nodes+=[Node|ValidID])*
+		public Group getGroup_5_2() { return cGroup_5_2; }
+		
+		//','
+		public Keyword getCommaKeyword_5_2_0() { return cCommaKeyword_5_2_0; }
+		
+		//nodes+=[Node|ValidID]
+		public Assignment getNodesAssignment_5_2_1() { return cNodesAssignment_5_2_1; }
+		
+		//[Node|ValidID]
+		public CrossReference getNodesNodeCrossReference_5_2_1_0() { return cNodesNodeCrossReference_5_2_1_0; }
+		
+		//ValidID
+		public RuleCall getNodesNodeValidIDParserRuleCall_5_2_1_0_1() { return cNodesNodeValidIDParserRuleCall_5_2_1_0_1; }
+		
+		//'}'
+		public Keyword getRightCurlyBracketKeyword_6() { return cRightCurlyBracketKeyword_6; }
 	}
 	public class RelationshipElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.ShardML.Relationship");
@@ -189,137 +405,137 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 		private final Group cGroup = (Group)rule.eContents().get(1);
 		private final Assignment cSubjectAssignment_0 = (Assignment)cGroup.eContents().get(0);
 		private final CrossReference cSubjectTableCrossReference_0_0 = (CrossReference)cSubjectAssignment_0.eContents().get(0);
-		private final RuleCall cSubjectTableIDTerminalRuleCall_0_0_1 = (RuleCall)cSubjectTableCrossReference_0_0.eContents().get(1);
+		private final RuleCall cSubjectTableValidIDParserRuleCall_0_0_1 = (RuleCall)cSubjectTableCrossReference_0_0.eContents().get(1);
 		private final Keyword cHas_manyKeyword_1 = (Keyword)cGroup.eContents().get(1);
 		private final Assignment cManyAssignment_2 = (Assignment)cGroup.eContents().get(2);
 		private final CrossReference cManyTableCrossReference_2_0 = (CrossReference)cManyAssignment_2.eContents().get(0);
-		private final RuleCall cManyTableIDTerminalRuleCall_2_0_1 = (RuleCall)cManyTableCrossReference_2_0.eContents().get(1);
+		private final RuleCall cManyTableValidIDParserRuleCall_2_0_1 = (RuleCall)cManyTableCrossReference_2_0.eContents().get(1);
 		
 		//HasMany:
-		//    subject=[sql::Table] 'has_many' many=[sql::Table]
+		//    subject=[sql::Table|ValidID] 'has_many' many=[sql::Table|ValidID]
 		//;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//subject=[sql::Table] 'has_many' many=[sql::Table]
+		//subject=[sql::Table|ValidID] 'has_many' many=[sql::Table|ValidID]
 		public Group getGroup() { return cGroup; }
 		
-		//subject=[sql::Table]
+		//subject=[sql::Table|ValidID]
 		public Assignment getSubjectAssignment_0() { return cSubjectAssignment_0; }
 		
-		//[sql::Table]
+		//[sql::Table|ValidID]
 		public CrossReference getSubjectTableCrossReference_0_0() { return cSubjectTableCrossReference_0_0; }
 		
-		//ID
-		public RuleCall getSubjectTableIDTerminalRuleCall_0_0_1() { return cSubjectTableIDTerminalRuleCall_0_0_1; }
+		//ValidID
+		public RuleCall getSubjectTableValidIDParserRuleCall_0_0_1() { return cSubjectTableValidIDParserRuleCall_0_0_1; }
 		
 		//'has_many'
 		public Keyword getHas_manyKeyword_1() { return cHas_manyKeyword_1; }
 		
-		//many=[sql::Table]
+		//many=[sql::Table|ValidID]
 		public Assignment getManyAssignment_2() { return cManyAssignment_2; }
 		
-		//[sql::Table]
+		//[sql::Table|ValidID]
 		public CrossReference getManyTableCrossReference_2_0() { return cManyTableCrossReference_2_0; }
 		
-		//ID
-		public RuleCall getManyTableIDTerminalRuleCall_2_0_1() { return cManyTableIDTerminalRuleCall_2_0_1; }
+		//ValidID
+		public RuleCall getManyTableValidIDParserRuleCall_2_0_1() { return cManyTableValidIDParserRuleCall_2_0_1; }
 	}
 	public class HasOneElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.ShardML.HasOne");
 		private final Group cGroup = (Group)rule.eContents().get(1);
 		private final Assignment cSubjectAssignment_0 = (Assignment)cGroup.eContents().get(0);
 		private final CrossReference cSubjectTableCrossReference_0_0 = (CrossReference)cSubjectAssignment_0.eContents().get(0);
-		private final RuleCall cSubjectTableIDTerminalRuleCall_0_0_1 = (RuleCall)cSubjectTableCrossReference_0_0.eContents().get(1);
+		private final RuleCall cSubjectTableValidIDParserRuleCall_0_0_1 = (RuleCall)cSubjectTableCrossReference_0_0.eContents().get(1);
 		private final Keyword cHas_oneKeyword_1 = (Keyword)cGroup.eContents().get(1);
 		private final Assignment cOneAssignment_2 = (Assignment)cGroup.eContents().get(2);
 		private final CrossReference cOneTableCrossReference_2_0 = (CrossReference)cOneAssignment_2.eContents().get(0);
-		private final RuleCall cOneTableIDTerminalRuleCall_2_0_1 = (RuleCall)cOneTableCrossReference_2_0.eContents().get(1);
+		private final RuleCall cOneTableValidIDParserRuleCall_2_0_1 = (RuleCall)cOneTableCrossReference_2_0.eContents().get(1);
 		
 		//HasOne:
-		//    subject=[sql::Table] 'has_one' one = [sql::Table]
+		//    subject=[sql::Table|ValidID] 'has_one' one = [sql::Table|ValidID]
 		//;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//subject=[sql::Table] 'has_one' one = [sql::Table]
+		//subject=[sql::Table|ValidID] 'has_one' one = [sql::Table|ValidID]
 		public Group getGroup() { return cGroup; }
 		
-		//subject=[sql::Table]
+		//subject=[sql::Table|ValidID]
 		public Assignment getSubjectAssignment_0() { return cSubjectAssignment_0; }
 		
-		//[sql::Table]
+		//[sql::Table|ValidID]
 		public CrossReference getSubjectTableCrossReference_0_0() { return cSubjectTableCrossReference_0_0; }
 		
-		//ID
-		public RuleCall getSubjectTableIDTerminalRuleCall_0_0_1() { return cSubjectTableIDTerminalRuleCall_0_0_1; }
+		//ValidID
+		public RuleCall getSubjectTableValidIDParserRuleCall_0_0_1() { return cSubjectTableValidIDParserRuleCall_0_0_1; }
 		
 		//'has_one'
 		public Keyword getHas_oneKeyword_1() { return cHas_oneKeyword_1; }
 		
-		//one = [sql::Table]
+		//one = [sql::Table|ValidID]
 		public Assignment getOneAssignment_2() { return cOneAssignment_2; }
 		
-		//[sql::Table]
+		//[sql::Table|ValidID]
 		public CrossReference getOneTableCrossReference_2_0() { return cOneTableCrossReference_2_0; }
 		
-		//ID
-		public RuleCall getOneTableIDTerminalRuleCall_2_0_1() { return cOneTableIDTerminalRuleCall_2_0_1; }
+		//ValidID
+		public RuleCall getOneTableValidIDParserRuleCall_2_0_1() { return cOneTableValidIDParserRuleCall_2_0_1; }
 	}
 	public class BelongsToElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.ShardML.BelongsTo");
 		private final Group cGroup = (Group)rule.eContents().get(1);
 		private final Assignment cSubjectAssignment_0 = (Assignment)cGroup.eContents().get(0);
 		private final CrossReference cSubjectTableCrossReference_0_0 = (CrossReference)cSubjectAssignment_0.eContents().get(0);
-		private final RuleCall cSubjectTableIDTerminalRuleCall_0_0_1 = (RuleCall)cSubjectTableCrossReference_0_0.eContents().get(1);
+		private final RuleCall cSubjectTableValidIDParserRuleCall_0_0_1 = (RuleCall)cSubjectTableCrossReference_0_0.eContents().get(1);
 		private final Keyword cBelongs_toKeyword_1 = (Keyword)cGroup.eContents().get(1);
 		private final Assignment cBelongsAssignment_2 = (Assignment)cGroup.eContents().get(2);
 		private final CrossReference cBelongsTableCrossReference_2_0 = (CrossReference)cBelongsAssignment_2.eContents().get(0);
-		private final RuleCall cBelongsTableIDTerminalRuleCall_2_0_1 = (RuleCall)cBelongsTableCrossReference_2_0.eContents().get(1);
+		private final RuleCall cBelongsTableValidIDParserRuleCall_2_0_1 = (RuleCall)cBelongsTableCrossReference_2_0.eContents().get(1);
 		private final Keyword cViaKeyword_3 = (Keyword)cGroup.eContents().get(3);
 		private final Assignment cViaAssignment_4 = (Assignment)cGroup.eContents().get(4);
 		private final CrossReference cViaColumnCrossReference_4_0 = (CrossReference)cViaAssignment_4.eContents().get(0);
-		private final RuleCall cViaColumnIDTerminalRuleCall_4_0_1 = (RuleCall)cViaColumnCrossReference_4_0.eContents().get(1);
+		private final RuleCall cViaColumnValidIDParserRuleCall_4_0_1 = (RuleCall)cViaColumnCrossReference_4_0.eContents().get(1);
 		
 		//// via names the foreign key column on the subject that points at the parent
 		//BelongsTo:
-		//    subject=[sql::Table] 'belongs_to' belongs = [sql::Table] 'via' via=[sql::Column]
+		//    subject=[sql::Table|ValidID] 'belongs_to' belongs = [sql::Table|ValidID] 'via' via=[sql::Column|ValidID]
 		//;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//subject=[sql::Table] 'belongs_to' belongs = [sql::Table] 'via' via=[sql::Column]
+		//subject=[sql::Table|ValidID] 'belongs_to' belongs = [sql::Table|ValidID] 'via' via=[sql::Column|ValidID]
 		public Group getGroup() { return cGroup; }
 		
-		//subject=[sql::Table]
+		//subject=[sql::Table|ValidID]
 		public Assignment getSubjectAssignment_0() { return cSubjectAssignment_0; }
 		
-		//[sql::Table]
+		//[sql::Table|ValidID]
 		public CrossReference getSubjectTableCrossReference_0_0() { return cSubjectTableCrossReference_0_0; }
 		
-		//ID
-		public RuleCall getSubjectTableIDTerminalRuleCall_0_0_1() { return cSubjectTableIDTerminalRuleCall_0_0_1; }
+		//ValidID
+		public RuleCall getSubjectTableValidIDParserRuleCall_0_0_1() { return cSubjectTableValidIDParserRuleCall_0_0_1; }
 		
 		//'belongs_to'
 		public Keyword getBelongs_toKeyword_1() { return cBelongs_toKeyword_1; }
 		
-		//belongs = [sql::Table]
+		//belongs = [sql::Table|ValidID]
 		public Assignment getBelongsAssignment_2() { return cBelongsAssignment_2; }
 		
-		//[sql::Table]
+		//[sql::Table|ValidID]
 		public CrossReference getBelongsTableCrossReference_2_0() { return cBelongsTableCrossReference_2_0; }
 		
-		//ID
-		public RuleCall getBelongsTableIDTerminalRuleCall_2_0_1() { return cBelongsTableIDTerminalRuleCall_2_0_1; }
+		//ValidID
+		public RuleCall getBelongsTableValidIDParserRuleCall_2_0_1() { return cBelongsTableValidIDParserRuleCall_2_0_1; }
 		
 		//'via'
 		public Keyword getViaKeyword_3() { return cViaKeyword_3; }
 		
-		//via=[sql::Column]
+		//via=[sql::Column|ValidID]
 		public Assignment getViaAssignment_4() { return cViaAssignment_4; }
 		
-		//[sql::Column]
+		//[sql::Column|ValidID]
 		public CrossReference getViaColumnCrossReference_4_0() { return cViaColumnCrossReference_4_0; }
 		
-		//ID
-		public RuleCall getViaColumnIDTerminalRuleCall_4_0_1() { return cViaColumnIDTerminalRuleCall_4_0_1; }
+		//ValidID
+		public RuleCall getViaColumnValidIDParserRuleCall_4_0_1() { return cViaColumnValidIDParserRuleCall_4_0_1; }
 	}
 	public class ShardDeclElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.ShardML.ShardDecl");
@@ -327,7 +543,7 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 		private final Keyword cShardKeyword_0 = (Keyword)cGroup.eContents().get(0);
 		private final Assignment cEntityAssignment_1 = (Assignment)cGroup.eContents().get(1);
 		private final CrossReference cEntityTableCrossReference_1_0 = (CrossReference)cEntityAssignment_1.eContents().get(0);
-		private final RuleCall cEntityTableIDTerminalRuleCall_1_0_1 = (RuleCall)cEntityTableCrossReference_1_0.eContents().get(1);
+		private final RuleCall cEntityTableValidIDParserRuleCall_1_0_1 = (RuleCall)cEntityTableCrossReference_1_0.eContents().get(1);
 		private final Keyword cLeftCurlyBracketKeyword_2 = (Keyword)cGroup.eContents().get(2);
 		private final Keyword cStrategyKeyword_3 = (Keyword)cGroup.eContents().get(3);
 		private final Assignment cStrategyAssignment_4 = (Assignment)cGroup.eContents().get(4);
@@ -336,7 +552,7 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 		private final Keyword cKeyKeyword_5_0 = (Keyword)cGroup_5.eContents().get(0);
 		private final Assignment cIdAssignment_5_1 = (Assignment)cGroup_5.eContents().get(1);
 		private final CrossReference cIdColumnCrossReference_5_1_0 = (CrossReference)cIdAssignment_5_1.eContents().get(0);
-		private final RuleCall cIdColumnIDTerminalRuleCall_5_1_0_1 = (RuleCall)cIdColumnCrossReference_5_1_0.eContents().get(1);
+		private final RuleCall cIdColumnValidIDParserRuleCall_5_1_0_1 = (RuleCall)cIdColumnCrossReference_5_1_0.eContents().get(1);
 		private final Group cGroup_6 = (Group)cGroup.eContents().get(6);
 		private final Keyword cBucketsKeyword_6_0 = (Keyword)cGroup_6.eContents().get(0);
 		private final Assignment cBucketsAssignment_6_1 = (Assignment)cGroup_6.eContents().get(1);
@@ -345,7 +561,7 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 		private final Keyword cColocate_withKeyword_7_0 = (Keyword)cGroup_7.eContents().get(0);
 		private final Assignment cColocateAssignment_7_1 = (Assignment)cGroup_7.eContents().get(1);
 		private final CrossReference cColocateTableCrossReference_7_1_0 = (CrossReference)cColocateAssignment_7_1.eContents().get(0);
-		private final RuleCall cColocateTableIDTerminalRuleCall_7_1_0_1 = (RuleCall)cColocateTableCrossReference_7_1_0.eContents().get(1);
+		private final RuleCall cColocateTableValidIDParserRuleCall_7_1_0_1 = (RuleCall)cColocateTableCrossReference_7_1_0.eContents().get(1);
 		private final Keyword cRightCurlyBracketKeyword_8 = (Keyword)cGroup.eContents().get(8);
 		
 		//// Defines how a table is distributed across shards
@@ -353,32 +569,32 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 		//// replicated tables are copied to every shard
 		//// colocate_with: groups this table with another on the same shard, for efficient joins
 		//ShardDecl:
-		//    'shard' entity=[sql::Table] '{'
+		//    'shard' entity=[sql::Table|ValidID] '{'
 		//    'strategy:' strategy = Strategy
-		//    ('key:' id=[sql::Column])?
+		//    ('key:' id=[sql::Column|ValidID])?
 		//    ('buckets:' buckets=INT)?
-		//    ('colocate_with:' colocate=[sql::Table])? '}'
+		//    ('colocate_with:' colocate=[sql::Table|ValidID])? '}'
 		//;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//'shard' entity=[sql::Table] '{'
+		//'shard' entity=[sql::Table|ValidID] '{'
 		//'strategy:' strategy = Strategy
-		//('key:' id=[sql::Column])?
+		//('key:' id=[sql::Column|ValidID])?
 		//('buckets:' buckets=INT)?
-		//('colocate_with:' colocate=[sql::Table])? '}'
+		//('colocate_with:' colocate=[sql::Table|ValidID])? '}'
 		public Group getGroup() { return cGroup; }
 		
 		//'shard'
 		public Keyword getShardKeyword_0() { return cShardKeyword_0; }
 		
-		//entity=[sql::Table]
+		//entity=[sql::Table|ValidID]
 		public Assignment getEntityAssignment_1() { return cEntityAssignment_1; }
 		
-		//[sql::Table]
+		//[sql::Table|ValidID]
 		public CrossReference getEntityTableCrossReference_1_0() { return cEntityTableCrossReference_1_0; }
 		
-		//ID
-		public RuleCall getEntityTableIDTerminalRuleCall_1_0_1() { return cEntityTableIDTerminalRuleCall_1_0_1; }
+		//ValidID
+		public RuleCall getEntityTableValidIDParserRuleCall_1_0_1() { return cEntityTableValidIDParserRuleCall_1_0_1; }
 		
 		//'{'
 		public Keyword getLeftCurlyBracketKeyword_2() { return cLeftCurlyBracketKeyword_2; }
@@ -392,20 +608,20 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 		//Strategy
 		public RuleCall getStrategyStrategyEnumRuleCall_4_0() { return cStrategyStrategyEnumRuleCall_4_0; }
 		
-		//('key:' id=[sql::Column])?
+		//('key:' id=[sql::Column|ValidID])?
 		public Group getGroup_5() { return cGroup_5; }
 		
 		//'key:'
 		public Keyword getKeyKeyword_5_0() { return cKeyKeyword_5_0; }
 		
-		//id=[sql::Column]
+		//id=[sql::Column|ValidID]
 		public Assignment getIdAssignment_5_1() { return cIdAssignment_5_1; }
 		
-		//[sql::Column]
+		//[sql::Column|ValidID]
 		public CrossReference getIdColumnCrossReference_5_1_0() { return cIdColumnCrossReference_5_1_0; }
 		
-		//ID
-		public RuleCall getIdColumnIDTerminalRuleCall_5_1_0_1() { return cIdColumnIDTerminalRuleCall_5_1_0_1; }
+		//ValidID
+		public RuleCall getIdColumnValidIDParserRuleCall_5_1_0_1() { return cIdColumnValidIDParserRuleCall_5_1_0_1; }
 		
 		//('buckets:' buckets=INT)?
 		public Group getGroup_6() { return cGroup_6; }
@@ -419,20 +635,20 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 		//INT
 		public RuleCall getBucketsINTTerminalRuleCall_6_1_0() { return cBucketsINTTerminalRuleCall_6_1_0; }
 		
-		//('colocate_with:' colocate=[sql::Table])?
+		//('colocate_with:' colocate=[sql::Table|ValidID])?
 		public Group getGroup_7() { return cGroup_7; }
 		
 		//'colocate_with:'
 		public Keyword getColocate_withKeyword_7_0() { return cColocate_withKeyword_7_0; }
 		
-		//colocate=[sql::Table]
+		//colocate=[sql::Table|ValidID]
 		public Assignment getColocateAssignment_7_1() { return cColocateAssignment_7_1; }
 		
-		//[sql::Table]
+		//[sql::Table|ValidID]
 		public CrossReference getColocateTableCrossReference_7_1_0() { return cColocateTableCrossReference_7_1_0; }
 		
-		//ID
-		public RuleCall getColocateTableIDTerminalRuleCall_7_1_0_1() { return cColocateTableIDTerminalRuleCall_7_1_0_1; }
+		//ValidID
+		public RuleCall getColocateTableValidIDParserRuleCall_7_1_0_1() { return cColocateTableValidIDParserRuleCall_7_1_0_1; }
 		
 		//'}'
 		public Keyword getRightCurlyBracketKeyword_8() { return cRightCurlyBracketKeyword_8; }
@@ -443,7 +659,7 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 		private final Keyword cRouteKeyword_0 = (Keyword)cGroup.eContents().get(0);
 		private final Assignment cEntityAssignment_1 = (Assignment)cGroup.eContents().get(1);
 		private final CrossReference cEntityTableCrossReference_1_0 = (CrossReference)cEntityAssignment_1.eContents().get(0);
-		private final RuleCall cEntityTableIDTerminalRuleCall_1_0_1 = (RuleCall)cEntityTableCrossReference_1_0.eContents().get(1);
+		private final RuleCall cEntityTableValidIDParserRuleCall_1_0_1 = (RuleCall)cEntityTableCrossReference_1_0.eContents().get(1);
 		private final Keyword cLeftCurlyBracketKeyword_2 = (Keyword)cGroup.eContents().get(2);
 		private final Keyword cPolicyKeyword_3 = (Keyword)cGroup.eContents().get(3);
 		private final Assignment cPolicyAssignment_4 = (Assignment)cGroup.eContents().get(4);
@@ -463,14 +679,14 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 		//// deny: treat the as errors
 		//// max_conditions: limits where clause complexity
 		//RouteRule:
-		//    'route' entity=[sql::Table] '{'
+		//    'route' entity=[sql::Table|ValidID] '{'
 		//    'policy:' policy=Policy
 		//    ('max_conditions:' condtions=INT)? queries += QueryPattern*
 		//    '}'
 		//;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//'route' entity=[sql::Table] '{'
+		//'route' entity=[sql::Table|ValidID] '{'
 		//'policy:' policy=Policy
 		//('max_conditions:' condtions=INT)? queries += QueryPattern*
 		//'}'
@@ -479,14 +695,14 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 		//'route'
 		public Keyword getRouteKeyword_0() { return cRouteKeyword_0; }
 		
-		//entity=[sql::Table]
+		//entity=[sql::Table|ValidID]
 		public Assignment getEntityAssignment_1() { return cEntityAssignment_1; }
 		
-		//[sql::Table]
+		//[sql::Table|ValidID]
 		public CrossReference getEntityTableCrossReference_1_0() { return cEntityTableCrossReference_1_0; }
 		
-		//ID
-		public RuleCall getEntityTableIDTerminalRuleCall_1_0_1() { return cEntityTableIDTerminalRuleCall_1_0_1; }
+		//ValidID
+		public RuleCall getEntityTableValidIDParserRuleCall_1_0_1() { return cEntityTableValidIDParserRuleCall_1_0_1; }
 		
 		//'{'
 		public Keyword getLeftCurlyBracketKeyword_2() { return cLeftCurlyBracketKeyword_2; }
@@ -691,27 +907,27 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 		private final Group cGroup = (Group)rule.eContents().get(1);
 		private final Assignment cFieldAssignment_0 = (Assignment)cGroup.eContents().get(0);
 		private final CrossReference cFieldColumnCrossReference_0_0 = (CrossReference)cFieldAssignment_0.eContents().get(0);
-		private final RuleCall cFieldColumnIDTerminalRuleCall_0_0_1 = (RuleCall)cFieldColumnCrossReference_0_0.eContents().get(1);
+		private final RuleCall cFieldColumnValidIDParserRuleCall_0_0_1 = (RuleCall)cFieldColumnCrossReference_0_0.eContents().get(1);
 		private final Assignment cOpAssignment_1 = (Assignment)cGroup.eContents().get(1);
 		private final RuleCall cOpOperatorEnumRuleCall_1_0 = (RuleCall)cOpAssignment_1.eContents().get(0);
 		private final Keyword cQuestionMarkKeyword_2 = (Keyword)cGroup.eContents().get(2);
 		
 		//WhereCondition:
-		//    field=[sql::Column] op=Operator '?'
+		//    field=[sql::Column|ValidID] op=Operator '?'
 		//;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//field=[sql::Column] op=Operator '?'
+		//field=[sql::Column|ValidID] op=Operator '?'
 		public Group getGroup() { return cGroup; }
 		
-		//field=[sql::Column]
+		//field=[sql::Column|ValidID]
 		public Assignment getFieldAssignment_0() { return cFieldAssignment_0; }
 		
-		//[sql::Column]
+		//[sql::Column|ValidID]
 		public CrossReference getFieldColumnCrossReference_0_0() { return cFieldColumnCrossReference_0_0; }
 		
-		//ID
-		public RuleCall getFieldColumnIDTerminalRuleCall_0_0_1() { return cFieldColumnIDTerminalRuleCall_0_0_1; }
+		//ValidID
+		public RuleCall getFieldColumnValidIDParserRuleCall_0_0_1() { return cFieldColumnValidIDParserRuleCall_0_0_1; }
 		
 		//op=Operator
 		public Assignment getOpAssignment_1() { return cOpAssignment_1; }
@@ -727,26 +943,26 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 		private final Group cGroup = (Group)rule.eContents().get(1);
 		private final Assignment cFieldAssignment_0 = (Assignment)cGroup.eContents().get(0);
 		private final CrossReference cFieldColumnCrossReference_0_0 = (CrossReference)cFieldAssignment_0.eContents().get(0);
-		private final RuleCall cFieldColumnIDTerminalRuleCall_0_0_1 = (RuleCall)cFieldColumnCrossReference_0_0.eContents().get(1);
+		private final RuleCall cFieldColumnValidIDParserRuleCall_0_0_1 = (RuleCall)cFieldColumnCrossReference_0_0.eContents().get(1);
 		private final Assignment cOrderAssignment_1 = (Assignment)cGroup.eContents().get(1);
 		private final RuleCall cOrderSortOrderEnumRuleCall_1_0 = (RuleCall)cOrderAssignment_1.eContents().get(0);
 		
 		//SortClause:
-		//    field=[sql::Column] order=SortOrder
+		//    field=[sql::Column|ValidID] order=SortOrder
 		//;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//field=[sql::Column] order=SortOrder
+		//field=[sql::Column|ValidID] order=SortOrder
 		public Group getGroup() { return cGroup; }
 		
-		//field=[sql::Column]
+		//field=[sql::Column|ValidID]
 		public Assignment getFieldAssignment_0() { return cFieldAssignment_0; }
 		
-		//[sql::Column]
+		//[sql::Column|ValidID]
 		public CrossReference getFieldColumnCrossReference_0_0() { return cFieldColumnCrossReference_0_0; }
 		
-		//ID
-		public RuleCall getFieldColumnIDTerminalRuleCall_0_0_1() { return cFieldColumnIDTerminalRuleCall_0_0_1; }
+		//ValidID
+		public RuleCall getFieldColumnValidIDParserRuleCall_0_0_1() { return cFieldColumnValidIDParserRuleCall_0_0_1; }
 		
 		//order=SortOrder
 		public Assignment getOrderAssignment_1() { return cOrderAssignment_1; }
@@ -758,23 +974,51 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.ShardML.GroupBy");
 		private final Assignment cFieldAssignment = (Assignment)rule.eContents().get(1);
 		private final CrossReference cFieldColumnCrossReference_0 = (CrossReference)cFieldAssignment.eContents().get(0);
-		private final RuleCall cFieldColumnIDTerminalRuleCall_0_1 = (RuleCall)cFieldColumnCrossReference_0.eContents().get(1);
+		private final RuleCall cFieldColumnValidIDParserRuleCall_0_1 = (RuleCall)cFieldColumnCrossReference_0.eContents().get(1);
 		
 		//GroupBy:
-		//    field=[sql::Column]
+		//    field=[sql::Column|ValidID]
 		//;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//field=[sql::Column]
+		//field=[sql::Column|ValidID]
 		public Assignment getFieldAssignment() { return cFieldAssignment; }
 		
-		//[sql::Column]
+		//[sql::Column|ValidID]
 		public CrossReference getFieldColumnCrossReference_0() { return cFieldColumnCrossReference_0; }
 		
-		//ID
-		public RuleCall getFieldColumnIDTerminalRuleCall_0_1() { return cFieldColumnIDTerminalRuleCall_0_1; }
+		//ValidID
+		public RuleCall getFieldColumnValidIDParserRuleCall_0_1() { return cFieldColumnValidIDParserRuleCall_0_1; }
 	}
 	
+	public class PlacementStrategyElements extends AbstractElementFinder.AbstractEnumRuleElementFinder {
+		private final EnumRule rule = (EnumRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.ShardML.PlacementStrategy");
+		private final Alternatives cAlternatives = (Alternatives)rule.eContents().get(1);
+		private final EnumLiteralDeclaration cSPREADEnumLiteralDeclaration_0 = (EnumLiteralDeclaration)cAlternatives.eContents().get(0);
+		private final Keyword cSPREADSpreadKeyword_0_0 = (Keyword)cSPREADEnumLiteralDeclaration_0.eContents().get(0);
+		private final EnumLiteralDeclaration cPINEnumLiteralDeclaration_1 = (EnumLiteralDeclaration)cAlternatives.eContents().get(1);
+		private final Keyword cPINPinKeyword_1_0 = (Keyword)cPINEnumLiteralDeclaration_1.eContents().get(0);
+		
+		//enum PlacementStrategy:
+		//    SPREAD='spread'|PIN='pin'
+		//;
+		public EnumRule getRule() { return rule; }
+		
+		//SPREAD='spread'|PIN='pin'
+		public Alternatives getAlternatives() { return cAlternatives; }
+		
+		//SPREAD='spread'
+		public EnumLiteralDeclaration getSPREADEnumLiteralDeclaration_0() { return cSPREADEnumLiteralDeclaration_0; }
+		
+		//'spread'
+		public Keyword getSPREADSpreadKeyword_0_0() { return cSPREADSpreadKeyword_0_0; }
+		
+		//PIN='pin'
+		public EnumLiteralDeclaration getPINEnumLiteralDeclaration_1() { return cPINEnumLiteralDeclaration_1; }
+		
+		//'pin'
+		public Keyword getPINPinKeyword_1_0() { return cPINPinKeyword_1_0; }
+	}
 	public class DatabaseTypeElements extends AbstractElementFinder.AbstractEnumRuleElementFinder {
 		private final EnumRule rule = (EnumRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.ShardML.DatabaseType");
 		private final Alternatives cAlternatives = (Alternatives)rule.eContents().get(1);
@@ -1034,6 +1278,10 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 	private final ModelElements pModel;
 	private final ImportElements pImport;
 	private final DatabaseElements pDatabase;
+	private final ValidIDElements pValidID;
+	private final NodeElements pNode;
+	private final PlaceDeclElements pPlaceDecl;
+	private final PlacementStrategyElements ePlacementStrategy;
 	private final DatabaseTypeElements eDatabaseType;
 	private final RelationshipElements pRelationship;
 	private final HasManyElements pHasMany;
@@ -1065,6 +1313,10 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 		this.pModel = new ModelElements();
 		this.pImport = new ImportElements();
 		this.pDatabase = new DatabaseElements();
+		this.pValidID = new ValidIDElements();
+		this.pNode = new NodeElements();
+		this.pPlaceDecl = new PlaceDeclElements();
+		this.ePlacementStrategy = new PlacementStrategyElements();
 		this.eDatabaseType = new DatabaseTypeElements();
 		this.pRelationship = new RelationshipElements();
 		this.pHasMany = new HasManyElements();
@@ -1141,7 +1393,9 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 	//Database:
 	//    'database' name=ID '{'
 	//    'type:' type = DatabaseType
+	//    nodes += Node*
 	//    shard_decl += ShardDecl*
+	//    placements += PlaceDecl*
 	//    route_rules += RouteRule*
 	//    relationships += Relationship* '}'
 	//;
@@ -1151,6 +1405,64 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 	
 	public ParserRule getDatabaseRule() {
 		return getDatabaseAccess().getRule();
+	}
+	
+	//// Table and column names may also be the bare words placement added as keywords,
+	//// so schemas with a table or column called e.g. 'node' keep working
+	//ValidID:
+	//    ID | 'node' | 'place' | 'spread' | 'pin'
+	//;
+	public ValidIDElements getValidIDAccess() {
+		return pValidID;
+	}
+	
+	public ParserRule getValidIDRule() {
+		return getValidIDAccess().getRule();
+	}
+	
+	//// A worker node of the cluster: the logical name the model uses, and where Citus knows it
+	//Node:
+	//    'node' name=ValidID '{'
+	//    'host:' host=STRING
+	//    'port:' port=INT
+	//    '}'
+	//;
+	public NodeElements getNodeAccess() {
+		return pNode;
+	}
+	
+	public ParserRule getNodeRule() {
+		return getNodeAccess().getRule();
+	}
+	
+	//// Decides which nodes a colocation group's shards live on. Declared on the group's root
+	//// (the table without colocate_with); the colocated tables follow it.
+	//// spread: bucket i goes to the i-th declared node, round-robin over all nodes
+	//// pin: the whole group on one node, or round-robin over the listed nodes
+	//// A root without a place block is spread when nodes are declared
+	//PlaceDecl:
+	//    'place' entity=[sql::Table|ValidID] '{'
+	//    'strategy:' strategy=PlacementStrategy
+	//    ('nodes:' nodes+=[Node|ValidID] (',' nodes+=[Node|ValidID])*)?
+	//    '}'
+	//;
+	public PlaceDeclElements getPlaceDeclAccess() {
+		return pPlaceDecl;
+	}
+	
+	public ParserRule getPlaceDeclRule() {
+		return getPlaceDeclAccess().getRule();
+	}
+	
+	//enum PlacementStrategy:
+	//    SPREAD='spread'|PIN='pin'
+	//;
+	public PlacementStrategyElements getPlacementStrategyAccess() {
+		return ePlacementStrategy;
+	}
+	
+	public EnumRule getPlacementStrategyRule() {
+		return getPlacementStrategyAccess().getRule();
 	}
 	
 	//// Target platforms; only postgres is supported
@@ -1179,7 +1491,7 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 	}
 	
 	//HasMany:
-	//    subject=[sql::Table] 'has_many' many=[sql::Table]
+	//    subject=[sql::Table|ValidID] 'has_many' many=[sql::Table|ValidID]
 	//;
 	public HasManyElements getHasManyAccess() {
 		return pHasMany;
@@ -1190,7 +1502,7 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 	}
 	
 	//HasOne:
-	//    subject=[sql::Table] 'has_one' one = [sql::Table]
+	//    subject=[sql::Table|ValidID] 'has_one' one = [sql::Table|ValidID]
 	//;
 	public HasOneElements getHasOneAccess() {
 		return pHasOne;
@@ -1202,7 +1514,7 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 	
 	//// via names the foreign key column on the subject that points at the parent
 	//BelongsTo:
-	//    subject=[sql::Table] 'belongs_to' belongs = [sql::Table] 'via' via=[sql::Column]
+	//    subject=[sql::Table|ValidID] 'belongs_to' belongs = [sql::Table|ValidID] 'via' via=[sql::Column|ValidID]
 	//;
 	public BelongsToElements getBelongsToAccess() {
 		return pBelongsTo;
@@ -1217,11 +1529,11 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 	//// replicated tables are copied to every shard
 	//// colocate_with: groups this table with another on the same shard, for efficient joins
 	//ShardDecl:
-	//    'shard' entity=[sql::Table] '{'
+	//    'shard' entity=[sql::Table|ValidID] '{'
 	//    'strategy:' strategy = Strategy
-	//    ('key:' id=[sql::Column])?
+	//    ('key:' id=[sql::Column|ValidID])?
 	//    ('buckets:' buckets=INT)?
-	//    ('colocate_with:' colocate=[sql::Table])? '}'
+	//    ('colocate_with:' colocate=[sql::Table|ValidID])? '}'
 	//;
 	public ShardDeclElements getShardDeclAccess() {
 		return pShardDecl;
@@ -1249,7 +1561,7 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 	//// deny: treat the as errors
 	//// max_conditions: limits where clause complexity
 	//RouteRule:
-	//    'route' entity=[sql::Table] '{'
+	//    'route' entity=[sql::Table|ValidID] '{'
 	//    'policy:' policy=Policy
 	//    ('max_conditions:' condtions=INT)? queries += QueryPattern*
 	//    '}'
@@ -1320,7 +1632,7 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 	}
 	
 	//WhereCondition:
-	//    field=[sql::Column] op=Operator '?'
+	//    field=[sql::Column|ValidID] op=Operator '?'
 	//;
 	public WhereConditionElements getWhereConditionAccess() {
 		return pWhereCondition;
@@ -1353,7 +1665,7 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 	}
 	
 	//SortClause:
-	//    field=[sql::Column] order=SortOrder
+	//    field=[sql::Column|ValidID] order=SortOrder
 	//;
 	public SortClauseElements getSortClauseAccess() {
 		return pSortClause;
@@ -1375,7 +1687,7 @@ public class ShardMLGrammarAccess extends AbstractElementFinder.AbstractGrammarE
 	}
 	
 	//GroupBy:
-	//    field=[sql::Column]
+	//    field=[sql::Column|ValidID]
 	//;
 	public GroupByElements getGroupByAccess() {
 		return pGroupBy;

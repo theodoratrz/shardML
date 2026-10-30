@@ -91,6 +91,16 @@ public class ShardMLAdapterFactory extends AdapterFactoryImpl
         return createDatabaseAdapter();
       }
       @Override
+      public Adapter caseNode(Node object)
+      {
+        return createNodeAdapter();
+      }
+      @Override
+      public Adapter casePlaceDecl(PlaceDecl object)
+      {
+        return createPlaceDeclAdapter();
+      }
+      @Override
       public Adapter caseRelationship(Relationship object)
       {
         return createRelationshipAdapter();
@@ -208,6 +218,36 @@ public class ShardMLAdapterFactory extends AdapterFactoryImpl
    * @generated
    */
   public Adapter createDatabaseAdapter()
+  {
+    return null;
+  }
+
+  /**
+   * Creates a new adapter for an object of class '{@link io.shardml.shardML.Node <em>Node</em>}'.
+   * <!-- begin-user-doc -->
+   * This default implementation returns null so that we can easily ignore cases;
+   * it's useful to ignore a case when inheritance will catch all the cases anyway.
+   * <!-- end-user-doc -->
+   * @return the new adapter.
+   * @see io.shardml.shardML.Node
+   * @generated
+   */
+  public Adapter createNodeAdapter()
+  {
+    return null;
+  }
+
+  /**
+   * Creates a new adapter for an object of class '{@link io.shardml.shardML.PlaceDecl <em>Place Decl</em>}'.
+   * <!-- begin-user-doc -->
+   * This default implementation returns null so that we can easily ignore cases;
+   * it's useful to ignore a case when inheritance will catch all the cases anyway.
+   * <!-- end-user-doc -->
+   * @return the new adapter.
+   * @see io.shardml.shardML.PlaceDecl
+   * @generated
+   */
+  public Adapter createPlaceDeclAdapter()
   {
     return null;
   }

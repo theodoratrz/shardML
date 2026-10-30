@@ -12,7 +12,10 @@ import io.shardml.shardML.HasOne;
 import io.shardml.shardML.Import;
 import io.shardml.shardML.Link;
 import io.shardml.shardML.Model;
+import io.shardml.shardML.Node;
 import io.shardml.shardML.Operator;
+import io.shardml.shardML.PlaceDecl;
+import io.shardml.shardML.PlacementStrategy;
 import io.shardml.shardML.Policy;
 import io.shardml.shardML.QueryPattern;
 import io.shardml.shardML.QueryType;
@@ -65,6 +68,20 @@ public class ShardMLPackageImpl extends EPackageImpl implements ShardMLPackage
    * @generated
    */
   private EClass databaseEClass = null;
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  private EClass nodeEClass = null;
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  private EClass placeDeclEClass = null;
 
   /**
    * <!-- begin-user-doc -->
@@ -142,6 +159,13 @@ public class ShardMLPackageImpl extends EPackageImpl implements ShardMLPackage
    * @generated
    */
   private EClass groupByEClass = null;
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  private EEnum placementStrategyEEnum = null;
 
   /**
    * <!-- begin-user-doc -->
@@ -351,7 +375,7 @@ public class ShardMLPackageImpl extends EPackageImpl implements ShardMLPackage
    * @generated
    */
   @Override
-  public EReference getDatabase_Shard_decl()
+  public EReference getDatabase_Nodes()
   {
     return (EReference)databaseEClass.getEStructuralFeatures().get(2);
   }
@@ -362,7 +386,7 @@ public class ShardMLPackageImpl extends EPackageImpl implements ShardMLPackage
    * @generated
    */
   @Override
-  public EReference getDatabase_Route_rules()
+  public EReference getDatabase_Shard_decl()
   {
     return (EReference)databaseEClass.getEStructuralFeatures().get(3);
   }
@@ -373,9 +397,119 @@ public class ShardMLPackageImpl extends EPackageImpl implements ShardMLPackage
    * @generated
    */
   @Override
-  public EReference getDatabase_Relationships()
+  public EReference getDatabase_Placements()
   {
     return (EReference)databaseEClass.getEStructuralFeatures().get(4);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EReference getDatabase_Route_rules()
+  {
+    return (EReference)databaseEClass.getEStructuralFeatures().get(5);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EReference getDatabase_Relationships()
+  {
+    return (EReference)databaseEClass.getEStructuralFeatures().get(6);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EClass getNode()
+  {
+    return nodeEClass;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getNode_Name()
+  {
+    return (EAttribute)nodeEClass.getEStructuralFeatures().get(0);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getNode_Host()
+  {
+    return (EAttribute)nodeEClass.getEStructuralFeatures().get(1);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getNode_Port()
+  {
+    return (EAttribute)nodeEClass.getEStructuralFeatures().get(2);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EClass getPlaceDecl()
+  {
+    return placeDeclEClass;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EReference getPlaceDecl_Entity()
+  {
+    return (EReference)placeDeclEClass.getEStructuralFeatures().get(0);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getPlaceDecl_Strategy()
+  {
+    return (EAttribute)placeDeclEClass.getEStructuralFeatures().get(1);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EReference getPlaceDecl_Nodes()
+  {
+    return (EReference)placeDeclEClass.getEStructuralFeatures().get(2);
   }
 
   /**
@@ -813,6 +947,17 @@ public class ShardMLPackageImpl extends EPackageImpl implements ShardMLPackage
    * @generated
    */
   @Override
+  public EEnum getPlacementStrategy()
+  {
+    return placementStrategyEEnum;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
   public EEnum getDatabaseType()
   {
     return databaseTypeEEnum;
@@ -925,9 +1070,21 @@ public class ShardMLPackageImpl extends EPackageImpl implements ShardMLPackage
     databaseEClass = createEClass(DATABASE);
     createEAttribute(databaseEClass, DATABASE__NAME);
     createEAttribute(databaseEClass, DATABASE__TYPE);
+    createEReference(databaseEClass, DATABASE__NODES);
     createEReference(databaseEClass, DATABASE__SHARD_DECL);
+    createEReference(databaseEClass, DATABASE__PLACEMENTS);
     createEReference(databaseEClass, DATABASE__ROUTE_RULES);
     createEReference(databaseEClass, DATABASE__RELATIONSHIPS);
+
+    nodeEClass = createEClass(NODE);
+    createEAttribute(nodeEClass, NODE__NAME);
+    createEAttribute(nodeEClass, NODE__HOST);
+    createEAttribute(nodeEClass, NODE__PORT);
+
+    placeDeclEClass = createEClass(PLACE_DECL);
+    createEReference(placeDeclEClass, PLACE_DECL__ENTITY);
+    createEAttribute(placeDeclEClass, PLACE_DECL__STRATEGY);
+    createEReference(placeDeclEClass, PLACE_DECL__NODES);
 
     relationshipEClass = createEClass(RELATIONSHIP);
     createEReference(relationshipEClass, RELATIONSHIP__SUBJECT);
@@ -980,6 +1137,7 @@ public class ShardMLPackageImpl extends EPackageImpl implements ShardMLPackage
     createEReference(groupByEClass, GROUP_BY__FIELD);
 
     // Create enums
+    placementStrategyEEnum = createEEnum(PLACEMENT_STRATEGY);
     databaseTypeEEnum = createEEnum(DATABASE_TYPE);
     strategyEEnum = createEEnum(STRATEGY);
     policyEEnum = createEEnum(POLICY);
@@ -1036,9 +1194,21 @@ public class ShardMLPackageImpl extends EPackageImpl implements ShardMLPackage
     initEClass(databaseEClass, Database.class, "Database", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
     initEAttribute(getDatabase_Name(), ecorePackage.getEString(), "name", null, 0, 1, Database.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
     initEAttribute(getDatabase_Type(), this.getDatabaseType(), "type", null, 0, 1, Database.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEReference(getDatabase_Nodes(), this.getNode(), null, "nodes", null, 0, -1, Database.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
     initEReference(getDatabase_Shard_decl(), this.getShardDecl(), null, "shard_decl", null, 0, -1, Database.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEReference(getDatabase_Placements(), this.getPlaceDecl(), null, "placements", null, 0, -1, Database.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
     initEReference(getDatabase_Route_rules(), this.getRouteRule(), null, "route_rules", null, 0, -1, Database.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
     initEReference(getDatabase_Relationships(), this.getRelationship(), null, "relationships", null, 0, -1, Database.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+
+    initEClass(nodeEClass, Node.class, "Node", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
+    initEAttribute(getNode_Name(), ecorePackage.getEString(), "name", null, 0, 1, Node.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getNode_Host(), ecorePackage.getEString(), "host", null, 0, 1, Node.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getNode_Port(), ecorePackage.getEInt(), "port", null, 0, 1, Node.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+
+    initEClass(placeDeclEClass, PlaceDecl.class, "PlaceDecl", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
+    initEReference(getPlaceDecl_Entity(), theSqlPackage.getTable(), null, "entity", null, 0, 1, PlaceDecl.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_COMPOSITE, IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getPlaceDecl_Strategy(), this.getPlacementStrategy(), "strategy", null, 0, 1, PlaceDecl.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEReference(getPlaceDecl_Nodes(), this.getNode(), null, "nodes", null, 0, -1, PlaceDecl.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_COMPOSITE, IS_RESOLVE_PROXIES, !IS_UNSETTABLE, !IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
     initEClass(relationshipEClass, Relationship.class, "Relationship", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
     initEReference(getRelationship_Subject(), theSqlPackage.getTable(), null, "subject", null, 0, 1, Relationship.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_COMPOSITE, IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
@@ -1091,6 +1261,10 @@ public class ShardMLPackageImpl extends EPackageImpl implements ShardMLPackage
     initEReference(getGroupBy_Field(), theSqlPackage.getColumn(), null, "field", null, 0, 1, GroupBy.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_COMPOSITE, IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
     // Initialize enums and add enum literals
+    initEEnum(placementStrategyEEnum, PlacementStrategy.class, "PlacementStrategy");
+    addEEnumLiteral(placementStrategyEEnum, PlacementStrategy.SPREAD);
+    addEEnumLiteral(placementStrategyEEnum, PlacementStrategy.PIN);
+
     initEEnum(databaseTypeEEnum, DatabaseType.class, "DatabaseType");
     addEEnumLiteral(databaseTypeEEnum, DatabaseType.POSTGRES);
     addEEnumLiteral(databaseTypeEEnum, DatabaseType.MYSQL);

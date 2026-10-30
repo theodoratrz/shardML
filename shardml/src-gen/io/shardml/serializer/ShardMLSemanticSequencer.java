@@ -12,6 +12,8 @@ import io.shardml.shardML.HasMany;
 import io.shardml.shardML.HasOne;
 import io.shardml.shardML.Import;
 import io.shardml.shardML.Model;
+import io.shardml.shardML.Node;
+import io.shardml.shardML.PlaceDecl;
 import io.shardml.shardML.QueryPattern;
 import io.shardml.shardML.RouteRule;
 import io.shardml.shardML.ShardDecl;
@@ -65,6 +67,12 @@ public class ShardMLSemanticSequencer extends AbstractDelegatingSemanticSequence
 			case ShardMLPackage.MODEL:
 				sequence_Model(context, (Model) semanticObject); 
 				return; 
+			case ShardMLPackage.NODE:
+				sequence_Node(context, (Node) semanticObject); 
+				return; 
+			case ShardMLPackage.PLACE_DECL:
+				sequence_PlaceDecl(context, (PlaceDecl) semanticObject); 
+				return; 
 			case ShardMLPackage.QUERY_PATTERN:
 				sequence_QueryPattern(context, (QueryPattern) semanticObject); 
 				return; 
@@ -95,7 +103,7 @@ public class ShardMLSemanticSequencer extends AbstractDelegatingSemanticSequence
 	 *     BelongsTo returns BelongsTo
 	 *
 	 * Constraint:
-	 *     (subject=[Table|ID] belongs=[Table|ID] via=[Column|ID])
+	 *     (subject=[Table|ValidID] belongs=[Table|ValidID] via=[Column|ValidID])
 	 * </pre>
 	 */
 	protected void sequence_BelongsTo(ISerializationContext context, BelongsTo semanticObject) {
@@ -108,9 +116,9 @@ public class ShardMLSemanticSequencer extends AbstractDelegatingSemanticSequence
 				errorAcceptor.accept(diagnosticProvider.createFeatureValueMissing(semanticObject, ShardMLPackage.Literals.BELONGS_TO__VIA));
 		}
 		SequenceFeeder feeder = createSequencerFeeder(context, semanticObject);
-		feeder.accept(grammarAccess.getBelongsToAccess().getSubjectTableIDTerminalRuleCall_0_0_1(), semanticObject.eGet(ShardMLPackage.Literals.RELATIONSHIP__SUBJECT, false));
-		feeder.accept(grammarAccess.getBelongsToAccess().getBelongsTableIDTerminalRuleCall_2_0_1(), semanticObject.eGet(ShardMLPackage.Literals.BELONGS_TO__BELONGS, false));
-		feeder.accept(grammarAccess.getBelongsToAccess().getViaColumnIDTerminalRuleCall_4_0_1(), semanticObject.eGet(ShardMLPackage.Literals.BELONGS_TO__VIA, false));
+		feeder.accept(grammarAccess.getBelongsToAccess().getSubjectTableValidIDParserRuleCall_0_0_1(), semanticObject.eGet(ShardMLPackage.Literals.RELATIONSHIP__SUBJECT, false));
+		feeder.accept(grammarAccess.getBelongsToAccess().getBelongsTableValidIDParserRuleCall_2_0_1(), semanticObject.eGet(ShardMLPackage.Literals.BELONGS_TO__BELONGS, false));
+		feeder.accept(grammarAccess.getBelongsToAccess().getViaColumnValidIDParserRuleCall_4_0_1(), semanticObject.eGet(ShardMLPackage.Literals.BELONGS_TO__VIA, false));
 		feeder.finish();
 	}
 	
@@ -121,7 +129,15 @@ public class ShardMLSemanticSequencer extends AbstractDelegatingSemanticSequence
 	 *     Database returns Database
 	 *
 	 * Constraint:
-	 *     (name=ID type=DatabaseType shard_decl+=ShardDecl* route_rules+=RouteRule* relationships+=Relationship*)
+	 *     (
+	 *         name=ID 
+	 *         type=DatabaseType 
+	 *         nodes+=Node* 
+	 *         shard_decl+=ShardDecl* 
+	 *         placements+=PlaceDecl* 
+	 *         route_rules+=RouteRule* 
+	 *         relationships+=Relationship*
+	 *     )
 	 * </pre>
 	 */
 	protected void sequence_Database(ISerializationContext context, Database semanticObject) {
@@ -135,7 +151,7 @@ public class ShardMLSemanticSequencer extends AbstractDelegatingSemanticSequence
 	 *     GroupBy returns GroupBy
 	 *
 	 * Constraint:
-	 *     field=[Column|ID]
+	 *     field=[Column|ValidID]
 	 * </pre>
 	 */
 	protected void sequence_GroupBy(ISerializationContext context, GroupBy semanticObject) {
@@ -144,7 +160,7 @@ public class ShardMLSemanticSequencer extends AbstractDelegatingSemanticSequence
 				errorAcceptor.accept(diagnosticProvider.createFeatureValueMissing(semanticObject, ShardMLPackage.Literals.GROUP_BY__FIELD));
 		}
 		SequenceFeeder feeder = createSequencerFeeder(context, semanticObject);
-		feeder.accept(grammarAccess.getGroupByAccess().getFieldColumnIDTerminalRuleCall_0_1(), semanticObject.eGet(ShardMLPackage.Literals.GROUP_BY__FIELD, false));
+		feeder.accept(grammarAccess.getGroupByAccess().getFieldColumnValidIDParserRuleCall_0_1(), semanticObject.eGet(ShardMLPackage.Literals.GROUP_BY__FIELD, false));
 		feeder.finish();
 	}
 	
@@ -156,7 +172,7 @@ public class ShardMLSemanticSequencer extends AbstractDelegatingSemanticSequence
 	 *     HasMany returns HasMany
 	 *
 	 * Constraint:
-	 *     (subject=[Table|ID] many=[Table|ID])
+	 *     (subject=[Table|ValidID] many=[Table|ValidID])
 	 * </pre>
 	 */
 	protected void sequence_HasMany(ISerializationContext context, HasMany semanticObject) {
@@ -167,8 +183,8 @@ public class ShardMLSemanticSequencer extends AbstractDelegatingSemanticSequence
 				errorAcceptor.accept(diagnosticProvider.createFeatureValueMissing(semanticObject, ShardMLPackage.Literals.HAS_MANY__MANY));
 		}
 		SequenceFeeder feeder = createSequencerFeeder(context, semanticObject);
-		feeder.accept(grammarAccess.getHasManyAccess().getSubjectTableIDTerminalRuleCall_0_0_1(), semanticObject.eGet(ShardMLPackage.Literals.RELATIONSHIP__SUBJECT, false));
-		feeder.accept(grammarAccess.getHasManyAccess().getManyTableIDTerminalRuleCall_2_0_1(), semanticObject.eGet(ShardMLPackage.Literals.HAS_MANY__MANY, false));
+		feeder.accept(grammarAccess.getHasManyAccess().getSubjectTableValidIDParserRuleCall_0_0_1(), semanticObject.eGet(ShardMLPackage.Literals.RELATIONSHIP__SUBJECT, false));
+		feeder.accept(grammarAccess.getHasManyAccess().getManyTableValidIDParserRuleCall_2_0_1(), semanticObject.eGet(ShardMLPackage.Literals.HAS_MANY__MANY, false));
 		feeder.finish();
 	}
 	
@@ -180,7 +196,7 @@ public class ShardMLSemanticSequencer extends AbstractDelegatingSemanticSequence
 	 *     HasOne returns HasOne
 	 *
 	 * Constraint:
-	 *     (subject=[Table|ID] one=[Table|ID])
+	 *     (subject=[Table|ValidID] one=[Table|ValidID])
 	 * </pre>
 	 */
 	protected void sequence_HasOne(ISerializationContext context, HasOne semanticObject) {
@@ -191,8 +207,8 @@ public class ShardMLSemanticSequencer extends AbstractDelegatingSemanticSequence
 				errorAcceptor.accept(diagnosticProvider.createFeatureValueMissing(semanticObject, ShardMLPackage.Literals.HAS_ONE__ONE));
 		}
 		SequenceFeeder feeder = createSequencerFeeder(context, semanticObject);
-		feeder.accept(grammarAccess.getHasOneAccess().getSubjectTableIDTerminalRuleCall_0_0_1(), semanticObject.eGet(ShardMLPackage.Literals.RELATIONSHIP__SUBJECT, false));
-		feeder.accept(grammarAccess.getHasOneAccess().getOneTableIDTerminalRuleCall_2_0_1(), semanticObject.eGet(ShardMLPackage.Literals.HAS_ONE__ONE, false));
+		feeder.accept(grammarAccess.getHasOneAccess().getSubjectTableValidIDParserRuleCall_0_0_1(), semanticObject.eGet(ShardMLPackage.Literals.RELATIONSHIP__SUBJECT, false));
+		feeder.accept(grammarAccess.getHasOneAccess().getOneTableValidIDParserRuleCall_2_0_1(), semanticObject.eGet(ShardMLPackage.Literals.HAS_ONE__ONE, false));
 		feeder.finish();
 	}
 	
@@ -234,6 +250,46 @@ public class ShardMLSemanticSequencer extends AbstractDelegatingSemanticSequence
 	/**
 	 * <pre>
 	 * Contexts:
+	 *     Node returns Node
+	 *
+	 * Constraint:
+	 *     (name=ValidID host=STRING port=INT)
+	 * </pre>
+	 */
+	protected void sequence_Node(ISerializationContext context, Node semanticObject) {
+		if (errorAcceptor != null) {
+			if (transientValues.isValueTransient(semanticObject, ShardMLPackage.Literals.NODE__NAME) == ValueTransient.YES)
+				errorAcceptor.accept(diagnosticProvider.createFeatureValueMissing(semanticObject, ShardMLPackage.Literals.NODE__NAME));
+			if (transientValues.isValueTransient(semanticObject, ShardMLPackage.Literals.NODE__HOST) == ValueTransient.YES)
+				errorAcceptor.accept(diagnosticProvider.createFeatureValueMissing(semanticObject, ShardMLPackage.Literals.NODE__HOST));
+			if (transientValues.isValueTransient(semanticObject, ShardMLPackage.Literals.NODE__PORT) == ValueTransient.YES)
+				errorAcceptor.accept(diagnosticProvider.createFeatureValueMissing(semanticObject, ShardMLPackage.Literals.NODE__PORT));
+		}
+		SequenceFeeder feeder = createSequencerFeeder(context, semanticObject);
+		feeder.accept(grammarAccess.getNodeAccess().getNameValidIDParserRuleCall_1_0(), semanticObject.getName());
+		feeder.accept(grammarAccess.getNodeAccess().getHostSTRINGTerminalRuleCall_4_0(), semanticObject.getHost());
+		feeder.accept(grammarAccess.getNodeAccess().getPortINTTerminalRuleCall_6_0(), semanticObject.getPort());
+		feeder.finish();
+	}
+	
+	
+	/**
+	 * <pre>
+	 * Contexts:
+	 *     PlaceDecl returns PlaceDecl
+	 *
+	 * Constraint:
+	 *     (entity=[Table|ValidID] strategy=PlacementStrategy (nodes+=[Node|ValidID] nodes+=[Node|ValidID]*)?)
+	 * </pre>
+	 */
+	protected void sequence_PlaceDecl(ISerializationContext context, PlaceDecl semanticObject) {
+		genericSequencer.createSequence(context, semanticObject);
+	}
+	
+	
+	/**
+	 * <pre>
+	 * Contexts:
 	 *     QueryPattern returns QueryPattern
 	 *
 	 * Constraint:
@@ -258,7 +314,7 @@ public class ShardMLSemanticSequencer extends AbstractDelegatingSemanticSequence
 	 *     RouteRule returns RouteRule
 	 *
 	 * Constraint:
-	 *     (entity=[Table|ID] policy=Policy condtions=INT? queries+=QueryPattern*)
+	 *     (entity=[Table|ValidID] policy=Policy condtions=INT? queries+=QueryPattern*)
 	 * </pre>
 	 */
 	protected void sequence_RouteRule(ISerializationContext context, RouteRule semanticObject) {
@@ -272,7 +328,7 @@ public class ShardMLSemanticSequencer extends AbstractDelegatingSemanticSequence
 	 *     ShardDecl returns ShardDecl
 	 *
 	 * Constraint:
-	 *     (entity=[Table|ID] strategy=Strategy id=[Column|ID]? buckets=INT? colocate=[Table|ID]?)
+	 *     (entity=[Table|ValidID] strategy=Strategy id=[Column|ValidID]? buckets=INT? colocate=[Table|ValidID]?)
 	 * </pre>
 	 */
 	protected void sequence_ShardDecl(ISerializationContext context, ShardDecl semanticObject) {
@@ -286,7 +342,7 @@ public class ShardMLSemanticSequencer extends AbstractDelegatingSemanticSequence
 	 *     SortClause returns SortClause
 	 *
 	 * Constraint:
-	 *     (field=[Column|ID] order=SortOrder)
+	 *     (field=[Column|ValidID] order=SortOrder)
 	 * </pre>
 	 */
 	protected void sequence_SortClause(ISerializationContext context, SortClause semanticObject) {
@@ -297,7 +353,7 @@ public class ShardMLSemanticSequencer extends AbstractDelegatingSemanticSequence
 				errorAcceptor.accept(diagnosticProvider.createFeatureValueMissing(semanticObject, ShardMLPackage.Literals.SORT_CLAUSE__ORDER));
 		}
 		SequenceFeeder feeder = createSequencerFeeder(context, semanticObject);
-		feeder.accept(grammarAccess.getSortClauseAccess().getFieldColumnIDTerminalRuleCall_0_0_1(), semanticObject.eGet(ShardMLPackage.Literals.SORT_CLAUSE__FIELD, false));
+		feeder.accept(grammarAccess.getSortClauseAccess().getFieldColumnValidIDParserRuleCall_0_0_1(), semanticObject.eGet(ShardMLPackage.Literals.SORT_CLAUSE__FIELD, false));
 		feeder.accept(grammarAccess.getSortClauseAccess().getOrderSortOrderEnumRuleCall_1_0(), semanticObject.getOrder());
 		feeder.finish();
 	}
@@ -323,7 +379,7 @@ public class ShardMLSemanticSequencer extends AbstractDelegatingSemanticSequence
 	 *     WhereCondition returns WhereCondition
 	 *
 	 * Constraint:
-	 *     (field=[Column|ID] op=Operator)
+	 *     (field=[Column|ValidID] op=Operator)
 	 * </pre>
 	 */
 	protected void sequence_WhereCondition(ISerializationContext context, WhereCondition semanticObject) {
@@ -334,7 +390,7 @@ public class ShardMLSemanticSequencer extends AbstractDelegatingSemanticSequence
 				errorAcceptor.accept(diagnosticProvider.createFeatureValueMissing(semanticObject, ShardMLPackage.Literals.WHERE_CONDITION__OP));
 		}
 		SequenceFeeder feeder = createSequencerFeeder(context, semanticObject);
-		feeder.accept(grammarAccess.getWhereConditionAccess().getFieldColumnIDTerminalRuleCall_0_0_1(), semanticObject.eGet(ShardMLPackage.Literals.WHERE_CONDITION__FIELD, false));
+		feeder.accept(grammarAccess.getWhereConditionAccess().getFieldColumnValidIDParserRuleCall_0_0_1(), semanticObject.eGet(ShardMLPackage.Literals.WHERE_CONDITION__FIELD, false));
 		feeder.accept(grammarAccess.getWhereConditionAccess().getOpOperatorEnumRuleCall_1_0(), semanticObject.getOp());
 		feeder.finish();
 	}

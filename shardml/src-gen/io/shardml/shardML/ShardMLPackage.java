@@ -152,13 +152,31 @@ public interface ShardMLPackage extends EPackage
   int DATABASE__TYPE = 1;
 
   /**
+   * The feature id for the '<em><b>Nodes</b></em>' containment reference list.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int DATABASE__NODES = 2;
+
+  /**
    * The feature id for the '<em><b>Shard decl</b></em>' containment reference list.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
    * @generated
    * @ordered
    */
-  int DATABASE__SHARD_DECL = 2;
+  int DATABASE__SHARD_DECL = 3;
+
+  /**
+   * The feature id for the '<em><b>Placements</b></em>' containment reference list.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int DATABASE__PLACEMENTS = 4;
 
   /**
    * The feature id for the '<em><b>Route rules</b></em>' containment reference list.
@@ -167,7 +185,7 @@ public interface ShardMLPackage extends EPackage
    * @generated
    * @ordered
    */
-  int DATABASE__ROUTE_RULES = 3;
+  int DATABASE__ROUTE_RULES = 5;
 
   /**
    * The feature id for the '<em><b>Relationships</b></em>' containment reference list.
@@ -176,7 +194,7 @@ public interface ShardMLPackage extends EPackage
    * @generated
    * @ordered
    */
-  int DATABASE__RELATIONSHIPS = 4;
+  int DATABASE__RELATIONSHIPS = 6;
 
   /**
    * The number of structural features of the '<em>Database</em>' class.
@@ -185,7 +203,99 @@ public interface ShardMLPackage extends EPackage
    * @generated
    * @ordered
    */
-  int DATABASE_FEATURE_COUNT = 5;
+  int DATABASE_FEATURE_COUNT = 7;
+
+  /**
+   * The meta object id for the '{@link io.shardml.shardML.impl.NodeImpl <em>Node</em>}' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see io.shardml.shardML.impl.NodeImpl
+   * @see io.shardml.shardML.impl.ShardMLPackageImpl#getNode()
+   * @generated
+   */
+  int NODE = 3;
+
+  /**
+   * The feature id for the '<em><b>Name</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int NODE__NAME = 0;
+
+  /**
+   * The feature id for the '<em><b>Host</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int NODE__HOST = 1;
+
+  /**
+   * The feature id for the '<em><b>Port</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int NODE__PORT = 2;
+
+  /**
+   * The number of structural features of the '<em>Node</em>' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int NODE_FEATURE_COUNT = 3;
+
+  /**
+   * The meta object id for the '{@link io.shardml.shardML.impl.PlaceDeclImpl <em>Place Decl</em>}' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see io.shardml.shardML.impl.PlaceDeclImpl
+   * @see io.shardml.shardML.impl.ShardMLPackageImpl#getPlaceDecl()
+   * @generated
+   */
+  int PLACE_DECL = 4;
+
+  /**
+   * The feature id for the '<em><b>Entity</b></em>' reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int PLACE_DECL__ENTITY = 0;
+
+  /**
+   * The feature id for the '<em><b>Strategy</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int PLACE_DECL__STRATEGY = 1;
+
+  /**
+   * The feature id for the '<em><b>Nodes</b></em>' reference list.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int PLACE_DECL__NODES = 2;
+
+  /**
+   * The number of structural features of the '<em>Place Decl</em>' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int PLACE_DECL_FEATURE_COUNT = 3;
 
   /**
    * The meta object id for the '{@link io.shardml.shardML.impl.RelationshipImpl <em>Relationship</em>}' class.
@@ -195,7 +305,7 @@ public interface ShardMLPackage extends EPackage
    * @see io.shardml.shardML.impl.ShardMLPackageImpl#getRelationship()
    * @generated
    */
-  int RELATIONSHIP = 3;
+  int RELATIONSHIP = 5;
 
   /**
    * The feature id for the '<em><b>Subject</b></em>' reference.
@@ -223,7 +333,7 @@ public interface ShardMLPackage extends EPackage
    * @see io.shardml.shardML.impl.ShardMLPackageImpl#getHasMany()
    * @generated
    */
-  int HAS_MANY = 4;
+  int HAS_MANY = 6;
 
   /**
    * The feature id for the '<em><b>Subject</b></em>' reference.
@@ -260,7 +370,7 @@ public interface ShardMLPackage extends EPackage
    * @see io.shardml.shardML.impl.ShardMLPackageImpl#getHasOne()
    * @generated
    */
-  int HAS_ONE = 5;
+  int HAS_ONE = 7;
 
   /**
    * The feature id for the '<em><b>Subject</b></em>' reference.
@@ -297,7 +407,7 @@ public interface ShardMLPackage extends EPackage
    * @see io.shardml.shardML.impl.ShardMLPackageImpl#getBelongsTo()
    * @generated
    */
-  int BELONGS_TO = 6;
+  int BELONGS_TO = 8;
 
   /**
    * The feature id for the '<em><b>Subject</b></em>' reference.
@@ -343,7 +453,7 @@ public interface ShardMLPackage extends EPackage
    * @see io.shardml.shardML.impl.ShardMLPackageImpl#getShardDecl()
    * @generated
    */
-  int SHARD_DECL = 7;
+  int SHARD_DECL = 9;
 
   /**
    * The feature id for the '<em><b>Entity</b></em>' reference.
@@ -407,7 +517,7 @@ public interface ShardMLPackage extends EPackage
    * @see io.shardml.shardML.impl.ShardMLPackageImpl#getRouteRule()
    * @generated
    */
-  int ROUTE_RULE = 8;
+  int ROUTE_RULE = 10;
 
   /**
    * The feature id for the '<em><b>Entity</b></em>' reference.
@@ -462,7 +572,7 @@ public interface ShardMLPackage extends EPackage
    * @see io.shardml.shardML.impl.ShardMLPackageImpl#getQueryPattern()
    * @generated
    */
-  int QUERY_PATTERN = 9;
+  int QUERY_PATTERN = 11;
 
   /**
    * The feature id for the '<em><b>Name</b></em>' attribute.
@@ -535,7 +645,7 @@ public interface ShardMLPackage extends EPackage
    * @see io.shardml.shardML.impl.ShardMLPackageImpl#getWhereClause()
    * @generated
    */
-  int WHERE_CLAUSE = 10;
+  int WHERE_CLAUSE = 12;
 
   /**
    * The feature id for the '<em><b>First</b></em>' containment reference.
@@ -581,7 +691,7 @@ public interface ShardMLPackage extends EPackage
    * @see io.shardml.shardML.impl.ShardMLPackageImpl#getWhereCondition()
    * @generated
    */
-  int WHERE_CONDITION = 11;
+  int WHERE_CONDITION = 13;
 
   /**
    * The feature id for the '<em><b>Field</b></em>' reference.
@@ -618,7 +728,7 @@ public interface ShardMLPackage extends EPackage
    * @see io.shardml.shardML.impl.ShardMLPackageImpl#getSortClause()
    * @generated
    */
-  int SORT_CLAUSE = 12;
+  int SORT_CLAUSE = 14;
 
   /**
    * The feature id for the '<em><b>Field</b></em>' reference.
@@ -655,7 +765,7 @@ public interface ShardMLPackage extends EPackage
    * @see io.shardml.shardML.impl.ShardMLPackageImpl#getGroupBy()
    * @generated
    */
-  int GROUP_BY = 13;
+  int GROUP_BY = 15;
 
   /**
    * The feature id for the '<em><b>Field</b></em>' reference.
@@ -676,6 +786,16 @@ public interface ShardMLPackage extends EPackage
   int GROUP_BY_FEATURE_COUNT = 1;
 
   /**
+   * The meta object id for the '{@link io.shardml.shardML.PlacementStrategy <em>Placement Strategy</em>}' enum.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see io.shardml.shardML.PlacementStrategy
+   * @see io.shardml.shardML.impl.ShardMLPackageImpl#getPlacementStrategy()
+   * @generated
+   */
+  int PLACEMENT_STRATEGY = 16;
+
+  /**
    * The meta object id for the '{@link io.shardml.shardML.DatabaseType <em>Database Type</em>}' enum.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
@@ -683,7 +803,7 @@ public interface ShardMLPackage extends EPackage
    * @see io.shardml.shardML.impl.ShardMLPackageImpl#getDatabaseType()
    * @generated
    */
-  int DATABASE_TYPE = 14;
+  int DATABASE_TYPE = 17;
 
   /**
    * The meta object id for the '{@link io.shardml.shardML.Strategy <em>Strategy</em>}' enum.
@@ -693,7 +813,7 @@ public interface ShardMLPackage extends EPackage
    * @see io.shardml.shardML.impl.ShardMLPackageImpl#getStrategy()
    * @generated
    */
-  int STRATEGY = 15;
+  int STRATEGY = 18;
 
   /**
    * The meta object id for the '{@link io.shardml.shardML.Policy <em>Policy</em>}' enum.
@@ -703,7 +823,7 @@ public interface ShardMLPackage extends EPackage
    * @see io.shardml.shardML.impl.ShardMLPackageImpl#getPolicy()
    * @generated
    */
-  int POLICY = 16;
+  int POLICY = 19;
 
   /**
    * The meta object id for the '{@link io.shardml.shardML.QueryType <em>Query Type</em>}' enum.
@@ -713,7 +833,7 @@ public interface ShardMLPackage extends EPackage
    * @see io.shardml.shardML.impl.ShardMLPackageImpl#getQueryType()
    * @generated
    */
-  int QUERY_TYPE = 17;
+  int QUERY_TYPE = 20;
 
   /**
    * The meta object id for the '{@link io.shardml.shardML.Operator <em>Operator</em>}' enum.
@@ -723,7 +843,7 @@ public interface ShardMLPackage extends EPackage
    * @see io.shardml.shardML.impl.ShardMLPackageImpl#getOperator()
    * @generated
    */
-  int OPERATOR = 18;
+  int OPERATOR = 21;
 
   /**
    * The meta object id for the '{@link io.shardml.shardML.Link <em>Link</em>}' enum.
@@ -733,7 +853,7 @@ public interface ShardMLPackage extends EPackage
    * @see io.shardml.shardML.impl.ShardMLPackageImpl#getLink()
    * @generated
    */
-  int LINK = 19;
+  int LINK = 22;
 
   /**
    * The meta object id for the '{@link io.shardml.shardML.SortOrder <em>Sort Order</em>}' enum.
@@ -743,7 +863,7 @@ public interface ShardMLPackage extends EPackage
    * @see io.shardml.shardML.impl.ShardMLPackageImpl#getSortOrder()
    * @generated
    */
-  int SORT_ORDER = 20;
+  int SORT_ORDER = 23;
 
 
   /**
@@ -832,6 +952,17 @@ public interface ShardMLPackage extends EPackage
   EAttribute getDatabase_Type();
 
   /**
+   * Returns the meta object for the containment reference list '{@link io.shardml.shardML.Database#getNodes <em>Nodes</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the containment reference list '<em>Nodes</em>'.
+   * @see io.shardml.shardML.Database#getNodes()
+   * @see #getDatabase()
+   * @generated
+   */
+  EReference getDatabase_Nodes();
+
+  /**
    * Returns the meta object for the containment reference list '{@link io.shardml.shardML.Database#getShard_decl <em>Shard decl</em>}'.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
@@ -841,6 +972,17 @@ public interface ShardMLPackage extends EPackage
    * @generated
    */
   EReference getDatabase_Shard_decl();
+
+  /**
+   * Returns the meta object for the containment reference list '{@link io.shardml.shardML.Database#getPlacements <em>Placements</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the containment reference list '<em>Placements</em>'.
+   * @see io.shardml.shardML.Database#getPlacements()
+   * @see #getDatabase()
+   * @generated
+   */
+  EReference getDatabase_Placements();
 
   /**
    * Returns the meta object for the containment reference list '{@link io.shardml.shardML.Database#getRoute_rules <em>Route rules</em>}'.
@@ -863,6 +1005,92 @@ public interface ShardMLPackage extends EPackage
    * @generated
    */
   EReference getDatabase_Relationships();
+
+  /**
+   * Returns the meta object for class '{@link io.shardml.shardML.Node <em>Node</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for class '<em>Node</em>'.
+   * @see io.shardml.shardML.Node
+   * @generated
+   */
+  EClass getNode();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.shardML.Node#getName <em>Name</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Name</em>'.
+   * @see io.shardml.shardML.Node#getName()
+   * @see #getNode()
+   * @generated
+   */
+  EAttribute getNode_Name();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.shardML.Node#getHost <em>Host</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Host</em>'.
+   * @see io.shardml.shardML.Node#getHost()
+   * @see #getNode()
+   * @generated
+   */
+  EAttribute getNode_Host();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.shardML.Node#getPort <em>Port</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Port</em>'.
+   * @see io.shardml.shardML.Node#getPort()
+   * @see #getNode()
+   * @generated
+   */
+  EAttribute getNode_Port();
+
+  /**
+   * Returns the meta object for class '{@link io.shardml.shardML.PlaceDecl <em>Place Decl</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for class '<em>Place Decl</em>'.
+   * @see io.shardml.shardML.PlaceDecl
+   * @generated
+   */
+  EClass getPlaceDecl();
+
+  /**
+   * Returns the meta object for the reference '{@link io.shardml.shardML.PlaceDecl#getEntity <em>Entity</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the reference '<em>Entity</em>'.
+   * @see io.shardml.shardML.PlaceDecl#getEntity()
+   * @see #getPlaceDecl()
+   * @generated
+   */
+  EReference getPlaceDecl_Entity();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.shardML.PlaceDecl#getStrategy <em>Strategy</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Strategy</em>'.
+   * @see io.shardml.shardML.PlaceDecl#getStrategy()
+   * @see #getPlaceDecl()
+   * @generated
+   */
+  EAttribute getPlaceDecl_Strategy();
+
+  /**
+   * Returns the meta object for the reference list '{@link io.shardml.shardML.PlaceDecl#getNodes <em>Nodes</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the reference list '<em>Nodes</em>'.
+   * @see io.shardml.shardML.PlaceDecl#getNodes()
+   * @see #getPlaceDecl()
+   * @generated
+   */
+  EReference getPlaceDecl_Nodes();
 
   /**
    * Returns the meta object for class '{@link io.shardml.shardML.Relationship <em>Relationship</em>}'.
@@ -1283,6 +1511,16 @@ public interface ShardMLPackage extends EPackage
   EReference getGroupBy_Field();
 
   /**
+   * Returns the meta object for enum '{@link io.shardml.shardML.PlacementStrategy <em>Placement Strategy</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for enum '<em>Placement Strategy</em>'.
+   * @see io.shardml.shardML.PlacementStrategy
+   * @generated
+   */
+  EEnum getPlacementStrategy();
+
+  /**
    * Returns the meta object for enum '{@link io.shardml.shardML.DatabaseType <em>Database Type</em>}'.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
@@ -1446,12 +1684,28 @@ public interface ShardMLPackage extends EPackage
     EAttribute DATABASE__TYPE = eINSTANCE.getDatabase_Type();
 
     /**
+     * The meta object literal for the '<em><b>Nodes</b></em>' containment reference list feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EReference DATABASE__NODES = eINSTANCE.getDatabase_Nodes();
+
+    /**
      * The meta object literal for the '<em><b>Shard decl</b></em>' containment reference list feature.
      * <!-- begin-user-doc -->
      * <!-- end-user-doc -->
      * @generated
      */
     EReference DATABASE__SHARD_DECL = eINSTANCE.getDatabase_Shard_decl();
+
+    /**
+     * The meta object literal for the '<em><b>Placements</b></em>' containment reference list feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EReference DATABASE__PLACEMENTS = eINSTANCE.getDatabase_Placements();
 
     /**
      * The meta object literal for the '<em><b>Route rules</b></em>' containment reference list feature.
@@ -1468,6 +1722,74 @@ public interface ShardMLPackage extends EPackage
      * @generated
      */
     EReference DATABASE__RELATIONSHIPS = eINSTANCE.getDatabase_Relationships();
+
+    /**
+     * The meta object literal for the '{@link io.shardml.shardML.impl.NodeImpl <em>Node</em>}' class.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @see io.shardml.shardML.impl.NodeImpl
+     * @see io.shardml.shardML.impl.ShardMLPackageImpl#getNode()
+     * @generated
+     */
+    EClass NODE = eINSTANCE.getNode();
+
+    /**
+     * The meta object literal for the '<em><b>Name</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute NODE__NAME = eINSTANCE.getNode_Name();
+
+    /**
+     * The meta object literal for the '<em><b>Host</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute NODE__HOST = eINSTANCE.getNode_Host();
+
+    /**
+     * The meta object literal for the '<em><b>Port</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute NODE__PORT = eINSTANCE.getNode_Port();
+
+    /**
+     * The meta object literal for the '{@link io.shardml.shardML.impl.PlaceDeclImpl <em>Place Decl</em>}' class.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @see io.shardml.shardML.impl.PlaceDeclImpl
+     * @see io.shardml.shardML.impl.ShardMLPackageImpl#getPlaceDecl()
+     * @generated
+     */
+    EClass PLACE_DECL = eINSTANCE.getPlaceDecl();
+
+    /**
+     * The meta object literal for the '<em><b>Entity</b></em>' reference feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EReference PLACE_DECL__ENTITY = eINSTANCE.getPlaceDecl_Entity();
+
+    /**
+     * The meta object literal for the '<em><b>Strategy</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute PLACE_DECL__STRATEGY = eINSTANCE.getPlaceDecl_Strategy();
+
+    /**
+     * The meta object literal for the '<em><b>Nodes</b></em>' reference list feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EReference PLACE_DECL__NODES = eINSTANCE.getPlaceDecl_Nodes();
 
     /**
      * The meta object literal for the '{@link io.shardml.shardML.impl.RelationshipImpl <em>Relationship</em>}' class.
@@ -1802,6 +2124,16 @@ public interface ShardMLPackage extends EPackage
      * @generated
      */
     EReference GROUP_BY__FIELD = eINSTANCE.getGroupBy_Field();
+
+    /**
+     * The meta object literal for the '{@link io.shardml.shardML.PlacementStrategy <em>Placement Strategy</em>}' enum.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @see io.shardml.shardML.PlacementStrategy
+     * @see io.shardml.shardML.impl.ShardMLPackageImpl#getPlacementStrategy()
+     * @generated
+     */
+    EEnum PLACEMENT_STRATEGY = eINSTANCE.getPlacementStrategy();
 
     /**
      * The meta object literal for the '{@link io.shardml.shardML.DatabaseType <em>Database Type</em>}' enum.

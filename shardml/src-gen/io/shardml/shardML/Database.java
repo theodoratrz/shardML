@@ -18,7 +18,9 @@ import org.eclipse.emf.ecore.EObject;
  * <ul>
  *   <li>{@link io.shardml.shardML.Database#getName <em>Name</em>}</li>
  *   <li>{@link io.shardml.shardML.Database#getType <em>Type</em>}</li>
+ *   <li>{@link io.shardml.shardML.Database#getNodes <em>Nodes</em>}</li>
  *   <li>{@link io.shardml.shardML.Database#getShard_decl <em>Shard decl</em>}</li>
+ *   <li>{@link io.shardml.shardML.Database#getPlacements <em>Placements</em>}</li>
  *   <li>{@link io.shardml.shardML.Database#getRoute_rules <em>Route rules</em>}</li>
  *   <li>{@link io.shardml.shardML.Database#getRelationships <em>Relationships</em>}</li>
  * </ul>
@@ -77,6 +79,18 @@ public interface Database extends EObject
   void setType(DatabaseType value);
 
   /**
+   * Returns the value of the '<em><b>Nodes</b></em>' containment reference list.
+   * The list contents are of type {@link io.shardml.shardML.Node}.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the value of the '<em>Nodes</em>' containment reference list.
+   * @see io.shardml.shardML.ShardMLPackage#getDatabase_Nodes()
+   * @model containment="true"
+   * @generated
+   */
+  EList<Node> getNodes();
+
+  /**
    * Returns the value of the '<em><b>Shard decl</b></em>' containment reference list.
    * The list contents are of type {@link io.shardml.shardML.ShardDecl}.
    * <!-- begin-user-doc -->
@@ -87,6 +101,18 @@ public interface Database extends EObject
    * @generated
    */
   EList<ShardDecl> getShard_decl();
+
+  /**
+   * Returns the value of the '<em><b>Placements</b></em>' containment reference list.
+   * The list contents are of type {@link io.shardml.shardML.PlaceDecl}.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the value of the '<em>Placements</em>' containment reference list.
+   * @see io.shardml.shardML.ShardMLPackage#getDatabase_Placements()
+   * @model containment="true"
+   * @generated
+   */
+  EList<PlaceDecl> getPlacements();
 
   /**
    * Returns the value of the '<em><b>Route rules</b></em>' containment reference list.

@@ -13,7 +13,11 @@ import io.shardml.shardML.Database;
 import io.shardml.shardML.DatabaseType;
 import io.shardml.shardML.HasMany;
 import io.shardml.shardML.HasOne;
+import io.shardml.placement.ColocationGroups;
 import io.shardml.shardML.Link;
+import io.shardml.shardML.Node;
+import io.shardml.shardML.PlaceDecl;
+import io.shardml.shardML.PlacementStrategy;
 import io.shardml.shardML.Policy;
 import io.shardml.shardML.QueryPattern;
 import io.shardml.shardML.Relationship;
@@ -64,6 +68,15 @@ public class ShardMLValidator extends AbstractShardMLValidator {
 	private static final String COLOCATED_BUCKET_MISMATCH = "SHML_028";
 	private static final String UNSUPPORTED_STRATEGY      = "SHML_029";
 	private static final String COLOCATION_WITHOUT_LINK   = "SHML_030";
+	// SHML_031 (unknown node) is a linking error: see ShardMLLinkingDiagnosticMessageProvider
+	private static final String DUPLICATE_NODE            = "SHML_032";
+	private static final String PLACEMENT_NODES_INVALID   = "SHML_033";
+	private static final String PLACEMENT_ON_COLOCATED    = "SHML_034";
+	private static final String PLACEMENT_ON_REFERENCE    = "SHML_035";
+	private static final String FEWER_BUCKETS_THAN_NODES  = "SHML_036";
+	private static final String PLACEMENT_SKEW            = "SHML_037";
+	private static final String DUPLICATE_PLACEMENT       = "SHML_038";
+	private static final String PLACEMENT_WITHOUT_SHARD   = "SHML_039";
 
 	// restrict validation to shardML only
 	@Override
@@ -574,5 +587,127 @@ public class ShardMLValidator extends AbstractShardMLValidator {
 				warning("Subject table: '" + subjectTable.getName() + "' and target table: '" + targetTable.getName() + "' have a relationship, but are not colocated.", db, ShardMLPackage.Literals.DATABASE__SHARD_DECL, RELATIONSHIP_NOT_COLOCATED);
 			}
 		}
+	}
+
+	// A node is declared once: two declarations of one name, or two names for one host and
+	// port, would make spread count the same worker twice
+	@Check
+	public void checkDuplicateNode(Node node) {
+		Database db = (Database) node.eContainer();
+		for (Node other : db.getNodes()) {
+			if (other == node)
+				return;
+			if (Objects.equals(other.getName(), node.getName())) {
+				error("Node '" + node.getName() + "' is declared twice.", node, ShardMLPackage.Literals.NODE__NAME, DUPLICATE_NODE);
+				return;
+			}
+			if (Objects.equals(other.getHost(), node.getHost()) && other.getPort() == node.getPort()) {
+				error("Nodes '" + other.getName() + "' and '" + node.getName() + "' are both " + node.getHost() + ":" + node.getPort()
+						+ ". Declare each worker once.", node, ShardMLPackage.Literals.NODE__HOST, DUPLICATE_NODE);
+				return;
+			}
+		}
+	}
+
+	// The same node listed twice in one place block would get twice its share of buckets
+	@Check
+	public void checkDuplicatePlacementNode(PlaceDecl place) {
+		List<Node> nodes = place.getNodes();
+		for (int i = 0; i < nodes.size(); i++) {
+			if (nodes.get(i).eIsProxy())
+				continue;
+			if (nodes.subList(0, i).contains(nodes.get(i)))
+				error("Node '" + nodes.get(i).getName() + "' is listed twice.", place, ShardMLPackage.Literals.PLACE_DECL__NODES, i, DUPLICATE_NODE);
+		}
+	}
+
+	// pin needs the nodes to pin to; spread always uses every declared node; and placing
+	// anything needs declared nodes
+	@Check
+	public void checkPlacementNodes(PlaceDecl place) {
+		Database db = (Database) place.eContainer();
+		if (db.getNodes().isEmpty()) {
+			error("A place block needs declared nodes. Declare the cluster's workers with `node <name> { host: \"<host>\" port: <port> }`.",
+					place, ShardMLPackage.Literals.PLACE_DECL__ENTITY, PLACEMENT_NODES_INVALID);
+		} else if (place.getStrategy() == PlacementStrategy.PIN && place.getNodes().isEmpty()) {
+			error("Strategy 'pin' needs the nodes to pin to: `nodes: <node>, ...`.",
+					place, ShardMLPackage.Literals.PLACE_DECL__STRATEGY, PLACEMENT_NODES_INVALID);
+		} else if (place.getStrategy() == PlacementStrategy.SPREAD && !place.getNodes().isEmpty()) {
+			error("Strategy 'spread' always uses every declared node. To use only some, pin to them: `strategy: pin`.",
+					place, ShardMLPackage.Literals.PLACE_DECL__NODES, PLACEMENT_NODES_INVALID);
+		}
+	}
+
+	// Placement is per colocation group: only a hash-sharded root can be placed, and the
+	// tables colocated with it follow
+	@Check
+	public void checkPlacementTarget(PlaceDecl place) {
+		Table table = place.getEntity();
+		if (table == null || table.eIsProxy())
+			return;
+		Database db = (Database) place.eContainer();
+		ShardDecl shard = shardFor(db, table);
+		if (shard == null) {
+			error("'" + table.getName() + "' has no shard declaration, so it has no shards to place.",
+					place, ShardMLPackage.Literals.PLACE_DECL__ENTITY, PLACEMENT_WITHOUT_SHARD);
+		} else if (shard.getStrategy() == Strategy.REPLICATED) {
+			error("'" + table.getName() + "' is a reference table (strategy: replicated). Citus keeps a copy on every node, "
+					+ "so it cannot be placed.", place, ShardMLPackage.Literals.PLACE_DECL__ENTITY, PLACEMENT_ON_REFERENCE);
+		} else if (!ColocationGroups.isRoot(shard)) {
+			String root = ColocationGroups.rootOf(db, shard).getEntity().getName();
+			error("'" + table.getName() + "' is colocated with '" + shard.getColocate().getName()
+					+ "', so its shards move with its colocation group. Place the group's root, '" + root + "', instead.",
+					place, ShardMLPackage.Literals.PLACE_DECL__ENTITY, PLACEMENT_ON_COLOCATED);
+		}
+	}
+
+	@Check
+	public void checkDuplicatePlacement(PlaceDecl place) {
+		Database db = (Database) place.eContainer();
+		for (PlaceDecl other : db.getPlacements()) {
+			if (other != place && other.getEntity() == place.getEntity()) {
+				error("The same table cannot have 2 place blocks.", place, ShardMLPackage.Literals.PLACE_DECL__ENTITY, DUPLICATE_PLACEMENT);
+				return;
+			}
+		}
+	}
+
+	// Round-robin gives each target node floor(b/n) or ceil(b/n) of a group's buckets.
+	// Fewer buckets than nodes leaves nodes empty; otherwise warn only when the busiest
+	// node carries more than 25% more buckets than the least busy one
+	@Check
+	public void checkPlacementBalance(ShardDecl shard) {
+		Database db = (Database) shard.eContainer();
+		if (db.getNodes().isEmpty() || !ColocationGroups.isRoot(shard) || !isHashed(shard) || shard.getBuckets() <= 0)
+			return;
+		int nodes = ColocationGroups.targetNodes(db, shard).size();
+		if (nodes == 0)
+			return;
+		PlaceDecl place = ColocationGroups.placeFor(db, shard.getEntity());
+		String table = shard.getEntity().getName();
+		int buckets = shard.getBuckets();
+		if (buckets < nodes) {
+			int empty = nodes - buckets;
+			placementWarning(shard, place, "'" + table + "' has " + buckets + " bucket" + (buckets == 1 ? "" : "s") + " but is placed on "
+					+ nodes + " nodes, so " + empty + (empty == 1 ? " node gets" : " nodes get") + " no shards of its colocation group.",
+					FEWER_BUCKETS_THAN_NODES);
+			return;
+		}
+		int least = buckets / nodes;
+		int most = (buckets + nodes - 1) / nodes;
+		if (most * 4 > least * 5) {
+			placementWarning(shard, place, "'" + table + "' has " + buckets + " buckets on " + nodes + " nodes: the busiest node gets "
+					+ most + " of them and the least busy " + least + ", " + (most - least) * 100 / least + "% more. "
+					+ "Use a bucket count divisible by " + nodes + ", or one large enough to keep the difference within 25%.",
+					PLACEMENT_SKEW);
+		}
+	}
+
+	// on the place block when the root has one, else on the root's bucket count
+	private void placementWarning(ShardDecl shard, PlaceDecl place, String message, String code) {
+		if (place != null)
+			warning(message, place, ShardMLPackage.Literals.PLACE_DECL__STRATEGY, code);
+		else
+			warning(message, shard, ShardMLPackage.Literals.SHARD_DECL__BUCKETS, code);
 	}
 }

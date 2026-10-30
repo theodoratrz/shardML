@@ -29,9 +29,41 @@ Import:
 Database:
     'database' name=ID '{'
     'type:' type = DatabaseType
+    nodes += Node*
     shard_decl += ShardDecl*
+    placements += PlaceDecl*
     route_rules += RouteRule*
     relationships += Relationship* '}'
+;
+
+// Table and column names may also be the bare words placement added as keywords,
+// so schemas with a table or column called e.g. 'node' keep working
+ValidID:
+    ID | 'node' | 'place' | 'spread' | 'pin'
+;
+
+// A worker node of the cluster: the logical name the model uses, and where Citus knows it
+Node:
+    'node' name=ValidID '{'
+    'host:' host=STRING
+    'port:' port=INT
+    '}'
+;
+
+// Decides which nodes a colocation group's shards live on. Declared on the group's root
+// (the table without colocate_with); the colocated tables follow it.
+// spread: bucket i goes to the i-th declared node, round-robin over all nodes
+// pin: the whole group on one node, or round-robin over the listed nodes
+// A root without a place block is spread when nodes are declared
+PlaceDecl:
+    'place' entity=[sql::Table|ValidID] '{'
+    'strategy:' strategy=PlacementStrategy
+    ('nodes:' nodes+=[Node|ValidID] (',' nodes+=[Node|ValidID])*)?
+    '}'
+;
+
+enum PlacementStrategy:
+    SPREAD='spread'|PIN='pin'
 ;
 
 // Target platforms; only postgres is supported
@@ -46,16 +78,16 @@ Relationship:
 ;
 
 HasMany:
-    subject=[sql::Table] 'has_many' many=[sql::Table]
+    subject=[sql::Table|ValidID] 'has_many' many=[sql::Table|ValidID]
 ;
 
 HasOne:
-    subject=[sql::Table] 'has_one' one = [sql::Table]
+    subject=[sql::Table|ValidID] 'has_one' one = [sql::Table|ValidID]
 ;
 
 // via names the foreign key column on the subject that points at the parent
 BelongsTo:
-    subject=[sql::Table] 'belongs_to' belongs = [sql::Table] 'via' via=[sql::Column]
+    subject=[sql::Table|ValidID] 'belongs_to' belongs = [sql::Table|ValidID] 'via' via=[sql::Column|ValidID]
 ;
 
 // Defines how a table is distributed across shards
@@ -63,11 +95,11 @@ BelongsTo:
 // replicated tables are copied to every shard
 // colocate_with: groups this table with another on the same shard, for efficient joins
 ShardDecl:
-    'shard' entity=[sql::Table] '{'
+    'shard' entity=[sql::Table|ValidID] '{'
     'strategy:' strategy = Strategy
-    ('key:' id=[sql::Column])?
+    ('key:' id=[sql::Column|ValidID])?
     ('buckets:' buckets=INT)?
-    ('colocate_with:' colocate=[sql::Table])? '}'
+    ('colocate_with:' colocate=[sql::Table|ValidID])? '}'
 ;
 
 enum Strategy:
@@ -81,7 +113,7 @@ enum Strategy:
 // deny: treat the as errors
 // max_conditions: limits where clause complexity
 RouteRule:
-    'route' entity=[sql::Table] '{'
+    'route' entity=[sql::Table|ValidID] '{'
     'policy:' policy=Policy
     ('max_conditions:' condtions=INT)? queries += QueryPattern*
     '}'
@@ -117,7 +149,7 @@ WhereClause:
 ;
 
 WhereCondition:
-    field=[sql::Column] op=Operator '?'
+    field=[sql::Column|ValidID] op=Operator '?'
 ;
 
 enum Operator:
@@ -129,7 +161,7 @@ enum Link:
 ;
 
 SortClause:
-    field=[sql::Column] order=SortOrder
+    field=[sql::Column|ValidID] order=SortOrder
 ;
 
 enum SortOrder:
@@ -137,5 +169,5 @@ enum SortOrder:
 ;
 
 GroupBy:
-    field=[sql::Column]
+    field=[sql::Column|ValidID]
 ;

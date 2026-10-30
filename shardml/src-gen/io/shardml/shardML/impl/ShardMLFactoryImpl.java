@@ -69,6 +69,8 @@ public class ShardMLFactoryImpl extends EFactoryImpl implements ShardMLFactory
       case ShardMLPackage.MODEL: return createModel();
       case ShardMLPackage.IMPORT: return createImport();
       case ShardMLPackage.DATABASE: return createDatabase();
+      case ShardMLPackage.NODE: return createNode();
+      case ShardMLPackage.PLACE_DECL: return createPlaceDecl();
       case ShardMLPackage.RELATIONSHIP: return createRelationship();
       case ShardMLPackage.HAS_MANY: return createHasMany();
       case ShardMLPackage.HAS_ONE: return createHasOne();
@@ -95,6 +97,8 @@ public class ShardMLFactoryImpl extends EFactoryImpl implements ShardMLFactory
   {
     switch (eDataType.getClassifierID())
     {
+      case ShardMLPackage.PLACEMENT_STRATEGY:
+        return createPlacementStrategyFromString(eDataType, initialValue);
       case ShardMLPackage.DATABASE_TYPE:
         return createDatabaseTypeFromString(eDataType, initialValue);
       case ShardMLPackage.STRATEGY:
@@ -124,6 +128,8 @@ public class ShardMLFactoryImpl extends EFactoryImpl implements ShardMLFactory
   {
     switch (eDataType.getClassifierID())
     {
+      case ShardMLPackage.PLACEMENT_STRATEGY:
+        return convertPlacementStrategyToString(eDataType, instanceValue);
       case ShardMLPackage.DATABASE_TYPE:
         return convertDatabaseTypeToString(eDataType, instanceValue);
       case ShardMLPackage.STRATEGY:
@@ -177,6 +183,30 @@ public class ShardMLFactoryImpl extends EFactoryImpl implements ShardMLFactory
   {
     DatabaseImpl database = new DatabaseImpl();
     return database;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public Node createNode()
+  {
+    NodeImpl node = new NodeImpl();
+    return node;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public PlaceDecl createPlaceDecl()
+  {
+    PlaceDeclImpl placeDecl = new PlaceDeclImpl();
+    return placeDecl;
   }
 
   /**
@@ -309,6 +339,28 @@ public class ShardMLFactoryImpl extends EFactoryImpl implements ShardMLFactory
   {
     GroupByImpl groupBy = new GroupByImpl();
     return groupBy;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  public PlacementStrategy createPlacementStrategyFromString(EDataType eDataType, String initialValue)
+  {
+    PlacementStrategy result = PlacementStrategy.get(initialValue);
+    if (result == null) throw new IllegalArgumentException("The value '" + initialValue + "' is not a valid enumerator of '" + eDataType.getName() + "'");
+    return result;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  public String convertPlacementStrategyToString(EDataType eDataType, Object instanceValue)
+  {
+    return instanceValue == null ? null : instanceValue.toString();
   }
 
   /**

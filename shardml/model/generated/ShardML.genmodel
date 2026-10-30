@@ -6,6 +6,10 @@
     copyrightFields="false" runtimeVersion="2.36" usedGenPackages="SQL.genmodel#//sql">
   <genPackages prefix="ShardML" basePackage="io.shardml" disposableProviderFactory="true"
       fileExtensions="shardml" ecorePackage="ShardML.ecore#/">
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="ShardML.ecore#//PlacementStrategy">
+      <genEnumLiterals ecoreEnumLiteral="ShardML.ecore#//PlacementStrategy/SPREAD"/>
+      <genEnumLiterals ecoreEnumLiteral="ShardML.ecore#//PlacementStrategy/PIN"/>
+    </genEnums>
     <genEnums typeSafeEnumCompatible="false" ecoreEnum="ShardML.ecore#//DatabaseType">
       <genEnumLiterals ecoreEnumLiteral="ShardML.ecore#//DatabaseType/POSTGRES"/>
       <genEnumLiterals ecoreEnumLiteral="ShardML.ecore#//DatabaseType/MYSQL"/>
@@ -51,9 +55,21 @@
     <genClasses ecoreClass="ShardML.ecore#//Database">
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute ShardML.ecore#//Database/name"/>
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute ShardML.ecore#//Database/type"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference ShardML.ecore#//Database/nodes"/>
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference ShardML.ecore#//Database/shard_decl"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference ShardML.ecore#//Database/placements"/>
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference ShardML.ecore#//Database/route_rules"/>
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference ShardML.ecore#//Database/relationships"/>
+    </genClasses>
+    <genClasses ecoreClass="ShardML.ecore#//Node">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute ShardML.ecore#//Node/name"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute ShardML.ecore#//Node/host"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute ShardML.ecore#//Node/port"/>
+    </genClasses>
+    <genClasses ecoreClass="ShardML.ecore#//PlaceDecl">
+      <genFeatures notify="false" createChild="false" propertySortChoices="true" ecoreFeature="ecore:EReference ShardML.ecore#//PlaceDecl/entity"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute ShardML.ecore#//PlaceDecl/strategy"/>
+      <genFeatures notify="false" createChild="false" propertySortChoices="true" ecoreFeature="ecore:EReference ShardML.ecore#//PlaceDecl/nodes"/>
     </genClasses>
     <genClasses ecoreClass="ShardML.ecore#//Relationship">
       <genFeatures notify="false" createChild="false" propertySortChoices="true" ecoreFeature="ecore:EReference ShardML.ecore#//Relationship/subject"/>

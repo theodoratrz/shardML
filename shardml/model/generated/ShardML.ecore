@@ -13,12 +13,31 @@
   <eClassifiers xsi:type="ecore:EClass" name="Database">
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="type" eType="#//DatabaseType"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="nodes" upperBound="-1"
+        eType="#//Node" containment="true"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="shard_decl" upperBound="-1"
         eType="#//ShardDecl" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="placements" upperBound="-1"
+        eType="#//PlaceDecl" containment="true"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="route_rules" upperBound="-1"
         eType="#//RouteRule" containment="true"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="relationships" upperBound="-1"
         eType="#//Relationship" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Node">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="host" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="port" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="PlaceDecl">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="entity" eType="ecore:EClass SQL.ecore#//Table"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="strategy" eType="#//PlacementStrategy"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="nodes" unique="false" upperBound="-1"
+        eType="#//Node"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="PlacementStrategy">
+    <eLiterals name="SPREAD" literal="spread"/>
+    <eLiterals name="PIN" value="1" literal="pin"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EEnum" name="DatabaseType">
     <eLiterals name="POSTGRES" literal="postgres"/>

@@ -5,6 +5,8 @@ package io.shardml.shardML.impl;
 
 import io.shardml.shardML.Database;
 import io.shardml.shardML.DatabaseType;
+import io.shardml.shardML.Node;
+import io.shardml.shardML.PlaceDecl;
 import io.shardml.shardML.Relationship;
 import io.shardml.shardML.RouteRule;
 import io.shardml.shardML.ShardDecl;
@@ -36,7 +38,9 @@ import org.eclipse.emf.ecore.util.InternalEList;
  * <ul>
  *   <li>{@link io.shardml.shardML.impl.DatabaseImpl#getName <em>Name</em>}</li>
  *   <li>{@link io.shardml.shardML.impl.DatabaseImpl#getType <em>Type</em>}</li>
+ *   <li>{@link io.shardml.shardML.impl.DatabaseImpl#getNodes <em>Nodes</em>}</li>
  *   <li>{@link io.shardml.shardML.impl.DatabaseImpl#getShard_decl <em>Shard decl</em>}</li>
+ *   <li>{@link io.shardml.shardML.impl.DatabaseImpl#getPlacements <em>Placements</em>}</li>
  *   <li>{@link io.shardml.shardML.impl.DatabaseImpl#getRoute_rules <em>Route rules</em>}</li>
  *   <li>{@link io.shardml.shardML.impl.DatabaseImpl#getRelationships <em>Relationships</em>}</li>
  * </ul>
@@ -86,6 +90,16 @@ public class DatabaseImpl extends MinimalEObjectImpl.Container implements Databa
   protected DatabaseType type = TYPE_EDEFAULT;
 
   /**
+   * The cached value of the '{@link #getNodes() <em>Nodes</em>}' containment reference list.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #getNodes()
+   * @generated
+   * @ordered
+   */
+  protected EList<Node> nodes;
+
+  /**
    * The cached value of the '{@link #getShard_decl() <em>Shard decl</em>}' containment reference list.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
@@ -94,6 +108,16 @@ public class DatabaseImpl extends MinimalEObjectImpl.Container implements Databa
    * @ordered
    */
   protected EList<ShardDecl> shard_decl;
+
+  /**
+   * The cached value of the '{@link #getPlacements() <em>Placements</em>}' containment reference list.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #getPlacements()
+   * @generated
+   * @ordered
+   */
+  protected EList<PlaceDecl> placements;
 
   /**
    * The cached value of the '{@link #getRoute_rules() <em>Route rules</em>}' containment reference list.
@@ -192,6 +216,21 @@ public class DatabaseImpl extends MinimalEObjectImpl.Container implements Databa
    * @generated
    */
   @Override
+  public EList<Node> getNodes()
+  {
+    if (nodes == null)
+    {
+      nodes = new EObjectContainmentEList<Node>(Node.class, this, ShardMLPackage.DATABASE__NODES);
+    }
+    return nodes;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
   public EList<ShardDecl> getShard_decl()
   {
     if (shard_decl == null)
@@ -199,6 +238,21 @@ public class DatabaseImpl extends MinimalEObjectImpl.Container implements Databa
       shard_decl = new EObjectContainmentEList<ShardDecl>(ShardDecl.class, this, ShardMLPackage.DATABASE__SHARD_DECL);
     }
     return shard_decl;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EList<PlaceDecl> getPlacements()
+  {
+    if (placements == null)
+    {
+      placements = new EObjectContainmentEList<PlaceDecl>(PlaceDecl.class, this, ShardMLPackage.DATABASE__PLACEMENTS);
+    }
+    return placements;
   }
 
   /**
@@ -241,8 +295,12 @@ public class DatabaseImpl extends MinimalEObjectImpl.Container implements Databa
   {
     switch (featureID)
     {
+      case ShardMLPackage.DATABASE__NODES:
+        return ((InternalEList<?>)getNodes()).basicRemove(otherEnd, msgs);
       case ShardMLPackage.DATABASE__SHARD_DECL:
         return ((InternalEList<?>)getShard_decl()).basicRemove(otherEnd, msgs);
+      case ShardMLPackage.DATABASE__PLACEMENTS:
+        return ((InternalEList<?>)getPlacements()).basicRemove(otherEnd, msgs);
       case ShardMLPackage.DATABASE__ROUTE_RULES:
         return ((InternalEList<?>)getRoute_rules()).basicRemove(otherEnd, msgs);
       case ShardMLPackage.DATABASE__RELATIONSHIPS:
@@ -265,8 +323,12 @@ public class DatabaseImpl extends MinimalEObjectImpl.Container implements Databa
         return getName();
       case ShardMLPackage.DATABASE__TYPE:
         return getType();
+      case ShardMLPackage.DATABASE__NODES:
+        return getNodes();
       case ShardMLPackage.DATABASE__SHARD_DECL:
         return getShard_decl();
+      case ShardMLPackage.DATABASE__PLACEMENTS:
+        return getPlacements();
       case ShardMLPackage.DATABASE__ROUTE_RULES:
         return getRoute_rules();
       case ShardMLPackage.DATABASE__RELATIONSHIPS:
@@ -292,9 +354,17 @@ public class DatabaseImpl extends MinimalEObjectImpl.Container implements Databa
       case ShardMLPackage.DATABASE__TYPE:
         setType((DatabaseType)newValue);
         return;
+      case ShardMLPackage.DATABASE__NODES:
+        getNodes().clear();
+        getNodes().addAll((Collection<? extends Node>)newValue);
+        return;
       case ShardMLPackage.DATABASE__SHARD_DECL:
         getShard_decl().clear();
         getShard_decl().addAll((Collection<? extends ShardDecl>)newValue);
+        return;
+      case ShardMLPackage.DATABASE__PLACEMENTS:
+        getPlacements().clear();
+        getPlacements().addAll((Collection<? extends PlaceDecl>)newValue);
         return;
       case ShardMLPackage.DATABASE__ROUTE_RULES:
         getRoute_rules().clear();
@@ -324,8 +394,14 @@ public class DatabaseImpl extends MinimalEObjectImpl.Container implements Databa
       case ShardMLPackage.DATABASE__TYPE:
         setType(TYPE_EDEFAULT);
         return;
+      case ShardMLPackage.DATABASE__NODES:
+        getNodes().clear();
+        return;
       case ShardMLPackage.DATABASE__SHARD_DECL:
         getShard_decl().clear();
+        return;
+      case ShardMLPackage.DATABASE__PLACEMENTS:
+        getPlacements().clear();
         return;
       case ShardMLPackage.DATABASE__ROUTE_RULES:
         getRoute_rules().clear();
@@ -351,8 +427,12 @@ public class DatabaseImpl extends MinimalEObjectImpl.Container implements Databa
         return NAME_EDEFAULT == null ? name != null : !NAME_EDEFAULT.equals(name);
       case ShardMLPackage.DATABASE__TYPE:
         return type != TYPE_EDEFAULT;
+      case ShardMLPackage.DATABASE__NODES:
+        return nodes != null && !nodes.isEmpty();
       case ShardMLPackage.DATABASE__SHARD_DECL:
         return shard_decl != null && !shard_decl.isEmpty();
+      case ShardMLPackage.DATABASE__PLACEMENTS:
+        return placements != null && !placements.isEmpty();
       case ShardMLPackage.DATABASE__ROUTE_RULES:
         return route_rules != null && !route_rules.isEmpty();
       case ShardMLPackage.DATABASE__RELATIONSHIPS:
