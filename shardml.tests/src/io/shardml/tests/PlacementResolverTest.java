@@ -230,25 +230,24 @@ public class PlacementResolverTest {
 		Assertions.assertTrue(placement.assignments().isEmpty());
 	}
 
-	private Model banking(boolean withNodes) throws Exception {
+	private Model example(String name) throws Exception {
 		Path examples = Path.of("..", "examples");
-		String msql = Files.readString(examples.resolve("banking.msql"));
-		String shardml = Files.readString(examples.resolve("banking.shardml")).replace("\"banking.msql\"", "\"test.msql\"");
-		if (withNodes)
-			shardml = shardml.replace("type: postgres\n", "type: postgres\n\n" + NODES);
+		String msql = Files.readString(examples.resolve(name + ".msql"));
+		String shardml = Files.readString(examples.resolve(name + ".shardml")).replace("\"" + name + ".msql\"", "\"test.msql\"");
 		return parse(msql, shardml);
 	}
 
-	// the committed banking example has no nodes, so Citus decides placement
+	// the committed social example has no nodes, so Citus decides placement
 	@Test
-	public void testBankingExampleWithoutNodes() throws Exception {
-		Assertions.assertTrue(PlacementResolver.resolve(banking(false).getDb()).isEmpty());
+	public void testSocialExampleWithoutNodes() throws Exception {
+		Assertions.assertTrue(PlacementResolver.resolve(example("social").getDb()).isEmpty());
 	}
 
-	// banking with three nodes: one group of four tables, 32 buckets spread 11/11/10
+	// the committed banking example declares w2, w3, w1: one group of four tables, 32 buckets spread 11/11/10
 	@Test
 	public void testBankingExampleWithNodes() throws Exception {
-		Placement placement = PlacementResolver.resolve(banking(true).getDb());
+		Placement placement = PlacementResolver.resolve(example("banking").getDb());
+		Assertions.assertEquals(List.of(W2, W3, W1), placement.nodes());
 		Assertions.assertEquals(1, placement.groups().size());
 		ColocationGroup group = placement.groups().get(0);
 		Assertions.assertEquals(List.of("customers", "accounts", "transactions", "cards"), group.tables());

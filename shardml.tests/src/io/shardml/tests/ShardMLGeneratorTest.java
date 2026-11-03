@@ -248,6 +248,104 @@ public class ShardMLGeneratorTest {
 				""", file(fsa.getTextFiles(), "mybank-schema.sql"));
 	}
 
+	// --- placement ---
+
+	private static final String PLACED = """
+			import "test.msql"
+			database mybank {
+			    type: postgres
+			    node w2 { host: "worker2" port: 5432 }
+			    node w1 { host: "worker1" port: 5433 }
+			    shard customers {
+			        strategy: hash
+			        key: id
+			        buckets: 3
+			    }
+			    shard orders {
+			        strategy: hash
+			        key: customer_id
+			        buckets: 3
+			        colocate_with: customers
+			    }
+			    orders belongs_to customers via customer_id
+			}
+			""";
+
+	@Test
+	public void testNoPlacementScriptWithoutNodes() throws IOException {
+		Map<String, CharSequence> files = generate("""
+				import "test.msql"
+				database mybank {
+				    type: postgres
+				    shard customers {
+				        strategy: hash
+				        key: id
+				        buckets: 32
+				    }
+				}
+				""");
+		Assertions.assertNull(file(files, "mybank-placement.sql"), "Without nodes Citus decides placement");
+		Assertions.assertEquals(3, files.size());
+	}
+
+	@Test
+	public void testDistributionWithNodesSeparatesRoots() throws IOException {
+		// a root gets its own Citus colocation group; colocated tables keep theirs
+		Assertions.assertEquals("""
+				SELECT create_distributed_table('customers', 'id'  ,shard_count => 3 ,colocate_with => 'none' );
+				SELECT create_distributed_table('orders', 'customer_id'  ,colocate_with => 'customers' );
+				""", file(generate(PLACED), "mybank-distribution.sql"));
+	}
+
+	@Test
+	public void testPlacementScriptMovesEachBucketOfTheRoot() throws IOException {
+		String sql = file(generate(PLACED), "mybank-placement.sql");
+		Assertions.assertNotNull(sql, "Nodes declared: a placement script is generated");
+		Assertions.assertTrue(sql.startsWith("\\set ON_ERROR_STOP on\n"), sql);
+		Assertions.assertTrue(sql.contains("-- customers group (customers, orders): 3 buckets on w2, w1\n"), sql);
+		// bucket i -> node i mod 2, in declaration order
+		Assertions.assertTrue(sql.contains("""
+				-- bucket 2 -> w2 (worker2:5432)
+				SELECT citus_move_shard_placement(s.shardid, s.src_host, s.src_port, 'worker2', 5432, shard_transfer_mode => 'force_logical')
+				FROM (
+				    SELECT b.shardid, n.nodename AS src_host, n.nodeport AS src_port, n.groupid AS src_groupid
+				    FROM (SELECT shardid, row_number() OVER (ORDER BY shardminvalue::bigint) - 1 AS bucket
+				          FROM pg_dist_shard WHERE logicalrelid = 'customers'::regclass) b
+				    JOIN pg_dist_placement p ON p.shardid = b.shardid
+				    JOIN pg_dist_node n ON n.groupid = p.groupid AND n.noderole = 'primary'
+				    WHERE b.bucket = 2
+				) s
+				WHERE (s.src_host, s.src_port) <> ('worker2', 5432) AND s.src_groupid <> 0;
+				"""), sql);
+		Assertions.assertTrue(sql.contains("-- bucket 1 -> w1 (worker1:5433)\n"), sql);
+		// colocated tables move with their root, so only the root's shards are moved
+		Assertions.assertEquals(3, sql.split("citus_move_shard_placement\\(", -1).length - 1);
+		Assertions.assertFalse(sql.contains("'orders'::regclass"), sql);
+	}
+
+	@Test
+	public void testPlacementPreflightListsNodesAndGroups() throws IOException {
+		String sql = file(generate(PLACED), "mybank-placement.sql");
+		Assertions.assertTrue(sql.contains("""
+				    FROM (VALUES
+				        ('w2', 'worker2', 5432),
+				        ('w1', 'worker1', 5433)
+				    ) AS d(name, host, port)
+				"""), sql);
+		Assertions.assertTrue(sql.contains("AND n.isactive AND n.noderole = 'primary' AND n.groupid <> 0"), sql);
+		Assertions.assertTrue(sql.contains("        ('customers', ARRAY['customers', 'orders'], 3)\n"), sql);
+		// the preflight runs no moves: it ends before the first one
+		int preflightEnd = sql.indexOf("END $preflight$;");
+		Assertions.assertTrue(preflightEnd > 0 && preflightEnd < sql.indexOf("citus_move_shard_placement"), sql);
+	}
+
+	@Test
+	public void testPlacementScriptQuotesHosts() throws IOException {
+		String sql = file(generate(PLACED.replace("\"worker2\"", "\"it's\"")), "mybank-placement.sql");
+		Assertions.assertTrue(sql.contains("'it''s', 5432"), sql);
+		Assertions.assertFalse(sql.contains("'it's'"), sql);
+	}
+
 	// --- mysql (unsupported) ---
 
 	@Test

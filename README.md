@@ -21,7 +21,8 @@ ShardML addresses the gap between sharding intent and deployment correctness. En
 - **Policy-aware query analysis**: route rules support `allow`, `warn`, `deny` to control strictness per table
 - **Citus code generation**: produces the schema and distribution SQL, plus a JSON summary, from a single model
 - **Cross-schema import**: reference an existing `.msql` SQL schema file; all table and column references are resolved and validated against it
-- **Command-line tool**: `shardml validate` and `shardml generate`, with `file:line` diagnostics and a non-zero exit code on model errors
+- **Shard placement**: declare the cluster's worker nodes and which nodes each colocation group goes to; the generated placement script moves the shards there, safely re-runnable
+- **Command-line tool**: `shardml validate`, `shardml generate` and `shardml placement`, with `file:line` diagnostics and a non-zero exit code on model errors
 
 ---
 
@@ -64,6 +65,16 @@ database banking {
 | `<database>-sharding.json` | Distribution config in JSON |
 | `<database>-schema.sql` | `CREATE TABLE` statements for the imported schema (apply before the distribution script) |
 | `<database>-distribution.sql` | Citus SQL commands (`create_distributed_table`, `create_reference_table`) |
+| `<database>-placement.sql` | Only for a model that declares `node`s: moves every shard to the node the model assigns it (apply last, see below) |
+
+### Placement script
+
+Each `node` names a worker as Citus knows it (`pg_dist_node`). Bucket *i* of a colocation group goes to the group's *i*-th target node, round-robin: every declared node in declaration order, or the nodes of a `place … { strategy: pin nodes: … }` block. The script, applied with `psql` after the distribution script and outside a transaction:
+
+1. runs a preflight that changes nothing and stops the script if the cluster does not match the model: every declared node must be an active primary worker (never the coordinator), and per group Citus must colocate exactly the model's tables with one shard per bucket, each on exactly one node and none on the coordinator;
+2. then moves the root's shard of each bucket that is not on its target, one statement per move with `shard_transfer_mode => 'force_logical'` (Citus moves at most one shard per transaction this way, and the mode fails instead of silently blocking writes). Colocated tables move with their root. Shards are found by bucket, ordered by `shardminvalue::bigint`, never by shard ID.
+
+A shard already on its node is skipped, so a second run moves nothing, and a run stopped halfway is finished by running the script again. `shardml placement <model>` prints the same map, one `table<TAB>bucket<TAB>host:port` line per shard.
 
 ---
 
@@ -95,7 +106,7 @@ shardml/                               # Language runtime
   src-gen/                             # Xtext-generated parser infrastructure
   model/generated/                     # Generated Ecore metamodels
 
-shardml.tests/                         # JUnit 5 test suite (95 tests)
+shardml.tests/                         # JUnit 5 test suite (100 tests)
 shardml.cli/                           # Command-line front end
 
 examples/
@@ -150,16 +161,17 @@ On macOS, if `java` on your `PATH` is not 21, set `JAVA_HOME=$(/usr/libexec/java
 ```sh
 java -jar shardml.cli/target/*-cli.jar validate examples/banking.shardml
 java -jar shardml.cli/target/*-cli.jar generate examples/banking.shardml [-o <dir>]
+java -jar shardml.cli/target/*-cli.jar placement examples/banking.shardml
 ```
 
-`validate` prints diagnostics as `file:line: severity: message [SHML_0xx]` and exits 1 if the model has errors. `generate` validates first, then writes the output files to `src-gen/` next to the model (or to `-o`).
+`validate` prints diagnostics as `file:line: severity: message [SHML_0xx]` and exits 1 if the model has errors. `generate` validates first, then writes the output files to `src-gen/` next to the model (or to `-o`). `placement` validates first, then prints the node of every shard.
 
 ---
 
 ## Running the Tests
 
 ```sh
-mvn test                                                   # all 95 tests
+mvn test                                                   # all 100 tests
 mvn -pl shardml.tests test -Dtest=ShardMLParsingTest       # one class
 ```
 

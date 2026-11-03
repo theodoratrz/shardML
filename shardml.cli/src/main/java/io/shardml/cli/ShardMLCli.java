@@ -3,6 +3,7 @@ package io.shardml.cli;
 import java.io.File;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -21,6 +22,11 @@ import com.google.inject.Injector;
 
 import io.shardml.SQLStandaloneSetup;
 import io.shardml.ShardMLStandaloneSetup;
+import io.shardml.placement.Node;
+import io.shardml.placement.Placement;
+import io.shardml.placement.PlacementResolver;
+import io.shardml.placement.ShardSlot;
+import io.shardml.shardML.Model;
 
 /**
  * Command line front end for ShardML.
@@ -28,12 +34,14 @@ import io.shardml.ShardMLStandaloneSetup;
  * <pre>
  *   shardml validate &lt;model.shardml&gt;
  *   shardml generate &lt;model.shardml&gt; [-o &lt;output-dir&gt;]
+ *   shardml placement &lt;model.shardml&gt;
  * </pre>
  *
  * This is a thin driver: validation runs the normal {@code IResourceValidator}
  * and generation calls the normal {@code ShardMLGenerator} through Xtext's
  * {@code GeneratorDelegate}, so output is identical to what any other Xtext host
- * produces on save.
+ * produces on save. placement prints {@code PlacementResolver}'s map, the same one
+ * the generated placement script applies.
  */
 public final class ShardMLCli {
 
@@ -41,11 +49,16 @@ public final class ShardMLCli {
 			"Usage:",
 			"  shardml validate <model.shardml>",
 			"  shardml generate <model.shardml> [-o <output-dir>]",
+			"  shardml placement <model.shardml>",
 			"",
 			"generate writes <output-dir>/<database>-sharding.json,",
 			"<output-dir>/<database>-schema.sql (apply first) and",
-			"<output-dir>/<database>-distribution.sql. The default output",
-			"directory is src-gen/ next to the model file.");
+			"<output-dir>/<database>-distribution.sql, and for a model that",
+			"declares nodes <output-dir>/<database>-placement.sql (apply last).",
+			"The default output directory is src-gen/ next to the model file.",
+			"",
+			"placement prints the node of every shard, one per line:",
+			"<table> TAB <bucket> TAB <host>:<port>.");
 
 	/** Exit codes: 0 ok, 1 model error, 2 bad invocation or I/O failure. */
 	private static final int EXIT_OK = 0;
@@ -66,7 +79,7 @@ public final class ShardMLCli {
 		}
 
 		String command = args[0];
-		if (!"validate".equals(command) && !"generate".equals(command)) {
+		if (!"validate".equals(command) && !"generate".equals(command) && !"placement".equals(command)) {
 			System.err.println("shardml: unknown command '" + command + "'");
 			System.err.println(USAGE);
 			return EXIT_USAGE;
@@ -92,7 +105,7 @@ public final class ShardMLCli {
 				return EXIT_USAGE;
 			}
 		}
-		if ("validate".equals(command) && outputOption != null) {
+		if (!"generate".equals(command) && outputOption != null) {
 			System.err.println("shardml: -o is only valid for generate");
 			return EXIT_USAGE;
 		}
@@ -126,7 +139,8 @@ public final class ShardMLCli {
 
 		List<Issue> issues = injector.getInstance(IResourceValidator.class)
 				.validate(resource, CheckMode.ALL, CancelIndicator.NullImpl);
-		int errors = report(issues, input);
+		// placement's stdout is the map alone, so its warnings go to stderr
+		int errors = report(issues, input, "placement".equals(command));
 
 		if (errors > 0) {
 			System.err.println("shardml: " + input.getName() + " has " + errors
@@ -137,6 +151,8 @@ public final class ShardMLCli {
 			System.out.println("shardml: " + input.getName() + " is valid");
 			return EXIT_OK;
 		}
+		if ("placement".equals(command))
+			return printPlacement(resource, input);
 
 		File outputDir = outputOption != null
 				? new File(outputOption)
@@ -154,8 +170,27 @@ public final class ShardMLCli {
 		return EXIT_OK;
 	}
 
+	/** Prints table, bucket and host:port of every shard, tab-separated, in the resolver's order. */
+	private static int printPlacement(Resource resource, File input) {
+		Model model = (Model) resource.getContents().get(0);
+		Placement placement = PlacementResolver.resolve(model.getDb());
+		if (placement.isEmpty()) {
+			System.err.println("shardml: " + input.getName() + " declares no nodes, so Citus decides the placement");
+			return EXIT_OK;
+		}
+		StringBuilder out = new StringBuilder();
+		for (Map.Entry<ShardSlot, Node> entry : placement.assignments().entrySet()) {
+			ShardSlot slot = entry.getKey();
+			Node node = entry.getValue();
+			out.append(slot.table()).append('\t').append(slot.bucket()).append('\t')
+					.append(node.host()).append(':').append(node.port()).append('\n');
+		}
+		System.out.print(out);
+		return EXIT_OK;
+	}
+
 	/** Prints every issue as {@code file:line: severity: message [code]}; returns the error count. */
-	private static int report(List<Issue> issues, File input) {
+	private static int report(List<Issue> issues, File input, boolean warningsToStderr) {
 		int errors = 0;
 		for (Issue issue : issues) {
 			if (issue.getSeverity() == Severity.ERROR) {
@@ -165,7 +200,7 @@ public final class ShardMLCli {
 			String code = issue.getCode() == null ? "" : " [" + issue.getCode() + "]";
 			String line = location + ": " + issue.getSeverity().name().toLowerCase() + ": "
 					+ issue.getMessage() + code;
-			if (issue.getSeverity() == Severity.ERROR) {
+			if (issue.getSeverity() == Severity.ERROR || warningsToStderr) {
 				System.err.println(line);
 			} else {
 				System.out.println(line);

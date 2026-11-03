@@ -3,6 +3,13 @@ import "banking.msql"
 database banking {
     type: postgres
 
+    // The bench cluster's workers (bench/docker-compose.yml). Declared out of order on
+    // purpose: spread sends bucket i to the i-th node, so Citus's default placement
+    // (worker1, worker2, worker3) differs and the first apply really moves shards.
+    node w2 { host: "worker2" port: 5432 }
+    node w3 { host: "worker3" port: 5432 }
+    node w1 { host: "worker1" port: 5432 }
+
     shard customers {
         strategy: hash
         key: id

@@ -5,7 +5,9 @@
 | `banking.shardml` | `banking.msql` | Customers, their accounts, transactions and cards |
 | `social.shardml` | `social.msql` | Users, posts, comments, likes, and a reference table of countries |
 
-Generated output for both is committed in `src-gen/`. `bench/integration/test-examples.sh`
+Generated output for both is committed in `src-gen/`. Banking declares the
+bench cluster's three workers, in the order w2, w3, w1, so it also gets a
+`banking-placement.sql`; social declares no nodes and leaves placement to Citus. `bench/integration/test-examples.sh`
 deploys each example to the bench Citus cluster and, if a `<model>.probe.sql`
 exists, runs the joins the application relies on.
 
