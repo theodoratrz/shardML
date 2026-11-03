@@ -17,7 +17,7 @@ ShardML addresses the gap between sharding intent and deployment correctness. En
 ## Features
 
 - **Declarative syntax**: describe what to shard and how, not low-level middleware configuration
-- **29 validators** covering structural correctness, colocation consistency, performance anti-patterns, and query pattern analysis
+- **39 validators** (SHML_001 to SHML_039) covering structural correctness, colocation consistency, performance anti-patterns, and query pattern analysis
 - **Policy-aware query analysis**: route rules support `allow`, `warn`, `deny` to control strictness per table
 - **Citus code generation**: produces the schema and distribution SQL, plus a JSON summary, from a single model
 - **Cross-schema import**: reference an existing `.msql` SQL schema file; all table and column references are resolved and validated against it
@@ -75,6 +75,8 @@ Each `node` names a worker as Citus knows it (`pg_dist_node`). Bucket *i* of a c
 2. then moves the root's shard of each bucket that is not on its target, one statement per move with `shard_transfer_mode => 'force_logical'` (Citus moves at most one shard per transaction this way, and the mode fails instead of silently blocking writes). Colocated tables move with their root. Shards are found by bucket, ordered by `shardminvalue::bigint`, never by shard ID.
 
 A shard already on its node is skipped, so a second run moves nothing, and a run stopped halfway is finished by running the script again. `shardml placement <model>` prints the same map, one `table<TAB>bucket<TAB>host:port` line per shard.
+
+`generate` never deletes files. If a model's `node` declarations are later removed, delete the stale `<database>-placement.sql` from `src-gen/` by hand.
 
 ---
 
