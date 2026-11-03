@@ -150,12 +150,11 @@ public class ShardMLGenerator extends AbstractGenerator {
 	// replicated: create_reference_table()
 	// shard_count goes on the first table of each colocation group only: Citus rejects it
 	// together with colocate_with, and colocated tables take the group's count.
-	// With nodes declared, each root also gets colocate_with => 'none': Citus would otherwise
-	// join roots of the same shape into one colocation group, and moving one would move both.
-	// Without nodes the output is left as it was (see the README's TODO)
+	// Each root also gets colocate_with => 'none': Citus would otherwise join roots of the same
+	// shape (shard count, key type) into one colocation group, so that moving a shard of one
+	// moves the other's too, and the cluster's colocation would differ from the model's
 	public CharSequence distributionDefinitions(Database db) {
 		StringBuilder out = new StringBuilder();
-		boolean placed = !db.getNodes().isEmpty();
 		for (ShardDecl shard : db.getShard_decl()) {
 			if (isHashed(shard)) {
 				out.append("SELECT create_distributed_table('").append(shard.getEntity().getName())
@@ -163,9 +162,7 @@ public class ShardMLGenerator extends AbstractGenerator {
 				if (shard.getColocate() != null)
 					out.append(" ,colocate_with => '").append(shard.getColocate().getName()).append("' ");
 				else
-					out.append(" ,shard_count => ").append(shard.getBuckets()).append(" ");
-				if (shard.getColocate() == null && placed)
-					out.append(",colocate_with => 'none' ");
+					out.append(" ,shard_count => ").append(shard.getBuckets()).append(" ,colocate_with => 'none' ");
 				out.append(");\n");
 			} else {
 				out.append("SELECT create_reference_table('").append(shard.getEntity().getName()).append("');\n");

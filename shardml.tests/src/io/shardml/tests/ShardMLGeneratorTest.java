@@ -182,8 +182,33 @@ public class ShardMLGeneratorTest {
 				"""), "mybank-distribution.sql");
 		// Citus rejects shard_count together with colocate_with; orders takes the count from customers
 		Assertions.assertEquals("""
-				SELECT create_distributed_table('customers', 'id'  ,shard_count => 64 );
+				SELECT create_distributed_table('customers', 'id'  ,shard_count => 64 ,colocate_with => 'none' );
 				SELECT create_distributed_table('orders', 'customer_id'  ,colocate_with => 'customers' );
+				""", sql);
+	}
+
+	@Test
+	public void testDistributionWithoutNodesSeparatesRoots() throws IOException {
+		// two roots of the same shape and no nodes: each still starts its own colocation group
+		String sql = file(generate("""
+				import "test.msql"
+				database mybank {
+				    type: postgres
+				    shard customers {
+				        strategy: hash
+				        key: id
+				        buckets: 32
+				    }
+				    shard orders {
+				        strategy: hash
+				        key: id
+				        buckets: 32
+				    }
+				}
+				"""), "mybank-distribution.sql");
+		Assertions.assertEquals("""
+				SELECT create_distributed_table('customers', 'id'  ,shard_count => 32 ,colocate_with => 'none' );
+				SELECT create_distributed_table('orders', 'id'  ,shard_count => 32 ,colocate_with => 'none' );
 				""", sql);
 	}
 
