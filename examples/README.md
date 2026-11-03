@@ -9,7 +9,8 @@ Generated output for both is committed in `src-gen/`. Banking declares the
 bench cluster's three workers, in the order w2, w3, w1, so it also gets a
 `banking-placement.sql`; social declares no nodes and leaves placement to Citus. `bench/integration/test-examples.sh`
 deploys each example to the bench Citus cluster and, if a `<model>.probe.sql`
-exists, runs the joins the application relies on.
+exists, runs the joins the application relies on. `bench/integration/test-placement.sh`
+applies the banking placement script and checks where the shards end up.
 
 ---
 

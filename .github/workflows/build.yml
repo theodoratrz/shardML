@@ -59,3 +59,8 @@ jobs:
 
       - name: Deploy examples to Citus
         run: bench/integration/test-examples.sh
+
+      # Applies generated placement scripts and compares the live shard map with
+      # `shardml placement`; every psql run is bounded by timeout(1).
+      - name: Shard placement on Citus
+        run: bench/integration/test-placement.sh

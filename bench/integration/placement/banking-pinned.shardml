@@ -1,0 +1,47 @@
+// Fixture for test-placement.sh: the banking example with its group pinned to w3 and w1,
+// so applying it after the example moves every shard off worker2.
+import "../../../examples/banking.msql"
+
+database banking {
+    type: postgres
+
+    node w2 { host: "worker2" port: 5432 }
+    node w3 { host: "worker3" port: 5432 }
+    node w1 { host: "worker1" port: 5432 }
+
+    shard customers {
+        strategy: hash
+        key: id
+        buckets: 32
+    }
+
+    shard accounts {
+        strategy: hash
+        key: customer_id
+        buckets: 32
+        colocate_with: customers
+    }
+
+    shard transactions {
+        strategy: hash
+        key: customer_id
+        buckets: 32
+        colocate_with: accounts
+    }
+
+    shard cards {
+        strategy: hash
+        key: customer_id
+        buckets: 32
+        colocate_with: customers
+    }
+
+    place customers {
+        strategy: pin
+        nodes: w3, w1
+    }
+
+    accounts belongs_to customers via customer_id
+    transactions belongs_to accounts via customer_id
+    cards belongs_to customers via customer_id
+}

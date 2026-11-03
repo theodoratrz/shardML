@@ -64,3 +64,23 @@ model. Every statement runs on its own and is reported, and any error fails
 the run. Probe files hold the joins the application relies on: Citus refuses a
 join between distributed tables that is not on their distribution columns, so
 a probe catches colocation that is declared but does not hold.
+
+Placement scripts are not applied there: `<db>-placement.sql` is one psql
+script whose preflight must stop it as a whole, so it is tested on its own:
+
+```sh
+bench/integration/test-placement.sh      # PLACEMENT_TIMEOUT=<s> per psql run, default 900
+```
+
+It deploys the banking example and applies placement scripts generated from
+the example and from the fixtures in `integration/placement/`: nodes the
+preflight must refuse (the coordinator, an unregistered host) with no shard
+moved; the example's script, after which the live map of every table must
+equal `shardml placement`; the same script again, which must leave every
+`(shardid, groupid, placementid)` unchanged; a fixture that pins the group to
+two nodes, to which the live map must converge; and a copy of the example's
+script in which one move fails, after which the earlier moves must stay done
+and the real script must finish the rest. Each psql run is bounded by a
+timeout, since a stalled move would otherwise hang without output.
+If it times out locally, the orphaned psql session may still be running inside
+the container; the safe reset is `bench/down.sh` then `bench/up.sh`.
