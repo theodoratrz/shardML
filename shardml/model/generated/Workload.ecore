@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ecore:EPackage xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ecore="http://www.eclipse.org/emf/2002/Ecore" name="workload" nsURI="http://shardml.io/Workload" nsPrefix="workload">
+  <eClassifiers xsi:type="ecore:EClass" name="WorkloadModel">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="imports" upperBound="-1"
+        eType="#//Import" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="workload" eType="#//Workload"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Import">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="importURI" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Workload">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="params" upperBound="-1"
+        eType="#//Param" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="domains" upperBound="-1"
+        eType="#//Domain" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="tables" upperBound="-1"
+        eType="#//TableData" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="transactions" upperBound="-1"
+        eType="#//Transaction" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Param">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="value" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBigDecimal"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Domain">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="size" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//ELong"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="parent" eType="#//Domain"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="children" eType="#//Distribution"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="TableData">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="table" eType="ecore:EClass SQL.ecore#//Table"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="rows" eType="#//Rows" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="columns" upperBound="-1"
+        eType="#//ColumnMap" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Rows">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="count" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//ELong"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="PerRows" eSuperTypes="#//Rows">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="domains" unique="false"
+        upperBound="-1" eType="#//Domain"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="OverRows" eSuperTypes="#//Rows">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="domain" eType="#//Domain"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="distribution" eType="#//Distribution"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ColumnMap">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="column" eType="ecore:EClass SQL.ecore#//Column"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="KeyPath">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="domain" eType="#//Domain"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="parents" unique="false"
+        upperBound="-1" eType="#//Domain"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Distribution"/>
+  <eClassifiers xsi:type="ecore:EClass" name="Transaction">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="weight" eType="#//Num"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="steps" upperBound="-1"
+        eType="#//Step" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Step"/>
+  <eClassifiers xsi:type="ecore:EClass" name="Let" eSuperTypes="#//Step">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="draw" eType="#//Draw" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="base" eType="#//VarRef"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="remote" eType="#//Num"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Draw">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="domain" eType="#//Domain"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="distribution" eType="#//Distribution"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="distinctFrom" eType="#//VarRef"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Repeat" eSuperTypes="#//Step">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="count" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="steps" upperBound="-1"
+        eType="#//Step" containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Statement" eSuperTypes="#//Step">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="type" eType="#//QueryType"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="table" eType="ecore:EClass SQL.ecore#//Table"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="joins" upperBound="-1"
+        eType="#//Join" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="first" eType="#//Condition"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="links" unique="false" upperBound="-1"
+        eType="#//Link"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="rest" upperBound="-1" eType="#//Condition"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Join">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="table" eType="ecore:EClass SQL.ecore#//Table"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="on" upperBound="-1" eType="#//JoinOn"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="JoinOn">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="left" eType="#//ColumnRef"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="right" eType="#//ColumnRef"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Condition">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="column" eType="#//ColumnRef"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="op" eType="#//Operator"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="unbound" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="value" eType="#//VarRef"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="ColumnRef">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="table" eType="ecore:EClass SQL.ecore#//Table"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="column" eType="ecore:EClass SQL.ecore#//Column"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="VarRef">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="variable" eType="#//Let"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="parents" unique="false"
+        upperBound="-1" eType="#//Domain"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Num">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="value" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBigDecimal"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="param" eType="#//Param"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="QueryType">
+    <eLiterals name="READ" literal="read"/>
+    <eLiterals name="WRITE" value="1" literal="write"/>
+    <eLiterals name="DELETE" value="2" literal="delete"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="Operator">
+    <eLiterals name="EQ" literal="="/>
+    <eLiterals name="GE" value="1" literal=">"/>
+    <eLiterals name="LE" value="2" literal="&lt;"/>
+    <eLiterals name="LEQ" value="3" literal="&lt;="/>
+    <eLiterals name="GEQ" value="4" literal=">="/>
+    <eLiterals name="NEQ" value="5" literal="!="/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="Link">
+    <eLiterals name="AND" literal="AND"/>
+    <eLiterals name="OR" value="1" literal="OR"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="UniqueColumn" eSuperTypes="#//ColumnMap"/>
+  <eClassifiers xsi:type="ecore:EClass" name="MappedColumn" eSuperTypes="#//ColumnMap">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="path" eType="#//KeyPath"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Uniform" eSuperTypes="#//Distribution"/>
+  <eClassifiers xsi:type="ecore:EClass" name="Zipf" eSuperTypes="#//Distribution">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="s" eType="#//Num" containment="true"/>
+  </eClassifiers>
+</ecore:EPackage>

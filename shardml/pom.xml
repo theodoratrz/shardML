@@ -87,9 +87,9 @@
                 </executions>
             </plugin>
 
-            <!-- 1. Regenerate parser / EMF infrastructure from the two grammars.
-                    Two runs, in this order: SQL writes model/generated/SQL.ecore,
-                    which ShardML.xtext imports. One workflow with both languages
+            <!-- 1. Regenerate parser / EMF infrastructure from the three grammars.
+                    Three runs, in this order: SQL writes model/generated/SQL.ecore,
+                    which ShardML.xtext and Workload.xtext import. One workflow with several languages
                     does not work, because XtextGenerator parses every configured
                     grammar before generating any of them. -->
             <plugin>
@@ -119,6 +119,20 @@
                         <configuration>
                             <arguments>
                                 <argument>${project.basedir}/src/io/shardml/GenerateShardMLMaven.mwe2</argument>
+                                <argument>-p</argument>
+                                <argument>rootPath=${project.basedir}/..</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>mwe2-generate-workload</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>java</goal>
+                        </goals>
+                        <configuration>
+                            <arguments>
+                                <argument>${project.basedir}/src/io/shardml/GenerateWorkloadMaven.mwe2</argument>
                                 <argument>-p</argument>
                                 <argument>rootPath=${project.basedir}/..</argument>
                             </arguments>

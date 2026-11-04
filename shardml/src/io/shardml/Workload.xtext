@@ -1,0 +1,221 @@
+/*
+ * A workload for the ShardML cost model (.workload): the data (domains of key values, row
+ * counts per table) and the transaction mix that runs against it. A workload names no shard
+ * key, bucket or node, so one workload is evaluated against many layouts (.shardml models).
+ *
+ * It imports the same .msql schema as the layouts, never a .shardml: tables and columns link
+ * to that schema; domains, variables and params link within the workload.
+ *
+ * It does not inherit from ShardML.xtext: an inherited grammar brings all of its keywords
+ * into the lexer, so `node`, `hash`, `type:` ... could no longer be names here. Import and
+ * the enums QueryType, Operator and Link are copied from ShardML.xtext instead.
+ *
+ * Semantics (the cost model's, documented here so the syntax and the meaning stay together):
+ *  - Domains: the values of a domain are the integers 1..size, and rank r of a distribution
+ *    over the domain is value r. `--rank-offset k` (a CLI option, not syntax) rotates the
+ *    values of the top-level domains: rank r is value ((r - 1 + k) mod size) + 1. A domain
+ *    `within` a parent is not rotated: its values are numbered 1, 2, ... contiguously in the
+ *    parent's rank order, the counts per parent rank being size * pmf(rank), rounded by
+ *    largest remainder (ties to the lower rank).
+ *  - Distributions: `uniform`, or `zipf(s)` with pmf(r) = r^-s / sum_i i^-s (s = 0 is uniform).
+ *    A number is a literal (1, 1.0, 0.05) or a param reference ($s), see Num.
+ *  - Rows of a table:
+ *      `rows: per D`         one row per value of D
+ *      `rows: k per D`       k rows per value of D
+ *      `rows: per D1, D2`    one row per combination (e.g. stock: warehouse x item)
+ *      `rows: N over D dist` N rows in all, spread over D's values by dist (largest remainder)
+ *    Each column that can be a shard key maps to a key path (`customer_id: account.customer`,
+ *    the parent of the row's account), or is `unique` (a fresh value per row).
+ *  - Transactions are weighted; weight / sum of weights is a transaction's probability.
+ *  - `let x = D dist` draws x independently. `let x = D dist distinct from $y` draws it
+ *    with y's value excluded (renormalised over the rest of D).
+ *  - `let x = $y, else with p: D dist` is x = y, except that with probability p x is drawn
+ *    from D by dist EXCLUDING y's value; so p is exactly P[x != y].
+ *  - In a where condition, `column = $x` binds the column to x's value (`$x.parent` to the
+ *    parent's value); only `=` against a variable routes a statement to a shard. `?` stands
+ *    for an unbound parameter, as in ShardML's query patterns, and routes nowhere. For an
+ *    insert (a write), the conditions name the new row's key values.
+ *  - `repeat k { ... }` runs its body k times, drawing the variables declared in it afresh
+ *    each time.
+ *
+ * Linking errors (unknown names) get their own issue codes, as SHML_031 does in ShardML:
+ * SHML_040 unknown table, SHML_041 unknown column, SHML_042 unknown domain, variable or
+ * param, SHML_053 a projection to a domain that is not an ancestor.
+ */
+grammar io.shardml.Workload with org.eclipse.xtext.common.Terminals
+
+generate workload "http://shardml.io/Workload"
+
+import "platform:/resource/shardml/model/generated/SQL.ecore" as sql
+import "http://www.eclipse.org/emf/2002/Ecore" as ecore
+
+WorkloadModel:
+	imports += Import*
+	workload = Workload
+;
+
+// reference an .msql schema file by URI (copied from ShardML.xtext)
+Import:
+	'import' importURI=STRING
+;
+
+// The sections come in a fixed order, as in ShardML's database block
+Workload:
+	'workload' name=ValidID '{'
+	params += Param*
+	domains += Domain*
+	tables += TableData*
+	transactions += Transaction*
+	'}'
+;
+
+// A named number, overridable with `shardml cost --set name=value`
+Param:
+	'param' name=ValidID '=' value=Decimal
+;
+
+// A domain of key values 1..size, optionally nested in a parent
+Domain:
+	'domain' name=ValidID '{'
+	'size' ':' size=Count
+	('within' parent=[Domain|ValidID] children=Distribution)?
+	'}'
+;
+
+// The rows of a schema table, and how its key columns map to domains
+TableData:
+	'table' table=[sql::Table|ValidID] '{'
+	'rows' ':' rows=Rows
+	columns += ColumnMap*
+	'}'
+;
+
+Rows:
+	PerRows | OverRows
+;
+
+// `per D`, `k per D`, `per D1, D2`
+PerRows:
+	(count=Count)? 'per' domains+=[Domain|ValidID] (',' domains+=[Domain|ValidID])*
+;
+
+// `N over D dist`
+OverRows:
+	count=Count 'over' domain=[Domain|ValidID] distribution=Distribution
+;
+
+// `column: domain.parent...`, or `unique column` for a fresh value per row. unique comes
+// first: written after the colon it could not be told from a domain called `unique`
+ColumnMap:
+	{UniqueColumn} 'unique' column=[sql::Column|ValidID]
+	| {MappedColumn} column=[sql::Column|ValidID] ':' path=KeyPath
+;
+
+KeyPath:
+	domain=[Domain|ValidID] ('.' parents+=[Domain|ValidID])*
+;
+
+Distribution:
+	{Uniform} 'uniform'
+	| {Zipf} 'zipf' '(' s=Num ')'
+;
+
+Transaction:
+	'transaction' name=ValidID 'weight' weight=Num '{'
+	steps += Step*
+	'}'
+;
+
+Step:
+	Let | Repeat | Statement
+;
+
+// `let x = D dist [distinct from $y]`, or `let x = $y, else with p: D dist`
+Let:
+	'let' name=ValidID '='
+	( draw=Draw
+	| base=VarRef ',' 'else' 'with' remote=Num ':' draw=Draw )
+;
+
+Draw:
+	domain=[Domain|ValidID] distribution=Distribution ('distinct' 'from' distinctFrom=VarRef)?
+;
+
+Repeat:
+	'repeat' count=INT '{'
+	steps += Step*
+	'}'
+;
+
+// A statement in the shape of ShardML's query patterns: an operation on a table, its joins,
+// and where conditions joined by AND / OR
+Statement:
+	type=QueryType table=[sql::Table|ValidID]
+	joins += Join*
+	('where' first=Condition (links+=Link rest+=Condition)*)?
+;
+
+Join:
+	'join' table=[sql::Table|ValidID] 'on' on+=JoinOn ('AND' on+=JoinOn)*
+;
+
+JoinOn:
+	left=ColumnRef '=' right=ColumnRef
+;
+
+Condition:
+	column=ColumnRef op=Operator (unbound?='?' | value=VarRef)
+;
+
+// `column` or `table.column`, the table being the statement's or one of its joins
+ColumnRef:
+	(table=[sql::Table|ValidID] '.')? column=[sql::Column|ValidID]
+;
+
+// `$x`, or `$x.customer` for the value's parent in that domain
+VarRef:
+	'$' variable=[Let|ValidID] ('.' parents+=[Domain|ValidID])*
+;
+
+// A literal, or `$name` for a param
+Num:
+	value=Decimal | '$' param=[Param|ValidID]
+;
+
+// A data type rule, not a terminal: a terminal for 1.0 would also swallow the 1. of
+// `rows: 1.` and clash with INT. Hidden tokens are allowed between the parts by Xtext, so
+// `1 . 5` also parses; the validator may reject that later
+Decimal returns ecore::EBigDecimal:
+	INT ('.' INT)?
+;
+
+// Row counts and domain sizes can pass 2^31
+Count returns ecore::ELong:
+	INT
+;
+
+// The enums below are copied from ShardML.xtext, so a workload's statements read like its
+// query patterns
+enum QueryType:
+    READ='read'|WRITE='write'|DELETE='delete'
+;
+
+enum Operator:
+    EQ='='|GE='>'|LE='<'|LEQ='<='|GEQ='>='|NEQ='!='
+;
+
+enum Link:
+    AND='AND'|OR='OR'
+;
+
+// Every keyword of this language except AND and OR can still name a table, column, domain,
+// variable, param, transaction or workload:
+//   import workload param domain size within table rows per over unique uniform zipf
+//   transaction weight let else with distinct from repeat join on where read write delete
+// AND and OR stay reserved and upper case; lower-case and/or are plain IDs.
+ValidID:
+	ID
+	| 'import' | 'workload' | 'param' | 'domain' | 'size' | 'within' | 'table' | 'rows' | 'per' | 'over'
+	| 'unique' | 'uniform' | 'zipf' | 'transaction' | 'weight' | 'let' | 'else' | 'with'
+	| 'distinct' | 'from' | 'repeat' | 'join' | 'on' | 'where' | 'read' | 'write' | 'delete'
+;

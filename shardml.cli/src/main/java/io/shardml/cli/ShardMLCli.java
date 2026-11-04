@@ -22,6 +22,7 @@ import com.google.inject.Injector;
 
 import io.shardml.SQLStandaloneSetup;
 import io.shardml.ShardMLStandaloneSetup;
+import io.shardml.WorkloadStandaloneSetup;
 import io.shardml.placement.Node;
 import io.shardml.placement.Placement;
 import io.shardml.placement.PlacementResolver;
@@ -32,7 +33,7 @@ import io.shardml.shardML.Model;
  * Command line front end for ShardML.
  *
  * <pre>
- *   shardml validate &lt;model.shardml&gt;
+ *   shardml validate &lt;model.shardml | workload.workload&gt;
  *   shardml generate &lt;model.shardml&gt; [-o &lt;output-dir&gt;]
  *   shardml placement &lt;model.shardml&gt;
  * </pre>
@@ -41,13 +42,14 @@ import io.shardml.shardML.Model;
  * and generation calls the normal {@code ShardMLGenerator} through Xtext's
  * {@code GeneratorDelegate}, so output is identical to what any other Xtext host
  * produces on save. placement prints {@code PlacementResolver}'s map, the same one
- * the generated placement script applies.
+ * the generated placement script applies. validate also takes a .workload, checked
+ * by the workload language's validator.
  */
 public final class ShardMLCli {
 
 	private static final String USAGE = String.join(System.lineSeparator(),
 			"Usage:",
-			"  shardml validate <model.shardml>",
+			"  shardml validate <model.shardml | workload.workload>",
 			"  shardml generate <model.shardml> [-o <output-dir>]",
 			"  shardml placement <model.shardml>",
 			"",
@@ -114,8 +116,13 @@ public final class ShardMLCli {
 			System.err.println("shardml: no such file: " + input.getPath());
 			return EXIT_USAGE;
 		}
-		if (!input.getName().endsWith(".shardml")) {
-			System.err.println("shardml: expected a .shardml model, got: " + input.getName());
+		boolean workload = input.getName().endsWith(".workload");
+		if (workload && !"validate".equals(command)) {
+			System.err.println("shardml: " + command + " needs a .shardml model, got: " + input.getName());
+			return EXIT_USAGE;
+		}
+		if (!workload && !input.getName().endsWith(".shardml")) {
+			System.err.println("shardml: expected a .shardml model or a .workload, got: " + input.getName());
 			return EXIT_USAGE;
 		}
 
@@ -128,10 +135,12 @@ public final class ShardMLCli {
 	}
 
 	private static int execute(String command, File input, String outputOption) throws IOException {
-		// Both languages must be registered: the model's `import "x.msql"` is
-		// resolved by ShardMLScopeProvider against the same ResourceSet.
+		// The SQL language must be registered too: the file's `import "x.msql"` is
+		// resolved by its scope provider against the same ResourceSet.
 		SQLStandaloneSetup.doSetup();
-		Injector injector = new ShardMLStandaloneSetup().createInjectorAndDoEMFRegistration();
+		Injector injector = input.getName().endsWith(".workload")
+				? new WorkloadStandaloneSetup().createInjectorAndDoEMFRegistration()
+				: new ShardMLStandaloneSetup().createInjectorAndDoEMFRegistration();
 
 		XtextResourceSet resourceSet = injector.getInstance(XtextResourceSet.class);
 		resourceSet.addLoadOption(XtextResource.OPTION_RESOLVE_ALL, Boolean.TRUE);
