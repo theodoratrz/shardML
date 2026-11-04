@@ -26,13 +26,20 @@ set -uo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 BENCH="$ROOT/bench"
 
+# the newest CLI jar: target/ can hold the jars of several versions, and the
+# first match in name order need not be the one just built
 shopt -s nullglob
-jars=("$ROOT"/shardml.cli/target/*-cli.jar)
-if [[ ${#jars[@]} -eq 0 ]]; then
+JAR=
+for jar in "$ROOT"/shardml.cli/target/*-cli.jar; do
+	if [[ -z "$JAR" || "$jar" -nt "$JAR" ]]; then
+		JAR="$jar"
+	fi
+done
+if [[ -z "$JAR" ]]; then
 	echo "test-examples: no CLI jar in shardml.cli/target; run 'mvn install' first" >&2
 	exit 2
 fi
-JAR="${jars[0]}"
+echo "test-examples: using $JAR"
 
 models=("$@")
 if [[ ${#models[@]} -eq 0 ]]; then
