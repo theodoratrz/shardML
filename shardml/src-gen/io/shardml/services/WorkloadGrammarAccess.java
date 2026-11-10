@@ -1264,7 +1264,8 @@ public class WorkloadGrammarAccess extends AbstractElementFinder.AbstractGrammar
 		
 		//// A data type rule, not a terminal: a terminal for 1.0 would also swallow the 1. of
 		//// `rows: 1.` and clash with INT. Hidden tokens are allowed between the parts by Xtext, so
-		//// `1 . 5` also parses; the validator may reject that later
+		//// `1 . 5` parses, but the value converter rejects the spaced text: a syntax error, no validator
+		//// needed (WorkloadParsingTest pins it)
 		//Decimal returns ecore::EBigDecimal:
 		//    INT ('.' INT)?
 		//;
@@ -1963,7 +1964,8 @@ public class WorkloadGrammarAccess extends AbstractElementFinder.AbstractGrammar
 	
 	//// A data type rule, not a terminal: a terminal for 1.0 would also swallow the 1. of
 	//// `rows: 1.` and clash with INT. Hidden tokens are allowed between the parts by Xtext, so
-	//// `1 . 5` also parses; the validator may reject that later
+	//// `1 . 5` parses, but the value converter rejects the spaced text: a syntax error, no validator
+	//// needed (WorkloadParsingTest pins it)
 	//Decimal returns ecore::EBigDecimal:
 	//    INT ('.' INT)?
 	//;

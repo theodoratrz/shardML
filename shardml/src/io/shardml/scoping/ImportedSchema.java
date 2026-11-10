@@ -16,14 +16,20 @@ public final class ImportedSchema {
 	}
 
 	// manual resolve URI, because Shardml uses a custom import rather than Xtext's built-in.
-	// null if there is no import, or the first import is not a schema (e.g. a .shardml)
+	// null if there is no import, the first import is not a schema (e.g. a .shardml), or it
+	// cannot be loaded (a missing file)
 	public static Schema of(EObject obj) {
 		String importURI = firstImport(EcoreUtil2.getRootContainer(obj));
 		if (importURI == null)
 			return null;
 		URI baseURI = obj.eResource().getURI();
 		URI uri = URI.createURI(importURI).resolve(baseURI);
-		Resource importedSource = obj.eResource().getResourceSet().getResource(uri, true);
+		Resource importedSource;
+		try {
+			importedSource = obj.eResource().getResourceSet().getResource(uri, true);
+		} catch (RuntimeException e) {
+			return null;
+		}
 		if (importedSource == null || importedSource.getContents().isEmpty())
 			return null;
 		return importedSource.getContents().get(0) instanceof Schema schema ? schema : null;

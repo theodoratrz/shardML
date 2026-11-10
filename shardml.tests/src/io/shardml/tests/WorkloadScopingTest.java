@@ -102,7 +102,7 @@ public class WorkloadScopingTest {
 
 	@Test
 	public void testImportOfSomethingElseLinksNoTables() throws Exception {
-		// the import does not resolve to a schema, so every table is unknown (SHML_057 will say why)
+		// the import does not resolve to a schema, so every table is unknown, and SHML_057 says why
 		support.schema("dummy:/not-a-schema.msql", "");
 		WorkloadModel model = support.parse("dummy:/w2.workload", """
 				import "not-a-schema.msql"
@@ -113,6 +113,9 @@ public class WorkloadScopingTest {
 				""");
 		validationTestHelper.assertError(model, WorkloadPackage.Literals.TABLE_DATA, "SHML_040", at("customers"), 9,
 				"Unknown table 'customers' in the imported schema.");
+		validationTestHelper.assertError(model, WorkloadPackage.Literals.IMPORT, "SHML_057", at("\"not-a-schema.msql\""), 19,
+				"'not-a-schema.msql' could not be loaded as a schema");
+		Assertions.assertEquals(List.of("SHML_040", "SHML_057"), codes(model));
 	}
 
 	// --- SHML_040: tables ---
@@ -191,6 +194,7 @@ public class WorkloadScopingTest {
 				    table ledger { rows: 10 over region uniform  account_id: account }
 				    transaction t weight $q {
 				        let a = branch zipf($p)
+				        write accounts where id = $a
 				    }
 				""");
 		validationTestHelper.assertError(model, WorkloadPackage.Literals.OVER_ROWS, "SHML_042", at("region"), 6,
@@ -228,12 +232,13 @@ public class WorkloadScopingTest {
 		WorkloadModel model = parse("""
 				    transaction t1 weight 1 {
 				        let a = account uniform
+				        read accounts where id = $a
 				    }
 				    transaction t2 weight 1 {
 				        write accounts where id = $a
 				    }
 				""");
-		validationTestHelper.assertError(model, WorkloadPackage.Literals.VAR_REF, "SHML_042", at("$a", 1, 1), 1,
+		validationTestHelper.assertError(model, WorkloadPackage.Literals.VAR_REF, "SHML_042", at("$a", 2, 1), 1,
 				"Unknown variable 'a'", "There are none.");
 		Assertions.assertEquals(List.of("SHML_042"), codes(model));
 	}
@@ -245,6 +250,7 @@ public class WorkloadScopingTest {
 				        let a = account uniform
 				        write accounts where id = $b
 				        let b = account uniform distinct from $b
+				        write accounts where id = $a AND id = $b
 				    }
 				""");
 		validationTestHelper.assertError(model, WorkloadPackage.Literals.VAR_REF, "SHML_042", at("$b", 1, 1), 1,
@@ -276,6 +282,7 @@ public class WorkloadScopingTest {
 		WorkloadModel model = parse("""
 				    transaction t weight 1 {
 				        let a = customer uniform
+				        read customers where id = $a
 				        repeat 2 {
 				            let a = account uniform
 				            write accounts where id = $a
@@ -283,7 +290,7 @@ public class WorkloadScopingTest {
 				    }
 				""");
 		support.assertNoIssues(model);
-		Repeat repeat = (Repeat) model.getWorkload().getTransactions().get(0).getSteps().get(1);
+		Repeat repeat = (Repeat) model.getWorkload().getTransactions().get(0).getSteps().get(2);
 		Statement write = (Statement) repeat.getSteps().get(1);
 		Assertions.assertSame(repeat.getSteps().get(0), write.getFirst().getValue().getVariable());
 	}

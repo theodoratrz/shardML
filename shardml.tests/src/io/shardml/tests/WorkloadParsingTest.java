@@ -314,7 +314,7 @@ public class WorkloadParsingTest {
 				    transaction t weight 1 {
 				        let from = customer uniform
 				        let to = customer uniform distinct from $from
-				        write accounts where customer_id = $from
+				        write accounts where customer_id = $from AND customer_id = $to
 				    }
 				}
 				""");
