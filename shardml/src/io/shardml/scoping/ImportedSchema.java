@@ -19,20 +19,25 @@ public final class ImportedSchema {
 	// null if there is no import, the first import is not a schema (e.g. a .shardml), or it
 	// cannot be loaded (a missing file)
 	public static Schema of(EObject obj) {
+		Resource importedSource = resource(obj);
+		if (importedSource == null || importedSource.getContents().isEmpty())
+			return null;
+		return importedSource.getContents().get(0) instanceof Schema schema ? schema : null;
+	}
+
+	// the resource the first import loads, whatever it holds; null if there is no import or it
+	// cannot be loaded
+	public static Resource resource(EObject obj) {
 		String importURI = firstImport(EcoreUtil2.getRootContainer(obj));
 		if (importURI == null)
 			return null;
 		URI baseURI = obj.eResource().getURI();
 		URI uri = URI.createURI(importURI).resolve(baseURI);
-		Resource importedSource;
 		try {
-			importedSource = obj.eResource().getResourceSet().getResource(uri, true);
+			return obj.eResource().getResourceSet().getResource(uri, true);
 		} catch (RuntimeException e) {
 			return null;
 		}
-		if (importedSource == null || importedSource.getContents().isEmpty())
-			return null;
-		return importedSource.getContents().get(0) instanceof Schema schema ? schema : null;
 	}
 
 	private static String firstImport(EObject root) {

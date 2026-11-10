@@ -19,6 +19,8 @@ import io.shardml.shardML.Model;
 import io.shardml.shardML.ShardDecl;
 import io.shardml.shardML.Strategy;
 import io.shardml.scoping.ImportedSchema;
+import io.shardml.schema.SqlTypes;
+import io.shardml.schema.SqlTypes.SqlType;
 import io.shardml.sql.Column;
 import io.shardml.sql.Constraint;
 import io.shardml.sql.NotNull;
@@ -105,7 +107,7 @@ public class ShardMLGenerator extends AbstractGenerator {
 			// table constraints go after the columns, as in most hand-written DDL
 			List<String> lines = new ArrayList<>();
 			for (Column column : table.getColumns()) {
-				StringBuilder line = new StringBuilder(column.getName()).append(" ").append(columnType(column));
+				StringBuilder line = new StringBuilder(column.getName()).append(" ").append(columnType(table, column));
 				for (Constraint constraint : column.getConstraint())
 					line.append(" ").append(constraintSQL(constraint));
 				lines.add(line.toString());
@@ -119,11 +121,14 @@ public class ShardMLGenerator extends AbstractGenerator {
 		return out;
 	}
 
-	private static String columnType(Column column) {
-		// simpleType defaults to INT when unset, so the varchar check must come first
-		if (column.getVarchar() != null)
-			return "VARCHAR(" + column.getVarchar().getSize() + ")";
-		return column.getSimpleType().getLiteral();
+	// through SqlTypes: a type that did not parse must stop generation, not come out as the enum's
+	// default INT. Validation reports the syntax error first, so this only guards direct callers
+	private static String columnType(Table table, Column column) {
+		SqlType type = SqlTypes.of(column);
+		if (!type.isKnown())
+			throw new IllegalStateException("The type of " + table.getName() + "." + column.getName()
+					+ " did not parse; fix the .msql before generating.");
+		return type.spelling();
 	}
 
 	private static String constraintSQL(Constraint constraint) {

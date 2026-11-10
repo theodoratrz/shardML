@@ -2,6 +2,7 @@ package io.shardml.cli;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -28,6 +29,7 @@ import io.shardml.placement.Placement;
 import io.shardml.placement.PlacementResolver;
 import io.shardml.placement.ShardSlot;
 import io.shardml.shardML.Model;
+import io.shardml.validation.ImportedSchemaValidation;
 
 /**
  * Command line front end for ShardML.
@@ -43,7 +45,8 @@ import io.shardml.shardML.Model;
  * {@code GeneratorDelegate}, so output is identical to what any other Xtext host
  * produces on save. placement prints {@code PlacementResolver}'s map, the same one
  * the generated placement script applies. validate also takes a .workload, checked
- * by the workload language's validator.
+ * by the workload language's validator. Every command also validates the .msql schema the
+ * file imports and reports its issues under the schema's file name.
  */
 public final class ShardMLCli {
 
@@ -146,8 +149,10 @@ public final class ShardMLCli {
 		resourceSet.addLoadOption(XtextResource.OPTION_RESOLVE_ALL, Boolean.TRUE);
 		Resource resource = resourceSet.getResource(URI.createFileURI(input.getPath()), true);
 
-		List<Issue> issues = injector.getInstance(IResourceValidator.class)
-				.validate(resource, CheckMode.ALL, CancelIndicator.NullImpl);
+		// the imported .msql first: its errors (a type that did not parse, ...) explain the model's
+		List<Issue> issues = new ArrayList<>(ImportedSchemaValidation.issues(resource));
+		issues.addAll(injector.getInstance(IResourceValidator.class)
+				.validate(resource, CheckMode.ALL, CancelIndicator.NullImpl));
 		// placement's stdout is the map alone, so its warnings go to stderr
 		int errors = report(issues, input, "placement".equals(command));
 
@@ -198,14 +203,19 @@ public final class ShardMLCli {
 		return EXIT_OK;
 	}
 
-	/** Prints every issue as {@code file:line: severity: message [code]}; returns the error count. */
+	/**
+	 * Prints every issue as {@code file:line: severity: message [code]}, the file being the one the
+	 * issue is in (the model or the schema it imports); returns the error count.
+	 */
 	private static int report(List<Issue> issues, File input, boolean warningsToStderr) {
 		int errors = 0;
 		for (Issue issue : issues) {
 			if (issue.getSeverity() == Severity.ERROR) {
 				errors++;
 			}
-			String location = input.getName() + ":" + issue.getLineNumber();
+			URI problem = issue.getUriToProblem();
+			String file = problem != null && problem.lastSegment() != null ? URI.decode(problem.lastSegment()) : input.getName();
+			String location = file + ":" + issue.getLineNumber();
 			String code = issue.getCode() == null ? "" : " [" + issue.getCode() + "]";
 			String line = location + ": " + issue.getSeverity().name().toLowerCase() + ": "
 					+ issue.getMessage() + code;

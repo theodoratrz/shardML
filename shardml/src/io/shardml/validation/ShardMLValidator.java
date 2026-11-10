@@ -26,7 +26,9 @@ import io.shardml.shardML.ShardDecl;
 import io.shardml.shardML.ShardMLPackage;
 import io.shardml.shardML.Strategy;
 import io.shardml.shardML.WhereCondition;
-import io.shardml.sql.AllTypes;
+import io.shardml.schema.SqlTypes;
+import io.shardml.schema.SqlTypes.Base;
+import io.shardml.schema.SqlTypes.SqlType;
 import io.shardml.sql.Column;
 import io.shardml.sql.Constraint;
 import io.shardml.sql.PrimaryAnnotation;
@@ -150,13 +152,10 @@ public class ShardMLValidator extends AbstractShardMLValidator {
 	}
 
 	// Citus compares the type without its length: VARCHAR(50) colocates with VARCHAR(100),
-	// but VARCHAR with TEXT or INT with BIGINT is rejected (checked on Citus 14.2)
-	private static String typeOf(Column column) {
-		return column.getVarchar() != null ? "VARCHAR" : column.getSimpleType().getLiteral();
-	}
-
-	private static String typeName(Column column) {
-		return column.getVarchar() != null ? "VARCHAR(" + column.getVarchar().getSize() + ")" : typeOf(column);
+	// but VARCHAR with TEXT or INT with BIGINT is rejected (checked on Citus 14.2). Types are read
+	// through SqlTypes: a column whose type did not parse is UNKNOWN, never the enum default INT
+	private static SqlType typeOf(Column column) {
+		return SqlTypes.of(column);
 	}
 
 	// no meaning in a database without shard declarations
@@ -426,9 +425,13 @@ public class ShardMLValidator extends AbstractShardMLValidator {
 		if (subject == null || keyLink(db, subject) != rel)
 			return;
 		Column parentKey = shardFor(db, rel.getBelongs()).getId();
-		if (!typeOf(rel.getVia()).equals(typeOf(parentKey))) {
-			error("Foreign key " + qualified(rel.getVia()) + " is " + typeName(rel.getVia()) + ", but the shard key it references, "
-					+ qualified(parentKey) + ", is " + typeName(parentKey) + ". Colocated tables need the same type at every link.",
+		SqlType via = typeOf(rel.getVia());
+		SqlType parent = typeOf(parentKey);
+		if (!via.isKnown() || !parent.isKnown())
+			return; // the .msql has a syntax error at that column; it is reported there
+		if (!via.sameBase(parent)) {
+			error("Foreign key " + qualified(rel.getVia()) + " is " + via.spelling() + ", but the shard key it references, "
+					+ qualified(parentKey) + ", is " + parent.spelling() + ". Colocated tables need the same type at every link.",
 					rel, ShardMLPackage.Literals.BELONGS_TO__VIA, FOREIGN_KEY_TYPE_MISMATCH);
 		}
 	}
@@ -553,9 +556,10 @@ public class ShardMLValidator extends AbstractShardMLValidator {
 	// INT, BIGINT, UUID distribute evenly and avoid hotspots
 	@Check
 	public void checkKeyTypeWarning(ShardDecl shard) {
-		if (shard.getStrategy() != Strategy.REPLICATED && shard.getId() != null) {
-			AllTypes type = shard.getId().getSimpleType();
-			if (shard.getId().getVarchar() != null || (type != AllTypes.INT && type != AllTypes.BIGINT && type != AllTypes.UUID)) {
+		if (shard.getStrategy() != Strategy.REPLICATED && shard.getId() != null && !shard.getId().eIsProxy()) {
+			SqlType type = typeOf(shard.getId());
+			// an UNKNOWN type is a syntax error in the .msql, reported there
+			if (type.isKnown() && type.base() != Base.INT4 && type.base() != Base.INT8 && type.base() != Base.UUID) {
 				warning("Shard key should be of type INT, BIGINT or UUID for optimal performance.", shard, ShardMLPackage.Literals.SHARD_DECL__ID, SUBOPTIMAL_KEY_TYPE);
 			}
 		}

@@ -168,6 +168,10 @@ java -jar shardml.cli/target/*-cli.jar placement examples/banking.shardml
 
 `validate` prints diagnostics as `file:line: severity: message [SHML_0xx]` and exits 1 if the model has errors. `generate` validates first, then writes the output files to `src-gen/` next to the model (or to `-o`). `placement` validates first, then prints the node of every shard.
 
+Every command also validates the `.msql` schema the model (or workload) imports, and reports its issues under the `.msql` file's name, e.g. `banking.msql:12: error: ...`. A schema error counts like a model error: the command exits 1 and `generate` writes nothing. `generate` also refuses a column whose type did not parse.
+
+> **Fixed after v2.1.0:** v2.0.0 and v2.1.0 validated only the `.shardml` file. A schema with a column type the grammar does not know (e.g. `code CHAR(2) NOT NULL`) passed `validate`, and `generate` wrote that column as `INT`, dropping its `NOT NULL` and the table's key constraints. If you generated with those versions from a schema that has a syntax error, regenerate.
+
 ---
 
 ## Running the Tests
