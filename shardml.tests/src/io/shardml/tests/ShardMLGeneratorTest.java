@@ -2,6 +2,7 @@ package io.shardml.tests;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.StringReader;
 import java.util.Map;
 
 import org.eclipse.emf.common.util.URI;
@@ -15,12 +16,23 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.Strictness;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 import io.shardml.SQLStandaloneSetup;
 import io.shardml.generator.ShardMLGenerator;
+import io.shardml.scoping.ImportedSchema;
 import io.shardml.shardML.Model;
+import io.shardml.shardML.ShardDecl;
+import io.shardml.sql.Column;
+import io.shardml.sql.Schema;
+import io.shardml.sql.Table;
 
 @ExtendWith(InjectionExtension.class)
 @InjectWith(ShardMLInjectorProvider.class)
@@ -138,6 +150,135 @@ public class ShardMLGeneratorTest {
 				}
 				"""), "mybank-sharding.json");
 		Assertions.assertTrue(json.contains("\"colocate_with\": \"customers\""), "Should include colocate_with field");
+	}
+
+	// --- JSON escaping ---
+
+	// Quoted names keep any character: "a""b" is stored as a"b, "back\slash" keeps its backslash,
+	// and a quoted name may span lines. ShardML cannot name such a column yet (its references are
+	// ValidIDs), so the shard is parsed against plain columns and then pointed at the quoted ones
+	private static final String ODD_MSQL = """
+			CREATE TABLE "t\\x" (
+			    id BIGINT PRIMARY KEY,
+			    "a""b" BIGINT NOT NULL,
+			    "back\\slash" BIGINT,
+			    "two
+			lines" BIGINT
+			)
+			CREATE TABLE plain (
+			    id BIGINT PRIMARY KEY
+			)
+			""";
+
+	private static final String ODD_SHARDML = """
+			import "test.msql"
+			database mybank {
+			    type: postgres
+			    shard plain {
+			        strategy: hash
+			        key: id
+			        buckets: 4
+			    }
+			    shard plain {
+			        strategy: hash
+			        key: id
+			        buckets: 4
+			        colocate_with: plain
+			    }
+			}
+			""";
+
+	// the JSON of ODD_SHARDML after its second shard is moved to table "t\x" and key column `key`
+	private String oddJson(String key) throws IOException {
+		Model model = parseShardML(ODD_MSQL, ODD_SHARDML);
+		Schema schema = ImportedSchema.of(model);
+		Table odd = schema.getTables().get(0);
+		Assertions.assertEquals("t\\x", odd.getName(), "the .msql should have parsed");
+		Column column = odd.getColumns().stream().filter(c -> key.equals(c.getName())).findFirst()
+				.orElseThrow(() -> new AssertionError("no column " + key + " in " + odd.getColumns()));
+		ShardDecl shard = model.getDb().getShard_decl().get(1);
+		shard.setEntity(odd);
+		shard.setId(column);
+		// the first shard's table as colocate_with target is plain; make it the odd one too
+		model.getDb().getShard_decl().get(0).setEntity(odd);
+		shard.setColocate(odd);
+		return generator.PostgresJSON(model.getDb()).toString();
+	}
+
+	// parses with a strict reader (a TypeAdapter keeps the reader strict; JsonParser.parseReader
+	// would make it lenient): no trailing data, no unescaped control characters, no NaN, etc.
+	private static JsonObject parseStrict(String json) throws IOException {
+		JsonReader reader = new JsonReader(new StringReader(json));
+		reader.setStrictness(Strictness.STRICT);
+		JsonElement element = new Gson().getAdapter(JsonElement.class).read(reader);
+		Assertions.assertEquals(JsonToken.END_DOCUMENT, reader.peek(), "trailing data after the JSON");
+		return element.getAsJsonObject();
+	}
+
+	private static JsonObject table(JsonObject json, int i) {
+		return json.getAsJsonArray("tables").get(i).getAsJsonObject();
+	}
+
+	@Test
+	public void testJsonEscapesAQuoteInAName() throws IOException {
+		String json = oddJson("a\"b");
+		Assertions.assertTrue(json.contains("\"distribution_column\": \"a\\\"b\""), json);
+		JsonObject parsed = parseStrict(json);
+		Assertions.assertEquals("a\"b", table(parsed, 1).get("distribution_column").getAsString());
+	}
+
+	@Test
+	public void testJsonEscapesABackslashInANameAndTable() throws IOException {
+		String json = oddJson("back\\slash");
+		Assertions.assertTrue(json.contains("\"distribution_column\": \"back\\\\slash\""), json);
+		Assertions.assertTrue(json.contains("\"name\": \"t\\\\x\""), json);
+		Assertions.assertTrue(json.contains("\"colocate_with\": \"t\\\\x\""), json);
+		JsonObject parsed = parseStrict(json);
+		Assertions.assertEquals("back\\slash", table(parsed, 1).get("distribution_column").getAsString());
+		Assertions.assertEquals("t\\x", table(parsed, 0).get("name").getAsString());
+		Assertions.assertEquals("t\\x", table(parsed, 1).get("name").getAsString());
+		Assertions.assertEquals("t\\x", table(parsed, 1).get("colocate_with").getAsString());
+	}
+
+	@Test
+	public void testJsonEscapesAControlCharacterInAName() throws IOException {
+		String json = oddJson("two\nlines");
+		Assertions.assertTrue(json.contains("\"distribution_column\": \"two\\nlines\""), json);
+		Assertions.assertEquals("two\nlines", table(parseStrict(json), 1).get("distribution_column").getAsString());
+	}
+
+	@Test
+	public void testJsonStringEscapesPerRfc8259() {
+		Assertions.assertEquals("\"plain\"", ShardMLGenerator.jsonString("plain"));
+		Assertions.assertEquals("\"\\\"\\\\\\b\\f\\n\\r\\t\"", ShardMLGenerator.jsonString("\"\\\b\f\n\r\t"));
+		Assertions.assertEquals("\"\\u0000\\u001f\"", ShardMLGenerator.jsonString("\u0000\u001f"));
+		// not escaped: DEL, solidus, non-ASCII (the file is UTF-8)
+		Assertions.assertEquals("\"\u007f/bıgınt\"", ShardMLGenerator.jsonString("\u007f/bıgınt"));
+	}
+
+	@Test
+	public void testJsonOfThePlainModelParses() throws IOException {
+		String json = file(generate("""
+				import "test.msql"
+				database mybank {
+				    type: postgres
+				    shard customers {
+				        strategy: hash
+				        key: id
+				        buckets: 32
+				    }
+				    shard orders {
+				        strategy: hash
+				        key: customer_id
+				        buckets: 32
+				        colocate_with: customers
+				    }
+				}
+				"""), "mybank-sharding.json");
+		JsonObject parsed = parseStrict(json);
+		Assertions.assertEquals("mybank", parsed.get("database").getAsString());
+		Assertions.assertEquals("customer_id", table(parsed, 1).get("distribution_column").getAsString());
+		Assertions.assertEquals("customers", table(parsed, 1).get("colocate_with").getAsString());
 	}
 
 	@Test

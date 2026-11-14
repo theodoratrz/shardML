@@ -38,6 +38,13 @@
             <artifactId>junit-jupiter-engine</artifactId>
             <scope>test</scope>
         </dependency>
+        <!-- A strict JSON reader (Strictness.STRICT, since 2.11) to check generated JSON parses. -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.11.0</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

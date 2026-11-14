@@ -59,7 +59,13 @@ public class ColumnTypeAccessGuardTest {
 	private static final List<Allowed> QUOTE_OR_FOLD_ALLOWED = List.of(
 			new Allowed("SQLValueConverters.java", "text.equals(\"\\\"\\\"\")",
 					"rejects the empty quoted name token; reading is SqlNames.read"),
-			new Allowed("ShardMLCli.java", "getSeverity().name().toLowerCase()", "a severity, not a name"));
+			new Allowed("ShardMLCli.java", "getSeverity().name().toLowerCase()", "a severity, not a name"),
+			new Allowed("ShardMLGenerator.java", "case '\"' -> out.append(\"\\\\\\\"\");",
+					"JSON string escaping in jsonString, not identifier quoting"),
+			new Allowed("ShardMLGenerator.java", "StringBuilder(value.length() + 2).append('\"')",
+					"opens a JSON string literal in jsonString"),
+			new Allowed("ShardMLGenerator.java", "return out.append('\"').toString();",
+					"closes a JSON string literal in jsonString"));
 
 	@Test
 	public void testOnlySqlTypesReadsTheColumnType() throws IOException {

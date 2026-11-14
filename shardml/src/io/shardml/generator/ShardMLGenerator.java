@@ -69,7 +69,7 @@ public class ShardMLGenerator extends AbstractGenerator {
 	public CharSequence PostgresJSON(Database db) {
 		StringBuilder out = new StringBuilder();
 		out.append("{\n");
-		out.append("    \"database\": \"").append(db.getName()).append("\",\n");
+		out.append("    \"database\": ").append(jsonString(db.getName())).append(",\n");
 		out.append("    \"target\": \"citus\",\n");
 		out.append("    \"tables\": [\n");
 		boolean first = true;
@@ -78,13 +78,13 @@ public class ShardMLGenerator extends AbstractGenerator {
 				out.append("        },\n");
 			first = false;
 			out.append("        {\n");
-			out.append("            \"name\": \"").append(SqlNames.stored(shard.getEntity())).append("\",\n");
+			out.append("            \"name\": ").append(jsonString(SqlNames.stored(shard.getEntity()))).append(",\n");
 			if (isHashed(shard)) {
-				out.append("            \"distribution_column\": \"").append(SqlNames.stored(shard.getId())).append("\",\n");
+				out.append("            \"distribution_column\": ").append(jsonString(SqlNames.stored(shard.getId()))).append(",\n");
 				out.append("            \"shard_count\": ").append(shard.getBuckets()).append(",\n");
 				out.append("            \"distribution_type\": \"hash\"\n");
 				if (shard.getColocate() != null)
-					out.append("            ,\"colocate_with\": \"").append(SqlNames.stored(shard.getColocate())).append("\"\n");
+					out.append("            ,\"colocate_with\": ").append(jsonString(SqlNames.stored(shard.getColocate()))).append("\n");
 			} else {
 				out.append("            \"distribution_type\": \"reference\"\n");
 			}
@@ -297,6 +297,32 @@ public class ShardMLGenerator extends AbstractGenerator {
 		out.append("        END IF;\n");
 		out.append("    END LOOP;\n");
 		out.append("END $preflight$;\n");
+	}
+
+	// a JSON string literal (RFC 8259, section 7): quotation mark, reverse solidus and the control
+	// characters U+0000-U+001F escaped, everything else as is. Quoted SQL names may hold any of
+	// them: "a""b" is stored as a"b, and a quoted name may span lines
+	public static String jsonString(String value) {
+		StringBuilder out = new StringBuilder(value.length() + 2).append('"');
+		for (int i = 0; i < value.length(); i++) {
+			char c = value.charAt(i);
+			switch (c) {
+				case '"' -> out.append("\\\"");
+				case '\\' -> out.append("\\\\");
+				case '\b' -> out.append("\\b");
+				case '\f' -> out.append("\\f");
+				case '\n' -> out.append("\\n");
+				case '\r' -> out.append("\\r");
+				case '\t' -> out.append("\\t");
+				default -> {
+					if (c < 0x20)
+						out.append(String.format("\\u%04x", (int) c));
+					else
+						out.append(c);
+				}
+			}
+		}
+		return out.append('"').toString();
 	}
 
 	private static String sqlString(String value) {
