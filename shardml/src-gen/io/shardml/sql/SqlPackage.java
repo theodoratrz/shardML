@@ -97,13 +97,31 @@ public interface SqlPackage extends EPackage
   int TABLE = 1;
 
   /**
+   * The feature id for the '<em><b>If Not Exists</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int TABLE__IF_NOT_EXISTS = 0;
+
+  /**
+   * The feature id for the '<em><b>Schema Name</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int TABLE__SCHEMA_NAME = 1;
+
+  /**
    * The feature id for the '<em><b>Name</b></em>' attribute.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
    * @generated
    * @ordered
    */
-  int TABLE__NAME = 0;
+  int TABLE__NAME = 2;
 
   /**
    * The feature id for the '<em><b>Columns</b></em>' containment reference list.
@@ -112,7 +130,7 @@ public interface SqlPackage extends EPackage
    * @generated
    * @ordered
    */
-  int TABLE__COLUMNS = 1;
+  int TABLE__COLUMNS = 3;
 
   /**
    * The feature id for the '<em><b>Constraints</b></em>' containment reference list.
@@ -121,7 +139,7 @@ public interface SqlPackage extends EPackage
    * @generated
    * @ordered
    */
-  int TABLE__CONSTRAINTS = 2;
+  int TABLE__CONSTRAINTS = 4;
 
   /**
    * The number of structural features of the '<em>Table</em>' class.
@@ -130,7 +148,7 @@ public interface SqlPackage extends EPackage
    * @generated
    * @ordered
    */
-  int TABLE_FEATURE_COUNT = 3;
+  int TABLE_FEATURE_COUNT = 5;
 
   /**
    * The meta object id for the '{@link io.shardml.sql.impl.ColumnImpl <em>Column</em>}' class.
@@ -418,6 +436,28 @@ public interface SqlPackage extends EPackage
   EClass getTable();
 
   /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.Table#isIfNotExists <em>If Not Exists</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>If Not Exists</em>'.
+   * @see io.shardml.sql.Table#isIfNotExists()
+   * @see #getTable()
+   * @generated
+   */
+  EAttribute getTable_IfNotExists();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.Table#getSchemaName <em>Schema Name</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Schema Name</em>'.
+   * @see io.shardml.sql.Table#getSchemaName()
+   * @see #getTable()
+   * @generated
+   */
+  EAttribute getTable_SchemaName();
+
+  /**
    * Returns the meta object for the attribute '{@link io.shardml.sql.Table#getName <em>Name</em>}'.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
@@ -666,6 +706,22 @@ public interface SqlPackage extends EPackage
      * @generated
      */
     EClass TABLE = eINSTANCE.getTable();
+
+    /**
+     * The meta object literal for the '<em><b>If Not Exists</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute TABLE__IF_NOT_EXISTS = eINSTANCE.getTable_IfNotExists();
+
+    /**
+     * The meta object literal for the '<em><b>Schema Name</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute TABLE__SCHEMA_NAME = eINSTANCE.getTable_SchemaName();
 
     /**
      * The meta object literal for the '<em><b>Name</b></em>' attribute feature.

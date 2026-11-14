@@ -19,6 +19,7 @@ import io.shardml.shardML.Model;
 import io.shardml.shardML.ShardDecl;
 import io.shardml.shardML.Strategy;
 import io.shardml.scoping.ImportedSchema;
+import io.shardml.schema.SqlNames;
 import io.shardml.schema.SqlTypes;
 import io.shardml.schema.SqlTypes.SqlType;
 import io.shardml.sql.Column;
@@ -77,13 +78,13 @@ public class ShardMLGenerator extends AbstractGenerator {
 				out.append("        },\n");
 			first = false;
 			out.append("        {\n");
-			out.append("            \"name\": \"").append(shard.getEntity().getName()).append("\",\n");
+			out.append("            \"name\": \"").append(SqlNames.stored(shard.getEntity())).append("\",\n");
 			if (isHashed(shard)) {
-				out.append("            \"distribution_column\": \"").append(shard.getId().getName()).append("\",\n");
+				out.append("            \"distribution_column\": \"").append(SqlNames.stored(shard.getId())).append("\",\n");
 				out.append("            \"shard_count\": ").append(shard.getBuckets()).append(",\n");
 				out.append("            \"distribution_type\": \"hash\"\n");
 				if (shard.getColocate() != null)
-					out.append("            ,\"colocate_with\": \"").append(shard.getColocate().getName()).append("\"\n");
+					out.append("            ,\"colocate_with\": \"").append(SqlNames.stored(shard.getColocate())).append("\"\n");
 			} else {
 				out.append("            \"distribution_type\": \"reference\"\n");
 			}
@@ -107,14 +108,16 @@ public class ShardMLGenerator extends AbstractGenerator {
 			// table constraints go after the columns, as in most hand-written DDL
 			List<String> lines = new ArrayList<>();
 			for (Column column : table.getColumns()) {
-				StringBuilder line = new StringBuilder(column.getName()).append(" ").append(columnType(table, column));
+				StringBuilder line = new StringBuilder(SqlNames.column(column)).append(" ").append(columnType(table, column));
 				for (Constraint constraint : column.getConstraint())
 					line.append(" ").append(constraintSQL(constraint));
 				lines.add(line.toString());
 			}
 			for (TableConstraint constraint : table.getConstraints())
 				lines.add(tableConstraintSQL(constraint));
-			out.append("CREATE TABLE ").append(table.getName()).append(" (\n    ");
+			// names as the schema wrote them: a quoted name stays quoted, a schema qualifier stays
+			out.append("CREATE TABLE ").append(table.isIfNotExists() ? "IF NOT EXISTS " : "")
+					.append(SqlNames.qualified(table)).append(" (\n    ");
 			out.append(String.join(",\n    ", lines));
 			out.append("\n);\n");
 		}
@@ -126,7 +129,7 @@ public class ShardMLGenerator extends AbstractGenerator {
 	private static String columnType(Table table, Column column) {
 		SqlType type = SqlTypes.of(column);
 		if (!type.isKnown())
-			throw new IllegalStateException("The type of " + table.getName() + "." + column.getName()
+			throw new IllegalStateException("The type of " + SqlNames.stored(table) + "." + SqlNames.stored(column)
 					+ " did not parse; fix the .msql before generating.");
 		return type.spelling();
 	}
@@ -142,7 +145,7 @@ public class ShardMLGenerator extends AbstractGenerator {
 	}
 
 	private static String tableConstraintSQL(TableConstraint constraint) {
-		String columns = constraint.getColumns().stream().map(Column::getName).collect(Collectors.joining(", "));
+		String columns = constraint.getColumns().stream().map(SqlNames::column).collect(Collectors.joining(", "));
 		if (constraint instanceof PrimaryKey)
 			return "PRIMARY KEY (" + columns + ")";
 		if (constraint instanceof UniqueKey)
@@ -162,15 +165,17 @@ public class ShardMLGenerator extends AbstractGenerator {
 		StringBuilder out = new StringBuilder();
 		for (ShardDecl shard : db.getShard_decl()) {
 			if (isHashed(shard)) {
-				out.append("SELECT create_distributed_table('").append(shard.getEntity().getName())
-						.append("', '").append(shard.getId().getName()).append("' ");
+				// tables as regclass literals: schema-qualified and quoted as the schema writes them
+				// the distribution column as stored: Citus matches this text against the catalog as given
+				out.append("SELECT create_distributed_table('").append(SqlNames.qualified(shard.getEntity()))
+						.append("', '").append(SqlNames.stored(shard.getId())).append("' ");
 				if (shard.getColocate() != null)
-					out.append(" ,colocate_with => '").append(shard.getColocate().getName()).append("' ");
+					out.append(" ,colocate_with => '").append(SqlNames.qualified(shard.getColocate())).append("' ");
 				else
 					out.append(" ,shard_count => ").append(shard.getBuckets()).append(" ,colocate_with => 'none' ");
 				out.append(");\n");
 			} else {
-				out.append("SELECT create_reference_table('").append(shard.getEntity().getName()).append("');\n");
+				out.append("SELECT create_reference_table('").append(SqlNames.qualified(shard.getEntity())).append("');\n");
 			}
 		}
 		return out;

@@ -80,9 +80,9 @@ public class PostgresKeywordsTest {
 	@Test
 	public void testTodaysGrammarKeywords() throws IOException {
 		// the .msql grammar's words today, with PostgreSQL's category ("-" when not a keyword there).
-		// They are case-sensitive and none of them may be a name, though PostgreSQL allows 10 of
-		// them: KEY, TEXT (U), DATE, UUID (no keyword) and the 6 C types. Step 2 of Plan-sql
-		// changes this.
+		// Step 2 of Plan-sql added IF and EXISTS (IF NOT EXISTS) and made every word whose category
+		// is U, C or "-" a name too, in any case (SqlKeywordTest checks that against this golden);
+		// in step 1 the words were case-sensitive and none of them could be a name.
 		Map<String, String> words = keywords();
 		Set<String> grammarWords = new TreeSet<>(GrammarUtil.getAllKeywords(grammar.getGrammar()));
 		grammarWords.removeIf(w -> !Character.isLetter(w.charAt(0)));
@@ -90,7 +90,8 @@ public class PostgresKeywordsTest {
 		for (String w : grammarWords)
 			categories.put(w, words.getOrDefault(w, "-"));
 		Assertions.assertEquals(Map.ofEntries(Map.entry("BIGINT", "C"), Map.entry("BOOLEAN", "C"), Map.entry("CREATE", "R"),
-				Map.entry("DATE", "-"), Map.entry("DECIMAL", "C"), Map.entry("INT", "C"), Map.entry("KEY", "U"),
+				Map.entry("DATE", "-"), Map.entry("DECIMAL", "C"), Map.entry("EXISTS", "C"), Map.entry("IF", "U"),
+				Map.entry("INT", "C"), Map.entry("KEY", "U"),
 				Map.entry("NOT", "R"), Map.entry("NULL", "R"), Map.entry("PRIMARY", "R"), Map.entry("TABLE", "R"),
 				Map.entry("TEXT", "U"), Map.entry("TIMESTAMP", "C"), Map.entry("UNIQUE", "R"), Map.entry("UUID", "-"),
 				Map.entry("VARCHAR", "C")), categories);

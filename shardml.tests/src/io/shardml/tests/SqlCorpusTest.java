@@ -38,7 +38,8 @@ import io.shardml.sql.Schema;
 //    DROP TABLE), and
 //    the statements that must become located errors;
 //  - how the grammar parses the file today: its syntax errors and the tables it recovers.
-// Each step of Plan-sql updates the second part, so progress shows here; the first stays fixed.
+// Each step of Plan-sql updates the second part, saying why each result moved, so progress shows
+// here; the first part (and with it the INFO counts) does not depend on the grammar and stays fixed.
 @ExtendWith(InjectionExtension.class)
 @InjectWith(SQLInjectorProvider.class)
 public class SqlCorpusTest {
@@ -123,8 +124,11 @@ public class SqlCorpusTest {
 
 	// --- one case per file ---
 
-	// today: the parser's errors in order (line: message, the first few), and the tables it recovered
-	record Today(int syntaxErrors, String firstError, int tables) {
+	// today, for the whole file: its syntax errors, the first one, and the tables recovered; and
+	// for its CREATE TABLE statements parsed one at a time: how many parse, and the first error of
+	// the first one that does not (its table, then the message). The whole-file error usually sits
+	// in the pg_dump preamble, so the per-table result is the one that shows grammar progress.
+	record Today(int syntaxErrors, String firstError, int tables, int tablesAlone, String firstTableError) {
 	}
 
 	private void check(String file, Map<String, Integer> statements, int preamble, Today today) throws IOException {
@@ -139,9 +143,28 @@ public class SqlCorpusTest {
 		resource.load(new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8)), null);
 		List<Resource.Diagnostic> errors = resource.getErrors();
 		int tables = resource.getContents().isEmpty() ? 0 : ((Schema) resource.getContents().get(0)).getTables().size();
+		int alone = 0;
+		String firstTableError = null;
+		int n = 0;
+		for (String statement : statements(text)) {
+			if (!kind(statement).equals("CREATE TABLE"))
+				continue;
+			Resource single = resourceSets.get().createResource(URI.createURI("dummy:/t" + (n++) + ".msql"));
+			single.load(new ByteArrayInputStream(statement.getBytes(StandardCharsets.UTF_8)), null);
+			if (single.getErrors().isEmpty())
+				alone++;
+			else if (firstTableError == null)
+				firstTableError = tableName(statement) + ": " + single.getErrors().get(0).getMessage();
+		}
 		Today actualToday = new Today(errors.size(),
-				errors.isEmpty() ? null : "line " + errors.get(0).getLine() + ": " + errors.get(0).getMessage(), tables);
+				errors.isEmpty() ? null : "line " + errors.get(0).getLine() + ": " + errors.get(0).getMessage(), tables, alone,
+				firstTableError);
 		Assertions.assertEquals(today, actualToday, file + ": parse result today");
+	}
+
+	private static String tableName(String statement) {
+		Matcher m = Pattern.compile("(?i)CREATE TABLE\\s+(?:IF NOT EXISTS\\s+)?([^\\s(]+)").matcher(uncommented(statement));
+		return m.find() ? m.group(1) : "?";
 	}
 
 	@Test
@@ -157,33 +180,45 @@ public class SqlCorpusTest {
 	@Test
 	public void testTpcc() throws IOException {
 		check("tpcc.sql", Map.of("CREATE TABLE", 9, "DROP TABLE", 9, "CREATE INDEX", 1), 9,
-				new Today(1, "line 7: missing EOF at 'DROP'", 0));
+				// step 2: the whole file still stops at its first statement, DROP TABLE (step 5). Its tables
+				// got further: lower-case `int` is now a type, so warehouse stops at decimal(12, 2)
+				// (step 3), where step 1 stopped at `int`
+				new Today(1, "line 7: missing EOF at 'DROP'", 0, 0, "warehouse: mismatched input '(' expecting ')'"));
 	}
 
 	@Test
 	public void testPgbench() throws IOException {
 		check("pgbench.sql", Map.of("CREATE TABLE", 4, "ALTER TABLE .. ADD constraint", 8, "ALTER .. OWNER TO", 4, "SET", 12,
 				"SELECT set_config", 1, "\\restrict", 1, "\\unrestrict", 1), 19,
-				new Today(1, "line 7: missing EOF at '-'", 0));
+				// step 2: -- comments are comments now, so the whole file moves from line 7 (a comment) to
+				// the psql restrict line at 11 (step 5). Its tables moved from public. (qualified names,
+				// now read) to the type integer (step 3)
+				new Today(1, "line 11: missing EOF at '\\'", 0, 0, "public.pgbench_accounts: no viable alternative at input 'integer'"));
 	}
 
 	@Test
 	public void testBankingPgDump() throws IOException {
 		check("banking-pg_dump.sql", Map.of("CREATE TABLE", 4, "ALTER TABLE .. ADD constraint", 4, "CREATE SCHEMA", 1,
 				"ALTER .. OWNER TO", 5, "SET", 12, "SELECT set_config", 1, "\\restrict", 1, "\\unrestrict", 1), 20,
-				new Today(1, "line 7: missing EOF at '-'", 0));
+				// step 2: as pgbench, the whole file now stops at the psql restrict line (step 5); its
+				// tables moved from banking. (qualified, now read) to the type numeric (step 3)
+				new Today(1, "line 11: missing EOF at '\\'", 0, 0, "banking.accounts: no viable alternative at input 'numeric'"));
 	}
 
 	@Test
 	public void testChinook() throws IOException {
 		check("chinook.sql", Map.of("CREATE TABLE", 11, "ALTER TABLE .. ADD constraint", 11, "CREATE INDEX", 11), 0,
-				new Today(2, "line 39: no viable alternative at input 'album_pkey'", 1));
+				// step 2: unchanged. Chinook is upper case with no comments or qualified names, so it stops,
+				// as in step 1, at the named CONSTRAINT album_pkey of its first table (step 4)
+				new Today(2, "line 39: no viable alternative at input 'album_pkey'", 1, 0, "album: no viable alternative at input 'album_pkey'"));
 	}
 
 	@Test
 	public void testNorthwind() throws IOException {
 		check("northwind.sql", Map.of("CREATE TABLE", 14, "ALTER TABLE .. ADD constraint", 27, "DROP TABLE", 14, "SET", 8), 22,
-				new Today(1, "line 8: missing EOF at '-'", 0));
+				// step 2: -- comments are read, so the whole file moves from line 8 (a comment) to its first
+				// SET at line 12 (step 5). Its tables stop at smallint, as in step 1 (step 3)
+				new Today(1, "line 12: missing EOF at 'SET'", 0, 0, "categories: no viable alternative at input 'smallint'"));
 	}
 
 	@Test
@@ -195,7 +230,10 @@ public class SqlCorpusTest {
 		statements.putAll(Map.of("other: ALTER TABLE", 55, "other: CREATE AGGREGATE", 1, "other: CREATE DOMAIN", 2,
 				"other: CREATE EXTENSION", 1, "other: CREATE FUNCTION", 9, "other: CREATE MATERIALIZED", 1,
 				"other: CREATE SEQUENCE", 13, "other: CREATE TRIGGER", 16, "other: CREATE TYPE", 1, "other: CREATE VIEW", 7));
-		check("pagila-schema.sql", statements, 121, new Today(1, "line 8: missing EOF at '-'", 0));
+		// step 2: comments are read, so the whole file moves from line 8 to its first SET at line 15
+		// (step 5); its tables moved from public. (now read) to the type integer (step 3)
+		check("pagila-schema.sql", statements, 121,
+				new Today(1, "line 15: missing EOF at 'SET'", 0, 0, "public.customer: no viable alternative at input 'integer'"));
 	}
 
 	@Test

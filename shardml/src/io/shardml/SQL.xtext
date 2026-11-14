@@ -4,29 +4,38 @@
  * Supports a subset of CREATE TABLE statements, sufficient for sharding decisions
  * Schema files use the .msql extension and are imported by ShardML models
  * to provide table and column cross-references
- * 
+ *
+ * Lexing follows PostgreSQL (Plan-sql, step 2):
+ *  - keywords match in any case (ignoreCase in GenerateSQLMaven.mwe2);
+ *  - an unquoted name is folded to lower case and a "quoted" name is kept as written, by
+ *    SQLValueConverters, so `CREATE TABLE Album` and a reference `album` are the same table;
+ *  - a keyword may be a table or column name exactly when PostgreSQL allows it bare: its
+ *    category in pg_get_keywords() is U or C, or it is not a PostgreSQL keyword (rule Name);
+ *  - comments are -- and slash-star; strings are 'single-quoted'; statements may end in ';'.
  */
 
-grammar io.shardml.SQL with org.eclipse.xtext.common.Terminals
+grammar io.shardml.SQL hidden(WS, ML_COMMENT, SL_COMMENT)
 generate sql "http://shardml.io/SQL"
+
+import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 
 // Root container
 Schema:
-	tables += Table*
+	(tables += Table ';'?)*
 ;
 
 // maps to database table
 // columns and table constraints are comma separated (classic SQL syntax)
 Table:
-	'CREATE' 'TABLE' name=ID '('
+	'CREATE' 'TABLE' (ifNotExists ?= 'IF' 'NOT' 'EXISTS')? (schemaName=Name '.')? name=Name '('
 		(columns += Column | constraints += TableConstraint)
 		(',' (columns += Column | constraints += TableConstraint))*
-	')' 
+	')'
 ;
 
 // supports zero or more constraints (primary key, unique, not null)
 Column:
-    name=ID (simpleType=AllTypes | varchar=Varchar) constraint += Constraint*
+    name=Name (simpleType=AllTypes | varchar=Varchar) constraint += Constraint*
 ;
 
 // explicit rule for varchar because of the size paramteter
@@ -64,9 +73,34 @@ TableConstraint:
 ;
 
 PrimaryKey:
-	'PRIMARY' 'KEY' '(' columns += [Column] (',' columns += [Column])* ')'
+	'PRIMARY' 'KEY' '(' columns += [Column|Name] (',' columns += [Column|Name])* ')'
 ;
 
 UniqueKey:
-	'UNIQUE' '(' columns += [Column] (',' columns += [Column])* ')'
+	'UNIQUE' '(' columns += [Column|Name] (',' columns += [Column|Name])* ')'
 ;
+
+// A table or column name: an identifier, a "quoted identifier", or a keyword of this grammar
+// that PostgreSQL accepts as a bare name (category U or C in pg_get_keywords(), or not a
+// PostgreSQL keyword at all). Reserved words (CREATE, TABLE, PRIMARY, UNIQUE, NOT, NULL) are
+// not names here either, as in PostgreSQL; quoted, they are. SqlKeywordTest checks this list
+// against the PostgreSQL 17 keyword golden. Every word that starts a constraint is reserved,
+// so a column and a constraint are told apart by their first token.
+Name:
+	ID | QUOTED_ID
+	| 'KEY' | 'TEXT' | 'IF' | 'EXISTS'                                                   // U, U, U, C
+	| 'INT' | 'BIGINT' | 'DECIMAL' | 'TIMESTAMP' | 'BOOLEAN' | 'VARCHAR'                 // C
+	| 'UUID' | 'DATE'                                                                    // not PostgreSQL keywords
+;
+
+// PostgreSQL's identifier characters (ASCII); no ^ escape, a keyword is quoted instead
+terminal ID: ('a'..'z'|'A'..'Z'|'_') ('a'..'z'|'A'..'Z'|'_'|'0'..'9'|'$')*;
+// "Order", "bıgınt": kept as written, "" stands for one "
+terminal QUOTED_ID: '"' ('""' | !'"')* '"';
+// SQL strings: single quotes, '' stands for one '
+terminal STRING: "'" ("''" | !"'")* "'";
+terminal INT returns ecore::EInt: ('0'..'9')+;
+terminal ML_COMMENT: '/*' -> '*/';
+terminal SL_COMMENT: '--' !('\n'|'\r')* ('\r'? '\n')?;
+terminal WS: (' '|'\t'|'\r'|'\n')+;
+terminal ANY_OTHER: .;

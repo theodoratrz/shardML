@@ -130,6 +130,16 @@ This was necessary because Xtext's default `ImportedNamespaceAwareLocalScopeProv
 
 A notable detail: column references are scoped to the *specific table* they belong to, not the full column namespace: a shard key (`key:`) to the table of its `ShardDecl`, a `via` column to the subject of its `belongs_to`, and `where:` / `sort:` / `group_by:` columns to the table of their `route`. This prevents false name collisions when multiple tables share a column name (e.g. `id`), a common case that Xtext's flat scoping would have gotten wrong.
 
+### Names and keywords in `.msql` files
+
+`.msql` schemas are read the way PostgreSQL reads SQL:
+
+- Keywords match in any case (`create table`, `CREATE TABLE`). Statements may end in `;`. Comments are `--` and `/* */`; `//` is not a comment (it was before).
+- An unquoted name is folded to lower case, so `CREATE TABLE Customers` declares `customers`, and a model refers to it as `customers`. A `"quoted"` name is kept exactly as written, and the generator writes it back quoted.
+- A keyword can be a table or column name exactly when PostgreSQL allows it bare: `key`, `text`, `date`, `int`, ... are names, while reserved words (`table`, `unique`, `primary`, `not`, `null`, `create`) must be quoted, e.g. `"unique" BIGINT`. The list follows PostgreSQL 17's `pg_get_keywords()`.
+- Tables may be schema-qualified (`banking.accounts`) and use `IF NOT EXISTS`; both are written back as given. A model refers to a table by its name without the schema, so two tables of one name in one file are an error (SHML_066), also in different schemas.
+- Known limit: a quoted name that is not a plain identifier (with a space, or mixed case meant to differ from the folded name) cannot be referred to from a `.shardml` or `.workload` file yet.
+
 ### Table relationships vs. foreign keys
 
 The `has_many`, `has_one`, and `belongs_to` relationship declarations are **application-level semantic relationships**, not a mirror of SQL foreign key constraints. The distinction is intentional: sharding decisions are driven by how the application queries data, not just by the schema's referential constraints. A foreign key tells you data is related; a relationship declaration in ShardML tells the validator which tables will be joined at the application layer, enabling colocation warnings when those tables land on different shards.

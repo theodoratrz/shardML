@@ -3,9 +3,18 @@
  */
 package io.shardml;
 
+import org.eclipse.xtext.conversion.IValueConverterService;
+
+import io.shardml.conversion.SQLValueConverters;
 
 /**
  * Use this class to register components to be used at runtime / without the Equinox extension registry.
  */
 public class SQLRuntimeModule extends AbstractSQLRuntimeModule {
+
+	// names are read as PostgreSQL reads them: unquoted folded, "quoted" kept (SQLValueConverters)
+	@Override
+	public Class<? extends IValueConverterService> bindIValueConverterService() {
+		return SQLValueConverters.class;
+	}
 }

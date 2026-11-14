@@ -11,6 +11,6 @@ public class SQLAntlrTokenFileProvider implements IAntlrTokenFileProvider {
 	@Override
 	public InputStream getAntlrTokenFile() {
 		ClassLoader classLoader = getClass().getClassLoader();
-		return classLoader.getResourceAsStream("io/shardml/parser/antlr/internal/InternalSQL.tokens");
+		return classLoader.getResourceAsStream("io/shardml/parser/antlr/internal/InternalSQLParser.tokens");
 	}
 }

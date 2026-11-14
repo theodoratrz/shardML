@@ -3,6 +3,7 @@ package io.shardml.placement;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.shardml.schema.SqlNames;
 import io.shardml.shardML.Database;
 import io.shardml.shardML.ShardDecl;
 
@@ -27,13 +28,14 @@ public final class PlacementResolver {
 		for (ShardDecl root : db.getShard_decl()) {
 			if (!ColocationGroups.isHashed(root) || !ColocationGroups.isRoot(root))
 				continue;
-			String name = root.getEntity().getName();
+			// as a regclass literal: schema-qualified and quoted as the schema writes the table
+			String name = SqlNames.qualified(root.getEntity());
 			if (root.getBuckets() <= 0)
 				throw new IllegalStateException("'" + name + "' has no buckets to place");
 			List<String> tables = new ArrayList<>(List.of(name));
 			for (ShardDecl shard : db.getShard_decl()) {
 				if (shard != root && ColocationGroups.isHashed(shard) && ColocationGroups.rootOf(db, shard) == root)
-					tables.add(shard.getEntity().getName());
+					tables.add(SqlNames.qualified(shard.getEntity()));
 			}
 			List<Node> targets = new ArrayList<>();
 			for (io.shardml.shardML.Node node : ColocationGroups.targetNodes(db, root))

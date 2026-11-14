@@ -16,6 +16,8 @@ import org.eclipse.emf.ecore.EObject;
  * The following features are supported:
  * </p>
  * <ul>
+ *   <li>{@link io.shardml.sql.Table#isIfNotExists <em>If Not Exists</em>}</li>
+ *   <li>{@link io.shardml.sql.Table#getSchemaName <em>Schema Name</em>}</li>
  *   <li>{@link io.shardml.sql.Table#getName <em>Name</em>}</li>
  *   <li>{@link io.shardml.sql.Table#getColumns <em>Columns</em>}</li>
  *   <li>{@link io.shardml.sql.Table#getConstraints <em>Constraints</em>}</li>
@@ -27,6 +29,50 @@ import org.eclipse.emf.ecore.EObject;
  */
 public interface Table extends EObject
 {
+  /**
+   * Returns the value of the '<em><b>If Not Exists</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the value of the '<em>If Not Exists</em>' attribute.
+   * @see #setIfNotExists(boolean)
+   * @see io.shardml.sql.SqlPackage#getTable_IfNotExists()
+   * @model
+   * @generated
+   */
+  boolean isIfNotExists();
+
+  /**
+   * Sets the value of the '{@link io.shardml.sql.Table#isIfNotExists <em>If Not Exists</em>}' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @param value the new value of the '<em>If Not Exists</em>' attribute.
+   * @see #isIfNotExists()
+   * @generated
+   */
+  void setIfNotExists(boolean value);
+
+  /**
+   * Returns the value of the '<em><b>Schema Name</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the value of the '<em>Schema Name</em>' attribute.
+   * @see #setSchemaName(String)
+   * @see io.shardml.sql.SqlPackage#getTable_SchemaName()
+   * @model
+   * @generated
+   */
+  String getSchemaName();
+
+  /**
+   * Sets the value of the '{@link io.shardml.sql.Table#getSchemaName <em>Schema Name</em>}' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @param value the new value of the '<em>Schema Name</em>' attribute.
+   * @see #getSchemaName()
+   * @generated
+   */
+  void setSchemaName(String value);
+
   /**
    * Returns the value of the '<em><b>Name</b></em>' attribute.
    * <!-- begin-user-doc -->

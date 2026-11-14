@@ -51,6 +51,14 @@ Workflow {
 			name = "io.shardml.SQL"
 			fileExtensions = "msql"
 
+			// SQL keywords match in any case, as in PostgreSQL (names are folded by
+			// SQLValueConverters, not by the lexer). No backtracking.
+			parserGenerator = {
+				options = {
+					ignoreCase = true
+				}
+			}
+
 			serializer = {
 				generateStub = false
 			}

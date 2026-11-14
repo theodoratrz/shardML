@@ -20,6 +20,8 @@
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference SQL.ecore#//Schema/tables"/>
     </genClasses>
     <genClasses ecoreClass="SQL.ecore#//Table">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Table/ifNotExists"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Table/schemaName"/>
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Table/name"/>
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference SQL.ecore#//Table/columns"/>
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference SQL.ecore#//Table/constraints"/>

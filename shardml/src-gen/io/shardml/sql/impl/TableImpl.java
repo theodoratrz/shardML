@@ -32,6 +32,8 @@ import org.eclipse.emf.ecore.util.InternalEList;
  * The following features are implemented:
  * </p>
  * <ul>
+ *   <li>{@link io.shardml.sql.impl.TableImpl#isIfNotExists <em>If Not Exists</em>}</li>
+ *   <li>{@link io.shardml.sql.impl.TableImpl#getSchemaName <em>Schema Name</em>}</li>
  *   <li>{@link io.shardml.sql.impl.TableImpl#getName <em>Name</em>}</li>
  *   <li>{@link io.shardml.sql.impl.TableImpl#getColumns <em>Columns</em>}</li>
  *   <li>{@link io.shardml.sql.impl.TableImpl#getConstraints <em>Constraints</em>}</li>
@@ -41,6 +43,46 @@ import org.eclipse.emf.ecore.util.InternalEList;
  */
 public class TableImpl extends MinimalEObjectImpl.Container implements Table
 {
+  /**
+   * The default value of the '{@link #isIfNotExists() <em>If Not Exists</em>}' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #isIfNotExists()
+   * @generated
+   * @ordered
+   */
+  protected static final boolean IF_NOT_EXISTS_EDEFAULT = false;
+
+  /**
+   * The cached value of the '{@link #isIfNotExists() <em>If Not Exists</em>}' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #isIfNotExists()
+   * @generated
+   * @ordered
+   */
+  protected boolean ifNotExists = IF_NOT_EXISTS_EDEFAULT;
+
+  /**
+   * The default value of the '{@link #getSchemaName() <em>Schema Name</em>}' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #getSchemaName()
+   * @generated
+   * @ordered
+   */
+  protected static final String SCHEMA_NAME_EDEFAULT = null;
+
+  /**
+   * The cached value of the '{@link #getSchemaName() <em>Schema Name</em>}' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #getSchemaName()
+   * @generated
+   * @ordered
+   */
+  protected String schemaName = SCHEMA_NAME_EDEFAULT;
+
   /**
    * The default value of the '{@link #getName() <em>Name</em>}' attribute.
    * <!-- begin-user-doc -->
@@ -100,6 +142,56 @@ public class TableImpl extends MinimalEObjectImpl.Container implements Table
   protected EClass eStaticClass()
   {
     return SqlPackage.Literals.TABLE;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public boolean isIfNotExists()
+  {
+    return ifNotExists;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public void setIfNotExists(boolean newIfNotExists)
+  {
+    boolean oldIfNotExists = ifNotExists;
+    ifNotExists = newIfNotExists;
+    if (eNotificationRequired())
+      eNotify(new ENotificationImpl(this, Notification.SET, SqlPackage.TABLE__IF_NOT_EXISTS, oldIfNotExists, ifNotExists));
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public String getSchemaName()
+  {
+    return schemaName;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public void setSchemaName(String newSchemaName)
+  {
+    String oldSchemaName = schemaName;
+    schemaName = newSchemaName;
+    if (eNotificationRequired())
+      eNotify(new ENotificationImpl(this, Notification.SET, SqlPackage.TABLE__SCHEMA_NAME, oldSchemaName, schemaName));
   }
 
   /**
@@ -185,6 +277,10 @@ public class TableImpl extends MinimalEObjectImpl.Container implements Table
   {
     switch (featureID)
     {
+      case SqlPackage.TABLE__IF_NOT_EXISTS:
+        return isIfNotExists();
+      case SqlPackage.TABLE__SCHEMA_NAME:
+        return getSchemaName();
       case SqlPackage.TABLE__NAME:
         return getName();
       case SqlPackage.TABLE__COLUMNS:
@@ -206,6 +302,12 @@ public class TableImpl extends MinimalEObjectImpl.Container implements Table
   {
     switch (featureID)
     {
+      case SqlPackage.TABLE__IF_NOT_EXISTS:
+        setIfNotExists((Boolean)newValue);
+        return;
+      case SqlPackage.TABLE__SCHEMA_NAME:
+        setSchemaName((String)newValue);
+        return;
       case SqlPackage.TABLE__NAME:
         setName((String)newValue);
         return;
@@ -231,6 +333,12 @@ public class TableImpl extends MinimalEObjectImpl.Container implements Table
   {
     switch (featureID)
     {
+      case SqlPackage.TABLE__IF_NOT_EXISTS:
+        setIfNotExists(IF_NOT_EXISTS_EDEFAULT);
+        return;
+      case SqlPackage.TABLE__SCHEMA_NAME:
+        setSchemaName(SCHEMA_NAME_EDEFAULT);
+        return;
       case SqlPackage.TABLE__NAME:
         setName(NAME_EDEFAULT);
         return;
@@ -254,6 +362,10 @@ public class TableImpl extends MinimalEObjectImpl.Container implements Table
   {
     switch (featureID)
     {
+      case SqlPackage.TABLE__IF_NOT_EXISTS:
+        return ifNotExists != IF_NOT_EXISTS_EDEFAULT;
+      case SqlPackage.TABLE__SCHEMA_NAME:
+        return SCHEMA_NAME_EDEFAULT == null ? schemaName != null : !SCHEMA_NAME_EDEFAULT.equals(schemaName);
       case SqlPackage.TABLE__NAME:
         return NAME_EDEFAULT == null ? name != null : !NAME_EDEFAULT.equals(name);
       case SqlPackage.TABLE__COLUMNS:
@@ -275,7 +387,11 @@ public class TableImpl extends MinimalEObjectImpl.Container implements Table
     if (eIsProxy()) return super.toString();
 
     StringBuilder result = new StringBuilder(super.toString());
-    result.append(" (name: ");
+    result.append(" (ifNotExists: ");
+    result.append(ifNotExists);
+    result.append(", schemaName: ");
+    result.append(schemaName);
+    result.append(", name: ");
     result.append(name);
     result.append(')');
     return result.toString();

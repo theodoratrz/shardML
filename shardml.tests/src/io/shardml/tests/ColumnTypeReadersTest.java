@@ -1,7 +1,9 @@
 package io.shardml.tests;
 
 import java.io.ByteArrayInputStream;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
@@ -157,6 +159,42 @@ public class ColumnTypeReadersTest {
 		generator.doGenerate(model.eResource(), fsa, new GeneratorContext());
 		String schemaSql = fsa.getTextFiles().get("DEFAULT_OUTPUTd-schema.sql").toString();
 		Assertions.assertTrue(schemaSql.contains("    code VARCHAR(2) NOT NULL,\n"), schemaSql);
+	}
+
+	@Test
+	public void testTypeKeywordsAsNamesDoNotBecomeTypes() throws Exception {
+		// Since step 2, type keywords may be column names (INT, TEXT, DATE, ...) and keywords match
+		// in any case. A column that is only a name, or whose "type" is quoted or not yet in the
+		// grammar, must stay a syntax error with an UNKNOWN type: never a defaulted INT
+		SQLStandaloneSetup.doSetup();
+		Map<String, String> cases = new LinkedHashMap<>();
+		cases.put("CREATE TABLE t ( int )", "int");
+		cases.put("CREATE TABLE t ( int NOT NULL, id INT )", "int");
+		cases.put("CREATE TABLE t ( text, id INT )", "text");
+		cases.put("CREATE TABLE t ( date PRIMARY KEY )", "date");
+		cases.put("CREATE TABLE t ( x \"INT\" )", "x");
+		cases.put("CREATE TABLE t ( x integer NOT NULL )", "x"); // INTEGER arrives in step 3
+		cases.put("CREATE TABLE t ( x VARCHAR )", "x");
+		int n = 0;
+		int checked = 0;
+		for (Map.Entry<String, String> c : cases.entrySet()) {
+			XtextResourceSet rs = resourceSets.get();
+			Resource r = rs.createResource(URI.createURI("dummy:/m" + (n++) + ".msql"));
+			r.load(new ByteArrayInputStream(c.getKey().getBytes()), rs.getLoadOptions());
+			Assertions.assertFalse(r.getErrors().isEmpty(), c.getKey() + ": should be a syntax error");
+			Schema schema = r.getContents().isEmpty() ? null : (Schema) r.getContents().get(0);
+			Column column = schema == null || schema.getTables().isEmpty() ? null
+					: schema.getTables().get(0).getColumns().stream().filter(col -> c.getValue().equals(col.getName())).findFirst()
+							.orElse(null);
+			if (column == null)
+				continue; // recovery dropped the column: nothing can read it
+			checked++;
+			Assertions.assertEquals(Base.UNKNOWN, SqlTypes.of(column).base(), c.getKey());
+			Assertions.assertEquals(Base.UNKNOWN, SchemaFacts.of(schema).get("t").column(c.getValue()).type().base(), c.getKey());
+			Assertions.assertThrows(IllegalStateException.class, () -> generator.schemaDefinitions(schema), c.getKey());
+		}
+		// most cases keep the column through recovery, so the checks above are not vacuous
+		Assertions.assertTrue(checked >= 3, "only " + checked + " columns recovered");
 	}
 
 	@Test

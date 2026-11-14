@@ -288,7 +288,9 @@ public class WorkloadParsingTest {
 
 	@Test
 	public void testUniqueColonVersusUniquePrefix() throws Exception {
-		support.schema("dummy:/u.msql", "CREATE TABLE t ( unique BIGINT NOT NULL, id BIGINT PRIMARY KEY )");
+		// UNIQUE is reserved in PostgreSQL, so the schema quotes the column (the .msql grammar reads
+		// keywords in any case since Plan-sql step 2); the workload refers to it as plain unique
+		support.schema("dummy:/u.msql", "CREATE TABLE t ( \"unique\" BIGINT NOT NULL, id BIGINT PRIMARY KEY )");
 		WorkloadModel model = support.parse("dummy:/u.workload", """
 				import "u.msql"
 				workload u {

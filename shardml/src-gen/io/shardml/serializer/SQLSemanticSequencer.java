@@ -78,7 +78,7 @@ public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
 	 *     Column returns Column
 	 *
 	 * Constraint:
-	 *     (name=ID (simpleType=AllTypes | varchar=Varchar) constraint+=Constraint*)
+	 *     (name=Name (simpleType=AllTypes | varchar=Varchar) constraint+=Constraint*)
 	 * </pre>
 	 */
 	protected void sequence_Column(ISerializationContext context, Column semanticObject) {
@@ -123,7 +123,7 @@ public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
 	 *     PrimaryKey returns PrimaryKey
 	 *
 	 * Constraint:
-	 *     (columns+=[Column|ID] columns+=[Column|ID]*)
+	 *     (columns+=[Column|Name] columns+=[Column|Name]*)
 	 * </pre>
 	 */
 	protected void sequence_PrimaryKey(ISerializationContext context, PrimaryKey semanticObject) {
@@ -151,7 +151,14 @@ public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
 	 *     Table returns Table
 	 *
 	 * Constraint:
-	 *     (name=ID (columns+=Column | constraints+=TableConstraint) columns+=Column? (constraints+=TableConstraint? columns+=Column?)*)
+	 *     (
+	 *         ifNotExists?='IF'? 
+	 *         schemaName=Name? 
+	 *         name=Name 
+	 *         (columns+=Column | constraints+=TableConstraint) 
+	 *         columns+=Column? 
+	 *         (constraints+=TableConstraint? columns+=Column?)*
+	 *     )
 	 * </pre>
 	 */
 	protected void sequence_Table(ISerializationContext context, Table semanticObject) {
@@ -181,7 +188,7 @@ public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
 	 *     UniqueKey returns UniqueKey
 	 *
 	 * Constraint:
-	 *     (columns+=[Column|ID] columns+=[Column|ID]*)
+	 *     (columns+=[Column|Name] columns+=[Column|Name]*)
 	 * </pre>
 	 */
 	protected void sequence_UniqueKey(ISerializationContext context, UniqueKey semanticObject) {

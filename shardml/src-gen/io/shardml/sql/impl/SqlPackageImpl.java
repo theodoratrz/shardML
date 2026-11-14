@@ -219,7 +219,7 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
    * @generated
    */
   @Override
-  public EAttribute getTable_Name()
+  public EAttribute getTable_IfNotExists()
   {
     return (EAttribute)tableEClass.getEStructuralFeatures().get(0);
   }
@@ -230,9 +230,31 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
    * @generated
    */
   @Override
+  public EAttribute getTable_SchemaName()
+  {
+    return (EAttribute)tableEClass.getEStructuralFeatures().get(1);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getTable_Name()
+  {
+    return (EAttribute)tableEClass.getEStructuralFeatures().get(2);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
   public EReference getTable_Columns()
   {
-    return (EReference)tableEClass.getEStructuralFeatures().get(1);
+    return (EReference)tableEClass.getEStructuralFeatures().get(3);
   }
 
   /**
@@ -243,7 +265,7 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
   @Override
   public EReference getTable_Constraints()
   {
-    return (EReference)tableEClass.getEStructuralFeatures().get(2);
+    return (EReference)tableEClass.getEStructuralFeatures().get(4);
   }
 
   /**
@@ -457,6 +479,8 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
     createEReference(schemaEClass, SCHEMA__TABLES);
 
     tableEClass = createEClass(TABLE);
+    createEAttribute(tableEClass, TABLE__IF_NOT_EXISTS);
+    createEAttribute(tableEClass, TABLE__SCHEMA_NAME);
     createEAttribute(tableEClass, TABLE__NAME);
     createEReference(tableEClass, TABLE__COLUMNS);
     createEReference(tableEClass, TABLE__CONSTRAINTS);
@@ -529,6 +553,8 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
     initEReference(getSchema_Tables(), this.getTable(), null, "tables", null, 0, -1, Schema.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
     initEClass(tableEClass, Table.class, "Table", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
+    initEAttribute(getTable_IfNotExists(), ecorePackage.getEBoolean(), "ifNotExists", null, 0, 1, Table.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getTable_SchemaName(), ecorePackage.getEString(), "schemaName", null, 0, 1, Table.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
     initEAttribute(getTable_Name(), ecorePackage.getEString(), "name", null, 0, 1, Table.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
     initEReference(getTable_Columns(), this.getColumn(), null, "columns", null, 0, -1, Table.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
     initEReference(getTable_Constraints(), this.getTableConstraint(), null, "constraints", null, 0, -1, Table.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
