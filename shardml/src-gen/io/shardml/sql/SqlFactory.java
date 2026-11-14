@@ -60,6 +60,24 @@ public interface SqlFactory extends EFactory
   Varchar createVarchar();
 
   /**
+   * Returns a new object of class '<em>Numeric</em>'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return a new object of class '<em>Numeric</em>'.
+   * @generated
+   */
+  Numeric createNumeric();
+
+  /**
+   * Returns a new object of class '<em>Char</em>'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return a new object of class '<em>Char</em>'.
+   * @generated
+   */
+  Char createChar();
+
+  /**
    * Returns a new object of class '<em>Constraint</em>'.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->

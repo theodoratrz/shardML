@@ -364,13 +364,147 @@ ruleColumn returns [EObject current=null]
 					}
 				)
 			)
+			    |
+			(
+				(
+					{
+						newCompositeNode(grammarAccess.getColumnAccess().getNumericNumericParserRuleCall_1_2_0());
+					}
+					lv_numeric_3_0=ruleNumeric
+					{
+						if ($current==null) {
+							$current = createModelElementForParent(grammarAccess.getColumnRule());
+						}
+						set(
+							$current,
+							"numeric",
+							lv_numeric_3_0,
+							"io.shardml.SQL.Numeric");
+						afterParserOrEnumRuleCall();
+					}
+				)
+			)
+			    |
+			(
+				(
+					{
+						newCompositeNode(grammarAccess.getColumnAccess().getCharCharParserRuleCall_1_3_0());
+					}
+					lv_char_4_0=ruleChar
+					{
+						if ($current==null) {
+							$current = createModelElementForParent(grammarAccess.getColumnRule());
+						}
+						set(
+							$current,
+							"char",
+							lv_char_4_0,
+							"io.shardml.SQL.Char");
+						afterParserOrEnumRuleCall();
+					}
+				)
+			)
+			    |
+			(
+				otherlv_5=DOUBLE
+				{
+					newLeafNode(otherlv_5, grammarAccess.getColumnAccess().getDOUBLEKeyword_1_4_0());
+				}
+				(
+					(
+						{
+							newCompositeNode(grammarAccess.getColumnAccess().getSimpleTypeDoublePrecisionEnumRuleCall_1_4_1_0());
+						}
+						lv_simpleType_6_0=ruleDoublePrecision
+						{
+							if ($current==null) {
+								$current = createModelElementForParent(grammarAccess.getColumnRule());
+							}
+							set(
+								$current,
+								"simpleType",
+								lv_simpleType_6_0,
+								"io.shardml.SQL.DoublePrecision");
+							afterParserOrEnumRuleCall();
+						}
+					)
+				)
+			)
+			    |
+			(
+				otherlv_7=TIMESTAMP
+				{
+					newLeafNode(otherlv_7, grammarAccess.getColumnAccess().getTIMESTAMPKeyword_1_5_0());
+				}
+				otherlv_8=WITHOUT
+				{
+					newLeafNode(otherlv_8, grammarAccess.getColumnAccess().getWITHOUTKeyword_1_5_1());
+				}
+				otherlv_9=TIME
+				{
+					newLeafNode(otherlv_9, grammarAccess.getColumnAccess().getTIMEKeyword_1_5_2());
+				}
+				(
+					(
+						{
+							newCompositeNode(grammarAccess.getColumnAccess().getSimpleTypeZoneNoTzEnumRuleCall_1_5_3_0());
+						}
+						lv_simpleType_10_0=ruleZoneNoTz
+						{
+							if ($current==null) {
+								$current = createModelElementForParent(grammarAccess.getColumnRule());
+							}
+							set(
+								$current,
+								"simpleType",
+								lv_simpleType_10_0,
+								"io.shardml.SQL.ZoneNoTz");
+							afterParserOrEnumRuleCall();
+						}
+					)
+				)
+			)
+			    |
+			(
+				otherlv_11=TIMESTAMP
+				{
+					newLeafNode(otherlv_11, grammarAccess.getColumnAccess().getTIMESTAMPKeyword_1_6_0());
+				}
+				otherlv_12=WITH
+				{
+					newLeafNode(otherlv_12, grammarAccess.getColumnAccess().getWITHKeyword_1_6_1());
+				}
+				otherlv_13=TIME
+				{
+					newLeafNode(otherlv_13, grammarAccess.getColumnAccess().getTIMEKeyword_1_6_2());
+				}
+				(
+					(
+						{
+							newCompositeNode(grammarAccess.getColumnAccess().getSimpleTypeZoneTzEnumRuleCall_1_6_3_0());
+						}
+						lv_simpleType_14_0=ruleZoneTz
+						{
+							if ($current==null) {
+								$current = createModelElementForParent(grammarAccess.getColumnRule());
+							}
+							set(
+								$current,
+								"simpleType",
+								lv_simpleType_14_0,
+								"io.shardml.SQL.ZoneTz");
+							afterParserOrEnumRuleCall();
+						}
+					)
+				)
+			)
 		)
 		(
 			(
 				{
 					newCompositeNode(grammarAccess.getColumnAccess().getConstraintConstraintParserRuleCall_2_0());
 				}
-				lv_constraint_3_0=ruleConstraint
+				lv_constraint_15_0=ruleConstraint
 				{
 					if ($current==null) {
 						$current = createModelElementForParent(grammarAccess.getColumnRule());
@@ -378,7 +512,7 @@ ruleColumn returns [EObject current=null]
 					add(
 						$current,
 						"constraint",
-						lv_constraint_3_0,
+						lv_constraint_15_0,
 						"io.shardml.SQL.Constraint");
 					afterParserOrEnumRuleCall();
 				}
@@ -403,19 +537,42 @@ ruleVarchar returns [EObject current=null]
 	leaveRule();
 }:
 	(
-		otherlv_0=VARCHAR
+		(
+			otherlv_0=VARCHAR
+			{
+				newLeafNode(otherlv_0, grammarAccess.getVarcharAccess().getVARCHARKeyword_0_0());
+			}
+			    |
+			(
+				(
+					(
+						lv_varying_1_0=CHARACTER
+						{
+							newLeafNode(lv_varying_1_0, grammarAccess.getVarcharAccess().getVaryingCHARACTERKeyword_0_1_0_0());
+						}
+						{
+							if ($current==null) {
+								$current = createModelElement(grammarAccess.getVarcharRule());
+							}
+							setWithLastConsumed($current, "varying", lv_varying_1_0 != null, "CHARACTER");
+						}
+					)
+				)
+				otherlv_2=VARYING
+				{
+					newLeafNode(otherlv_2, grammarAccess.getVarcharAccess().getVARYINGKeyword_0_1_1());
+				}
+			)
+		)
+		otherlv_3=LeftParenthesis
 		{
-			newLeafNode(otherlv_0, grammarAccess.getVarcharAccess().getVARCHARKeyword_0());
-		}
-		otherlv_1=LeftParenthesis
-		{
-			newLeafNode(otherlv_1, grammarAccess.getVarcharAccess().getLeftParenthesisKeyword_1());
+			newLeafNode(otherlv_3, grammarAccess.getVarcharAccess().getLeftParenthesisKeyword_1());
 		}
 		(
 			(
-				lv_size_2_0=RULE_INT
+				lv_size_4_0=RULE_INT
 				{
-					newLeafNode(lv_size_2_0, grammarAccess.getVarcharAccess().getSizeINTTerminalRuleCall_2_0());
+					newLeafNode(lv_size_4_0, grammarAccess.getVarcharAccess().getSizeINTTerminalRuleCall_2_0());
 				}
 				{
 					if ($current==null) {
@@ -424,14 +581,170 @@ ruleVarchar returns [EObject current=null]
 					setWithLastConsumed(
 						$current,
 						"size",
-						lv_size_2_0,
+						lv_size_4_0,
 						"io.shardml.SQL.INT");
 				}
 			)
 		)
-		otherlv_3=RightParenthesis
+		otherlv_5=RightParenthesis
 		{
-			newLeafNode(otherlv_3, grammarAccess.getVarcharAccess().getRightParenthesisKeyword_3());
+			newLeafNode(otherlv_5, grammarAccess.getVarcharAccess().getRightParenthesisKeyword_3());
+		}
+	)
+;
+
+// Entry rule entryRuleNumeric
+entryRuleNumeric returns [EObject current=null]:
+	{ newCompositeNode(grammarAccess.getNumericRule()); }
+	iv_ruleNumeric=ruleNumeric
+	{ $current=$iv_ruleNumeric.current; }
+	EOF;
+
+// Rule Numeric
+ruleNumeric returns [EObject current=null]
+@init {
+	enterRule();
+}
+@after {
+	leaveRule();
+}:
+	(
+		(
+			(
+				(
+					lv_decimal_0_0=DECIMAL
+					{
+						newLeafNode(lv_decimal_0_0, grammarAccess.getNumericAccess().getDecimalDECIMALKeyword_0_0_0());
+					}
+					{
+						if ($current==null) {
+							$current = createModelElement(grammarAccess.getNumericRule());
+						}
+						setWithLastConsumed($current, "decimal", lv_decimal_0_0 != null, "DECIMAL");
+					}
+				)
+			)
+			    |
+			otherlv_1=NUMERIC
+			{
+				newLeafNode(otherlv_1, grammarAccess.getNumericAccess().getNUMERICKeyword_0_1());
+			}
+		)
+		otherlv_2=LeftParenthesis
+		{
+			newLeafNode(otherlv_2, grammarAccess.getNumericAccess().getLeftParenthesisKeyword_1());
+		}
+		(
+			(
+				lv_precision_3_0=RULE_INT
+				{
+					newLeafNode(lv_precision_3_0, grammarAccess.getNumericAccess().getPrecisionINTTerminalRuleCall_2_0());
+				}
+				{
+					if ($current==null) {
+						$current = createModelElement(grammarAccess.getNumericRule());
+					}
+					setWithLastConsumed(
+						$current,
+						"precision",
+						lv_precision_3_0,
+						"io.shardml.SQL.INT");
+				}
+			)
+		)
+		(
+			otherlv_4=Comma
+			{
+				newLeafNode(otherlv_4, grammarAccess.getNumericAccess().getCommaKeyword_3_0());
+			}
+			(
+				(
+					lv_scale_5_0=RULE_INT
+					{
+						newLeafNode(lv_scale_5_0, grammarAccess.getNumericAccess().getScaleINTTerminalRuleCall_3_1_0());
+					}
+					{
+						if ($current==null) {
+							$current = createModelElement(grammarAccess.getNumericRule());
+						}
+						setWithLastConsumed(
+							$current,
+							"scale",
+							lv_scale_5_0,
+							"io.shardml.SQL.INT");
+					}
+				)
+			)
+		)?
+		otherlv_6=RightParenthesis
+		{
+			newLeafNode(otherlv_6, grammarAccess.getNumericAccess().getRightParenthesisKeyword_4());
+		}
+	)
+;
+
+// Entry rule entryRuleChar
+entryRuleChar returns [EObject current=null]:
+	{ newCompositeNode(grammarAccess.getCharRule()); }
+	iv_ruleChar=ruleChar
+	{ $current=$iv_ruleChar.current; }
+	EOF;
+
+// Rule Char
+ruleChar returns [EObject current=null]
+@init {
+	enterRule();
+}
+@after {
+	leaveRule();
+}:
+	(
+		(
+			(
+				(
+					lv_character_0_0=CHARACTER
+					{
+						newLeafNode(lv_character_0_0, grammarAccess.getCharAccess().getCharacterCHARACTERKeyword_0_0_0());
+					}
+					{
+						if ($current==null) {
+							$current = createModelElement(grammarAccess.getCharRule());
+						}
+						setWithLastConsumed($current, "character", lv_character_0_0 != null, "CHARACTER");
+					}
+				)
+			)
+			    |
+			otherlv_1=CHAR
+			{
+				newLeafNode(otherlv_1, grammarAccess.getCharAccess().getCHARKeyword_0_1());
+			}
+		)
+		otherlv_2=LeftParenthesis
+		{
+			newLeafNode(otherlv_2, grammarAccess.getCharAccess().getLeftParenthesisKeyword_1());
+		}
+		(
+			(
+				lv_size_3_0=RULE_INT
+				{
+					newLeafNode(lv_size_3_0, grammarAccess.getCharAccess().getSizeINTTerminalRuleCall_2_0());
+				}
+				{
+					if ($current==null) {
+						$current = createModelElement(grammarAccess.getCharRule());
+					}
+					setWithLastConsumed(
+						$current,
+						"size",
+						lv_size_3_0,
+						"io.shardml.SQL.INT");
+				}
+			)
+		)
+		otherlv_4=RightParenthesis
+		{
+			newLeafNode(otherlv_4, grammarAccess.getCharAccess().getRightParenthesisKeyword_3());
 		}
 	)
 ;
@@ -849,16 +1162,124 @@ ruleName returns [AntlrDatatypeRuleToken current=new AntlrDatatypeRuleToken()]
 			newLeafNode(kw, grammarAccess.getNameAccess().getVARCHARKeyword_11());
 		}
 		    |
+		kw=INTEGER
+		{
+			$current.merge(kw);
+			newLeafNode(kw, grammarAccess.getNameAccess().getINTEGERKeyword_12());
+		}
+		    |
+		kw=SMALLINT
+		{
+			$current.merge(kw);
+			newLeafNode(kw, grammarAccess.getNameAccess().getSMALLINTKeyword_13());
+		}
+		    |
+		kw=NUMERIC
+		{
+			$current.merge(kw);
+			newLeafNode(kw, grammarAccess.getNameAccess().getNUMERICKeyword_14());
+		}
+		    |
+		kw=REAL
+		{
+			$current.merge(kw);
+			newLeafNode(kw, grammarAccess.getNameAccess().getREALKeyword_15());
+		}
+		    |
+		kw=FLOAT
+		{
+			$current.merge(kw);
+			newLeafNode(kw, grammarAccess.getNameAccess().getFLOATKeyword_16());
+		}
+		    |
+		kw=PRECISION
+		{
+			$current.merge(kw);
+			newLeafNode(kw, grammarAccess.getNameAccess().getPRECISIONKeyword_17());
+		}
+		    |
+		kw=CHAR
+		{
+			$current.merge(kw);
+			newLeafNode(kw, grammarAccess.getNameAccess().getCHARKeyword_18());
+		}
+		    |
+		kw=CHARACTER
+		{
+			$current.merge(kw);
+			newLeafNode(kw, grammarAccess.getNameAccess().getCHARACTERKeyword_19());
+		}
+		    |
+		kw=TIME
+		{
+			$current.merge(kw);
+			newLeafNode(kw, grammarAccess.getNameAccess().getTIMEKeyword_20());
+		}
+		    |
+		kw=DOUBLE
+		{
+			$current.merge(kw);
+			newLeafNode(kw, grammarAccess.getNameAccess().getDOUBLEKeyword_21());
+		}
+		    |
+		kw=VARYING
+		{
+			$current.merge(kw);
+			newLeafNode(kw, grammarAccess.getNameAccess().getVARYINGKeyword_22());
+		}
+		    |
+		kw=WITHOUT
+		{
+			$current.merge(kw);
+			newLeafNode(kw, grammarAccess.getNameAccess().getWITHOUTKeyword_23());
+		}
+		    |
+		kw=ZONE
+		{
+			$current.merge(kw);
+			newLeafNode(kw, grammarAccess.getNameAccess().getZONEKeyword_24());
+		}
+		    |
 		kw=UUID
 		{
 			$current.merge(kw);
-			newLeafNode(kw, grammarAccess.getNameAccess().getUUIDKeyword_12());
+			newLeafNode(kw, grammarAccess.getNameAccess().getUUIDKeyword_25());
 		}
 		    |
 		kw=DATE
 		{
 			$current.merge(kw);
-			newLeafNode(kw, grammarAccess.getNameAccess().getDATEKeyword_13());
+			newLeafNode(kw, grammarAccess.getNameAccess().getDATEKeyword_26());
+		}
+		    |
+		kw=SERIAL
+		{
+			$current.merge(kw);
+			newLeafNode(kw, grammarAccess.getNameAccess().getSERIALKeyword_27());
+		}
+		    |
+		kw=BIGSERIAL
+		{
+			$current.merge(kw);
+			newLeafNode(kw, grammarAccess.getNameAccess().getBIGSERIALKeyword_28());
+		}
+		    |
+		kw=TIMESTAMPTZ
+		{
+			$current.merge(kw);
+			newLeafNode(kw, grammarAccess.getNameAccess().getTIMESTAMPTZKeyword_29());
+		}
+		    |
+		kw=JSONB
+		{
+			$current.merge(kw);
+			newLeafNode(kw, grammarAccess.getNameAccess().getJSONBKeyword_30());
+		}
+		    |
+		kw=BYTEA
+		{
+			$current.merge(kw);
+			newLeafNode(kw, grammarAccess.getNameAccess().getBYTEAKeyword_31());
 		}
 	)
 ;
@@ -935,5 +1356,136 @@ ruleAllTypes returns [Enumerator current=null]
 				newLeafNode(enumLiteral_7, grammarAccess.getAllTypesAccess().getTEXTEnumLiteralDeclaration_7());
 			}
 		)
+		    |
+		(
+			enumLiteral_8=INTEGER
+			{
+				$current = grammarAccess.getAllTypesAccess().getINTEGEREnumLiteralDeclaration_8().getEnumLiteral().getInstance();
+				newLeafNode(enumLiteral_8, grammarAccess.getAllTypesAccess().getINTEGEREnumLiteralDeclaration_8());
+			}
+		)
+		    |
+		(
+			enumLiteral_9=SMALLINT
+			{
+				$current = grammarAccess.getAllTypesAccess().getSMALLINTEnumLiteralDeclaration_9().getEnumLiteral().getInstance();
+				newLeafNode(enumLiteral_9, grammarAccess.getAllTypesAccess().getSMALLINTEnumLiteralDeclaration_9());
+			}
+		)
+		    |
+		(
+			enumLiteral_10=SERIAL
+			{
+				$current = grammarAccess.getAllTypesAccess().getSERIALEnumLiteralDeclaration_10().getEnumLiteral().getInstance();
+				newLeafNode(enumLiteral_10, grammarAccess.getAllTypesAccess().getSERIALEnumLiteralDeclaration_10());
+			}
+		)
+		    |
+		(
+			enumLiteral_11=BIGSERIAL
+			{
+				$current = grammarAccess.getAllTypesAccess().getBIGSERIALEnumLiteralDeclaration_11().getEnumLiteral().getInstance();
+				newLeafNode(enumLiteral_11, grammarAccess.getAllTypesAccess().getBIGSERIALEnumLiteralDeclaration_11());
+			}
+		)
+		    |
+		(
+			enumLiteral_12=NUMERIC
+			{
+				$current = grammarAccess.getAllTypesAccess().getNUMERICEnumLiteralDeclaration_12().getEnumLiteral().getInstance();
+				newLeafNode(enumLiteral_12, grammarAccess.getAllTypesAccess().getNUMERICEnumLiteralDeclaration_12());
+			}
+		)
+		    |
+		(
+			enumLiteral_13=REAL
+			{
+				$current = grammarAccess.getAllTypesAccess().getREALEnumLiteralDeclaration_13().getEnumLiteral().getInstance();
+				newLeafNode(enumLiteral_13, grammarAccess.getAllTypesAccess().getREALEnumLiteralDeclaration_13());
+			}
+		)
+		    |
+		(
+			enumLiteral_14=FLOAT
+			{
+				$current = grammarAccess.getAllTypesAccess().getFLOATEnumLiteralDeclaration_14().getEnumLiteral().getInstance();
+				newLeafNode(enumLiteral_14, grammarAccess.getAllTypesAccess().getFLOATEnumLiteralDeclaration_14());
+			}
+		)
+		    |
+		(
+			enumLiteral_15=TIMESTAMPTZ
+			{
+				$current = grammarAccess.getAllTypesAccess().getTIMESTAMPTZEnumLiteralDeclaration_15().getEnumLiteral().getInstance();
+				newLeafNode(enumLiteral_15, grammarAccess.getAllTypesAccess().getTIMESTAMPTZEnumLiteralDeclaration_15());
+			}
+		)
+		    |
+		(
+			enumLiteral_16=JSONB
+			{
+				$current = grammarAccess.getAllTypesAccess().getJSONBEnumLiteralDeclaration_16().getEnumLiteral().getInstance();
+				newLeafNode(enumLiteral_16, grammarAccess.getAllTypesAccess().getJSONBEnumLiteralDeclaration_16());
+			}
+		)
+		    |
+		(
+			enumLiteral_17=BYTEA
+			{
+				$current = grammarAccess.getAllTypesAccess().getBYTEAEnumLiteralDeclaration_17().getEnumLiteral().getInstance();
+				newLeafNode(enumLiteral_17, grammarAccess.getAllTypesAccess().getBYTEAEnumLiteralDeclaration_17());
+			}
+		)
+	)
+;
+
+// Rule DoublePrecision
+ruleDoublePrecision returns [Enumerator current=null]
+@init {
+	enterRule();
+}
+@after {
+	leaveRule();
+}:
+	(
+		enumLiteral_0=PRECISION
+		{
+			$current = grammarAccess.getDoublePrecisionAccess().getDOUBLE_PRECISIONEnumLiteralDeclaration().getEnumLiteral().getInstance();
+			newLeafNode(enumLiteral_0, grammarAccess.getDoublePrecisionAccess().getDOUBLE_PRECISIONEnumLiteralDeclaration());
+		}
+	)
+;
+
+// Rule ZoneNoTz
+ruleZoneNoTz returns [Enumerator current=null]
+@init {
+	enterRule();
+}
+@after {
+	leaveRule();
+}:
+	(
+		enumLiteral_0=ZONE
+		{
+			$current = grammarAccess.getZoneNoTzAccess().getTIMESTAMPEnumLiteralDeclaration().getEnumLiteral().getInstance();
+			newLeafNode(enumLiteral_0, grammarAccess.getZoneNoTzAccess().getTIMESTAMPEnumLiteralDeclaration());
+		}
+	)
+;
+
+// Rule ZoneTz
+ruleZoneTz returns [Enumerator current=null]
+@init {
+	enterRule();
+}
+@after {
+	leaveRule();
+}:
+	(
+		enumLiteral_0=ZONE
+		{
+			$current = grammarAccess.getZoneTzAccess().getTIMESTAMPTZEnumLiteralDeclaration().getEnumLiteral().getInstance();
+			newLeafNode(enumLiteral_0, grammarAccess.getZoneTzAccess().getTIMESTAMPTZEnumLiteralDeclaration());
+		}
 	)
 ;

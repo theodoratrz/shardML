@@ -82,7 +82,8 @@ public class PostgresKeywordsTest {
 		// the .msql grammar's words today, with PostgreSQL's category ("-" when not a keyword there).
 		// Step 2 of Plan-sql added IF and EXISTS (IF NOT EXISTS) and made every word whose category
 		// is U, C or "-" a name too, in any case (SqlKeywordTest checks that against this golden);
-		// in step 1 the words were case-sensitive and none of them could be a name.
+		// in step 1 the words were case-sensitive and none of them could be a name. Step 3 added the
+		// PostgreSQL types: all are names except WITH (R), from TIMESTAMP WITH TIME ZONE.
 		Map<String, String> words = keywords();
 		Set<String> grammarWords = new TreeSet<>(GrammarUtil.getAllKeywords(grammar.getGrammar()));
 		grammarWords.removeIf(w -> !Character.isLetter(w.charAt(0)));
@@ -94,6 +95,12 @@ public class PostgresKeywordsTest {
 				Map.entry("INT", "C"), Map.entry("KEY", "U"),
 				Map.entry("NOT", "R"), Map.entry("NULL", "R"), Map.entry("PRIMARY", "R"), Map.entry("TABLE", "R"),
 				Map.entry("TEXT", "U"), Map.entry("TIMESTAMP", "C"), Map.entry("UNIQUE", "R"), Map.entry("UUID", "-"),
-				Map.entry("VARCHAR", "C")), categories);
+				Map.entry("VARCHAR", "C"),
+				// step 3
+				Map.entry("BIGSERIAL", "-"), Map.entry("BYTEA", "-"), Map.entry("CHAR", "C"), Map.entry("CHARACTER", "C"),
+				Map.entry("DOUBLE", "U"), Map.entry("FLOAT", "C"), Map.entry("INTEGER", "C"), Map.entry("JSONB", "-"),
+				Map.entry("NUMERIC", "C"), Map.entry("PRECISION", "C"), Map.entry("REAL", "C"), Map.entry("SERIAL", "-"),
+				Map.entry("SMALLINT", "C"), Map.entry("TIME", "C"), Map.entry("TIMESTAMPTZ", "-"), Map.entry("VARYING", "U"),
+				Map.entry("WITH", "R"), Map.entry("WITHOUT", "U"), Map.entry("ZONE", "U")), categories);
 	}
 }

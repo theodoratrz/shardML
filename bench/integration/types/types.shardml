@@ -1,0 +1,13 @@
+import "types.msql"
+
+// The step 3 types on Citus: all_types is hash-distributed by its BIGSERIAL key, so every column
+// type has to be accepted by create_distributed_table, not only by CREATE TABLE.
+database types {
+    type: postgres
+
+    shard all_types {
+        strategy: hash
+        key: id
+        buckets: 4
+    }
+}

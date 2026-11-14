@@ -15,6 +15,17 @@
       <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//AllTypes/DATE"/>
       <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//AllTypes/BOOLEAN"/>
       <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//AllTypes/TEXT"/>
+      <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//AllTypes/INTEGER"/>
+      <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//AllTypes/SMALLINT"/>
+      <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//AllTypes/SERIAL"/>
+      <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//AllTypes/BIGSERIAL"/>
+      <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//AllTypes/NUMERIC"/>
+      <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//AllTypes/REAL"/>
+      <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//AllTypes/FLOAT"/>
+      <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//AllTypes/TIMESTAMPTZ"/>
+      <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//AllTypes/JSONB"/>
+      <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//AllTypes/BYTEA"/>
+      <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//AllTypes/DOUBLE_PRECISION"/>
     </genEnums>
     <genClasses ecoreClass="SQL.ecore#//Schema">
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference SQL.ecore#//Schema/tables"/>
@@ -30,10 +41,22 @@
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Column/name"/>
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Column/simpleType"/>
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference SQL.ecore#//Column/varchar"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference SQL.ecore#//Column/numeric"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference SQL.ecore#//Column/char"/>
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference SQL.ecore#//Column/constraint"/>
     </genClasses>
     <genClasses ecoreClass="SQL.ecore#//Varchar">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Varchar/varying"/>
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Varchar/size"/>
+    </genClasses>
+    <genClasses ecoreClass="SQL.ecore#//Numeric">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Numeric/decimal"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Numeric/precision"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Numeric/scale"/>
+    </genClasses>
+    <genClasses ecoreClass="SQL.ecore#//Char">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Char/character"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Char/size"/>
     </genClasses>
     <genClasses ecoreClass="SQL.ecore#//Constraint"/>
     <genClasses ecoreClass="SQL.ecore#//PrimaryAnnotation"/>

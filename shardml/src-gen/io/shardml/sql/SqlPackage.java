@@ -188,13 +188,31 @@ public interface SqlPackage extends EPackage
   int COLUMN__VARCHAR = 2;
 
   /**
+   * The feature id for the '<em><b>Numeric</b></em>' containment reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int COLUMN__NUMERIC = 3;
+
+  /**
+   * The feature id for the '<em><b>Char</b></em>' containment reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int COLUMN__CHAR = 4;
+
+  /**
    * The feature id for the '<em><b>Constraint</b></em>' containment reference list.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
    * @generated
    * @ordered
    */
-  int COLUMN__CONSTRAINT = 3;
+  int COLUMN__CONSTRAINT = 5;
 
   /**
    * The number of structural features of the '<em>Column</em>' class.
@@ -203,7 +221,7 @@ public interface SqlPackage extends EPackage
    * @generated
    * @ordered
    */
-  int COLUMN_FEATURE_COUNT = 4;
+  int COLUMN_FEATURE_COUNT = 6;
 
   /**
    * The meta object id for the '{@link io.shardml.sql.impl.VarcharImpl <em>Varchar</em>}' class.
@@ -216,13 +234,22 @@ public interface SqlPackage extends EPackage
   int VARCHAR = 3;
 
   /**
+   * The feature id for the '<em><b>Varying</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int VARCHAR__VARYING = 0;
+
+  /**
    * The feature id for the '<em><b>Size</b></em>' attribute.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
    * @generated
    * @ordered
    */
-  int VARCHAR__SIZE = 0;
+  int VARCHAR__SIZE = 1;
 
   /**
    * The number of structural features of the '<em>Varchar</em>' class.
@@ -231,7 +258,90 @@ public interface SqlPackage extends EPackage
    * @generated
    * @ordered
    */
-  int VARCHAR_FEATURE_COUNT = 1;
+  int VARCHAR_FEATURE_COUNT = 2;
+
+  /**
+   * The meta object id for the '{@link io.shardml.sql.impl.NumericImpl <em>Numeric</em>}' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see io.shardml.sql.impl.NumericImpl
+   * @see io.shardml.sql.impl.SqlPackageImpl#getNumeric()
+   * @generated
+   */
+  int NUMERIC = 4;
+
+  /**
+   * The feature id for the '<em><b>Decimal</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int NUMERIC__DECIMAL = 0;
+
+  /**
+   * The feature id for the '<em><b>Precision</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int NUMERIC__PRECISION = 1;
+
+  /**
+   * The feature id for the '<em><b>Scale</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int NUMERIC__SCALE = 2;
+
+  /**
+   * The number of structural features of the '<em>Numeric</em>' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int NUMERIC_FEATURE_COUNT = 3;
+
+  /**
+   * The meta object id for the '{@link io.shardml.sql.impl.CharImpl <em>Char</em>}' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see io.shardml.sql.impl.CharImpl
+   * @see io.shardml.sql.impl.SqlPackageImpl#getChar()
+   * @generated
+   */
+  int CHAR = 5;
+
+  /**
+   * The feature id for the '<em><b>Character</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int CHAR__CHARACTER = 0;
+
+  /**
+   * The feature id for the '<em><b>Size</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int CHAR__SIZE = 1;
+
+  /**
+   * The number of structural features of the '<em>Char</em>' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int CHAR_FEATURE_COUNT = 2;
 
   /**
    * The meta object id for the '{@link io.shardml.sql.impl.ConstraintImpl <em>Constraint</em>}' class.
@@ -241,7 +351,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getConstraint()
    * @generated
    */
-  int CONSTRAINT = 4;
+  int CONSTRAINT = 6;
 
   /**
    * The number of structural features of the '<em>Constraint</em>' class.
@@ -260,7 +370,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getPrimaryAnnotation()
    * @generated
    */
-  int PRIMARY_ANNOTATION = 5;
+  int PRIMARY_ANNOTATION = 7;
 
   /**
    * The number of structural features of the '<em>Primary Annotation</em>' class.
@@ -279,7 +389,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getUniqueAnnotation()
    * @generated
    */
-  int UNIQUE_ANNOTATION = 6;
+  int UNIQUE_ANNOTATION = 8;
 
   /**
    * The number of structural features of the '<em>Unique Annotation</em>' class.
@@ -298,7 +408,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getNotNull()
    * @generated
    */
-  int NOT_NULL = 7;
+  int NOT_NULL = 9;
 
   /**
    * The number of structural features of the '<em>Not Null</em>' class.
@@ -317,7 +427,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getTableConstraint()
    * @generated
    */
-  int TABLE_CONSTRAINT = 8;
+  int TABLE_CONSTRAINT = 10;
 
   /**
    * The feature id for the '<em><b>Columns</b></em>' reference list.
@@ -345,7 +455,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getPrimaryKey()
    * @generated
    */
-  int PRIMARY_KEY = 9;
+  int PRIMARY_KEY = 11;
 
   /**
    * The feature id for the '<em><b>Columns</b></em>' reference list.
@@ -373,7 +483,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getUniqueKey()
    * @generated
    */
-  int UNIQUE_KEY = 10;
+  int UNIQUE_KEY = 12;
 
   /**
    * The feature id for the '<em><b>Columns</b></em>' reference list.
@@ -401,7 +511,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getAllTypes()
    * @generated
    */
-  int ALL_TYPES = 11;
+  int ALL_TYPES = 13;
 
 
   /**
@@ -534,6 +644,28 @@ public interface SqlPackage extends EPackage
   EReference getColumn_Varchar();
 
   /**
+   * Returns the meta object for the containment reference '{@link io.shardml.sql.Column#getNumeric <em>Numeric</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the containment reference '<em>Numeric</em>'.
+   * @see io.shardml.sql.Column#getNumeric()
+   * @see #getColumn()
+   * @generated
+   */
+  EReference getColumn_Numeric();
+
+  /**
+   * Returns the meta object for the containment reference '{@link io.shardml.sql.Column#getChar <em>Char</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the containment reference '<em>Char</em>'.
+   * @see io.shardml.sql.Column#getChar()
+   * @see #getColumn()
+   * @generated
+   */
+  EReference getColumn_Char();
+
+  /**
    * Returns the meta object for the containment reference list '{@link io.shardml.sql.Column#getConstraint <em>Constraint</em>}'.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
@@ -555,6 +687,17 @@ public interface SqlPackage extends EPackage
   EClass getVarchar();
 
   /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.Varchar#isVarying <em>Varying</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Varying</em>'.
+   * @see io.shardml.sql.Varchar#isVarying()
+   * @see #getVarchar()
+   * @generated
+   */
+  EAttribute getVarchar_Varying();
+
+  /**
    * Returns the meta object for the attribute '{@link io.shardml.sql.Varchar#getSize <em>Size</em>}'.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
@@ -564,6 +707,81 @@ public interface SqlPackage extends EPackage
    * @generated
    */
   EAttribute getVarchar_Size();
+
+  /**
+   * Returns the meta object for class '{@link io.shardml.sql.Numeric <em>Numeric</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for class '<em>Numeric</em>'.
+   * @see io.shardml.sql.Numeric
+   * @generated
+   */
+  EClass getNumeric();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.Numeric#isDecimal <em>Decimal</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Decimal</em>'.
+   * @see io.shardml.sql.Numeric#isDecimal()
+   * @see #getNumeric()
+   * @generated
+   */
+  EAttribute getNumeric_Decimal();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.Numeric#getPrecision <em>Precision</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Precision</em>'.
+   * @see io.shardml.sql.Numeric#getPrecision()
+   * @see #getNumeric()
+   * @generated
+   */
+  EAttribute getNumeric_Precision();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.Numeric#getScale <em>Scale</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Scale</em>'.
+   * @see io.shardml.sql.Numeric#getScale()
+   * @see #getNumeric()
+   * @generated
+   */
+  EAttribute getNumeric_Scale();
+
+  /**
+   * Returns the meta object for class '{@link io.shardml.sql.Char <em>Char</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for class '<em>Char</em>'.
+   * @see io.shardml.sql.Char
+   * @generated
+   */
+  EClass getChar();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.Char#isCharacter <em>Character</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Character</em>'.
+   * @see io.shardml.sql.Char#isCharacter()
+   * @see #getChar()
+   * @generated
+   */
+  EAttribute getChar_Character();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.Char#getSize <em>Size</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Size</em>'.
+   * @see io.shardml.sql.Char#getSize()
+   * @see #getChar()
+   * @generated
+   */
+  EAttribute getChar_Size();
 
   /**
    * Returns the meta object for class '{@link io.shardml.sql.Constraint <em>Constraint</em>}'.
@@ -782,6 +1000,22 @@ public interface SqlPackage extends EPackage
     EReference COLUMN__VARCHAR = eINSTANCE.getColumn_Varchar();
 
     /**
+     * The meta object literal for the '<em><b>Numeric</b></em>' containment reference feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EReference COLUMN__NUMERIC = eINSTANCE.getColumn_Numeric();
+
+    /**
+     * The meta object literal for the '<em><b>Char</b></em>' containment reference feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EReference COLUMN__CHAR = eINSTANCE.getColumn_Char();
+
+    /**
      * The meta object literal for the '<em><b>Constraint</b></em>' containment reference list feature.
      * <!-- begin-user-doc -->
      * <!-- end-user-doc -->
@@ -800,12 +1034,80 @@ public interface SqlPackage extends EPackage
     EClass VARCHAR = eINSTANCE.getVarchar();
 
     /**
+     * The meta object literal for the '<em><b>Varying</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute VARCHAR__VARYING = eINSTANCE.getVarchar_Varying();
+
+    /**
      * The meta object literal for the '<em><b>Size</b></em>' attribute feature.
      * <!-- begin-user-doc -->
      * <!-- end-user-doc -->
      * @generated
      */
     EAttribute VARCHAR__SIZE = eINSTANCE.getVarchar_Size();
+
+    /**
+     * The meta object literal for the '{@link io.shardml.sql.impl.NumericImpl <em>Numeric</em>}' class.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @see io.shardml.sql.impl.NumericImpl
+     * @see io.shardml.sql.impl.SqlPackageImpl#getNumeric()
+     * @generated
+     */
+    EClass NUMERIC = eINSTANCE.getNumeric();
+
+    /**
+     * The meta object literal for the '<em><b>Decimal</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute NUMERIC__DECIMAL = eINSTANCE.getNumeric_Decimal();
+
+    /**
+     * The meta object literal for the '<em><b>Precision</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute NUMERIC__PRECISION = eINSTANCE.getNumeric_Precision();
+
+    /**
+     * The meta object literal for the '<em><b>Scale</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute NUMERIC__SCALE = eINSTANCE.getNumeric_Scale();
+
+    /**
+     * The meta object literal for the '{@link io.shardml.sql.impl.CharImpl <em>Char</em>}' class.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @see io.shardml.sql.impl.CharImpl
+     * @see io.shardml.sql.impl.SqlPackageImpl#getChar()
+     * @generated
+     */
+    EClass CHAR = eINSTANCE.getChar();
+
+    /**
+     * The meta object literal for the '<em><b>Character</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute CHAR__CHARACTER = eINSTANCE.getChar_Character();
+
+    /**
+     * The meta object literal for the '<em><b>Size</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute CHAR__SIZE = eINSTANCE.getChar_Size();
 
     /**
      * The meta object literal for the '{@link io.shardml.sql.impl.ConstraintImpl <em>Constraint</em>}' class.

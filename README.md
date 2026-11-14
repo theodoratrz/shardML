@@ -136,9 +136,21 @@ A notable detail: column references are scoped to the *specific table* they belo
 
 - Keywords match in any case (`create table`, `CREATE TABLE`). Statements may end in `;`. Comments are `--` and `/* */`; `//` is not a comment (it was before).
 - An unquoted name is folded to lower case, so `CREATE TABLE Customers` declares `customers`, and a model refers to it as `customers`. A `"quoted"` name is kept exactly as written, and the generator writes it back quoted.
-- A keyword can be a table or column name exactly when PostgreSQL allows it bare: `key`, `text`, `date`, `int`, ... are names, while reserved words (`table`, `unique`, `primary`, `not`, `null`, `create`) must be quoted, e.g. `"unique" BIGINT`. The list follows PostgreSQL 17's `pg_get_keywords()`.
+- A keyword can be a table or column name exactly when PostgreSQL allows it bare: `key`, `text`, `date`, `int`, ... are names, while reserved words (`table`, `unique`, `primary`, `not`, `null`, `create`, `with`) must be quoted, e.g. `"unique" BIGINT`. The list follows PostgreSQL 17's `pg_get_keywords()`.
 - Tables may be schema-qualified (`banking.accounts`) and use `IF NOT EXISTS`; both are written back as given. A model refers to a table by its name without the schema, so two tables of one name in one file are an error (SHML_066), also in different schemas.
 - Known limit: a quoted name that is not a plain identifier (with a space, or mixed case meant to differ from the folded name) cannot be referred to from a `.shardml` or `.workload` file yet.
+
+### Column types in `.msql` files
+
+| Types | Written back as |
+|---|---|
+| `INT`, `INTEGER`, `SMALLINT`, `BIGINT`, `SERIAL`, `BIGSERIAL` | as spelled (`SERIAL` / `BIGSERIAL` keep their sequence default) |
+| `NUMERIC`, `DECIMAL`, `NUMERIC(p)`, `NUMERIC(p,s)`, `DECIMAL(p,s)`, `REAL`, `FLOAT`, `DOUBLE PRECISION` | as spelled |
+| `VARCHAR(n)`, `CHARACTER VARYING(n)`, `CHAR(n)`, `CHARACTER(n)`, `TEXT` | as spelled |
+| `TIMESTAMP`, `TIMESTAMPTZ`, `DATE`, `BOOLEAN`, `UUID`, `JSONB`, `BYTEA` | as spelled |
+| `TIMESTAMP WITHOUT TIME ZONE`, `TIMESTAMP WITH TIME ZONE` | `TIMESTAMP`, `TIMESTAMPTZ` (the same types) |
+
+Type words are column names where PostgreSQL allows it (`double DOUBLE PRECISION`, `zone TIMESTAMPTZ`). Validators compare PostgreSQL's types, not spellings: `INT`, `INTEGER` and `SERIAL` are all `int4`, so a `SERIAL` key colocates with an `INT` foreign key. Any other type (`INTERVAL`, arrays, user-defined types) is a syntax error, and so is a sized type without its size (`VARCHAR`, `CHAR`). A column whose type did not parse is never read as `INT`. `bench/integration/types/` deploys one distributed table with every type above to the bench cluster.
 
 ### Table relationships vs. foreign keys
 

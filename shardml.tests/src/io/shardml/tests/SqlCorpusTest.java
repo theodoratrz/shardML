@@ -125,10 +125,10 @@ public class SqlCorpusTest {
 	// --- one case per file ---
 
 	// today, for the whole file: its syntax errors, the first one, and the tables recovered; and
-	// for its CREATE TABLE statements parsed one at a time: how many parse, and the first error of
-	// the first one that does not (its table, then the message). The whole-file error usually sits
+	// for its CREATE TABLE statements parsed one at a time: the tables that parse (step 3: by name,
+	// was a count), and the first error of the first one that does not (its table, then the message). The whole-file error usually sits
 	// in the pg_dump preamble, so the per-table result is the one that shows grammar progress.
-	record Today(int syntaxErrors, String firstError, int tables, int tablesAlone, String firstTableError) {
+	record Today(int syntaxErrors, String firstError, int tables, List<String> tablesAlone, String firstTableError) {
 	}
 
 	private void check(String file, Map<String, Integer> statements, int preamble, Today today) throws IOException {
@@ -143,7 +143,7 @@ public class SqlCorpusTest {
 		resource.load(new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8)), null);
 		List<Resource.Diagnostic> errors = resource.getErrors();
 		int tables = resource.getContents().isEmpty() ? 0 : ((Schema) resource.getContents().get(0)).getTables().size();
-		int alone = 0;
+		List<String> alone = new ArrayList<>();
 		String firstTableError = null;
 		int n = 0;
 		for (String statement : statements(text)) {
@@ -152,7 +152,7 @@ public class SqlCorpusTest {
 			Resource single = resourceSets.get().createResource(URI.createURI("dummy:/t" + (n++) + ".msql"));
 			single.load(new ByteArrayInputStream(statement.getBytes(StandardCharsets.UTF_8)), null);
 			if (single.getErrors().isEmpty())
-				alone++;
+				alone.add(tableName(statement));
 			else if (firstTableError == null)
 				firstTableError = tableName(statement) + ": " + single.getErrors().get(0).getMessage();
 		}
@@ -183,7 +183,12 @@ public class SqlCorpusTest {
 				// step 2: the whole file still stops at its first statement, DROP TABLE (step 5). Its tables
 				// got further: lower-case `int` is now a type, so warehouse stops at decimal(12, 2)
 				// (step 3), where step 1 stopped at `int`
-				new Today(1, "line 7: missing EOF at 'DROP'", 0, 0, "warehouse: mismatched input '(' expecting ')'"));
+				// step 3: decimal(p, s), char(n), varchar(n), timestamp and integer are types, so warehouse
+				// and item parse. The other seven stop at step-4 syntax: stock, district and order_line at
+				// FOREIGN KEY, customer, history and oorder at a DEFAULT, new_order at an explicit NULL
+				// (ol_delivery_d timestamp NULL). The whole file is unchanged (DROP TABLE, step 5)
+				new Today(1, "line 7: missing EOF at 'DROP'", 0, List.of("warehouse", "item"),
+						"stock: no viable alternative at input 'KEY'"));
 	}
 
 	@Test
@@ -193,7 +198,11 @@ public class SqlCorpusTest {
 				// step 2: -- comments are comments now, so the whole file moves from line 7 (a comment) to
 				// the psql restrict line at 11 (step 5). Its tables moved from public. (qualified names,
 				// now read) to the type integer (step 3)
-				new Today(1, "line 11: missing EOF at '\\'", 0, 0, "public.pgbench_accounts: no viable alternative at input 'integer'"));
+				// step 3: integer, character(n), bigint, timestamp are types. pgbench_history, the one
+				// table without storage options, parses; the other three stop after their closing
+				// parenthesis at WITH (fillfactor='100'), table options (step 4, RawSql)
+				new Today(1, "line 11: missing EOF at '\\'", 0, List.of("public.pgbench_history"),
+						"public.pgbench_accounts: missing EOF at 'WITH'"));
 	}
 
 	@Test
@@ -202,7 +211,11 @@ public class SqlCorpusTest {
 				"ALTER .. OWNER TO", 5, "SET", 12, "SELECT set_config", 1, "\\restrict", 1, "\\unrestrict", 1), 20,
 				// step 2: as pgbench, the whole file now stops at the psql restrict line (step 5); its
 				// tables moved from banking. (qualified, now read) to the type numeric (step 3)
-				new Today(1, "line 11: missing EOF at '\\'", 0, 0, "banking.accounts: no viable alternative at input 'numeric'"));
+				// step 3: numeric(p, s), character varying(n), timestamp with time zone and bigint are
+				// types, so all four tables parse (their keys are in ALTER TABLE, step 5). The whole
+				// file is unchanged
+				new Today(1, "line 11: missing EOF at '\\'", 0,
+						List.of("banking.accounts", "banking.cards", "banking.customers", "banking.transactions"), null));
 	}
 
 	@Test
@@ -210,7 +223,9 @@ public class SqlCorpusTest {
 		check("chinook.sql", Map.of("CREATE TABLE", 11, "ALTER TABLE .. ADD constraint", 11, "CREATE INDEX", 11), 0,
 				// step 2: unchanged. Chinook is upper case with no comments or qualified names, so it stops,
 				// as in step 1, at the named CONSTRAINT album_pkey of its first table (step 4)
-				new Today(2, "line 39: no viable alternative at input 'album_pkey'", 1, 0, "album: no viable alternative at input 'album_pkey'"));
+				// step 3: unchanged; all 11 tables still stop at their named CONSTRAINT .. PRIMARY KEY
+				// (step 4), each after its column types, which parse
+				new Today(2, "line 39: no viable alternative at input 'album_pkey'", 1, List.of(), "album: no viable alternative at input 'album_pkey'"));
 	}
 
 	@Test
@@ -218,7 +233,14 @@ public class SqlCorpusTest {
 		check("northwind.sql", Map.of("CREATE TABLE", 14, "ALTER TABLE .. ADD constraint", 27, "DROP TABLE", 14, "SET", 8), 22,
 				// step 2: -- comments are read, so the whole file moves from line 8 (a comment) to its first
 				// SET at line 12 (step 5). Its tables stop at smallint, as in step 1 (step 3)
-				new Today(1, "line 12: missing EOF at 'SET'", 0, 0, "categories: no viable alternative at input 'smallint'"));
+				// step 3: smallint, real, bytea, character varying(n) and character(n) are types, so all
+				// 14 tables parse (keys and FKs are in ALTER TABLE, steps 4 and 5). The whole file is
+				// unchanged
+				new Today(1, "line 12: missing EOF at 'SET'", 0,
+						List.of("categories", "customer_customer_demo", "customer_demographics", "customers", "employees",
+								"employee_territories", "order_details", "orders", "products", "region", "shippers", "suppliers",
+								"territories", "us_states"),
+						null));
 	}
 
 	@Test
@@ -232,8 +254,12 @@ public class SqlCorpusTest {
 				"other: CREATE SEQUENCE", 13, "other: CREATE TRIGGER", 16, "other: CREATE TYPE", 1, "other: CREATE VIEW", 7));
 		// step 2: comments are read, so the whole file moves from line 8 to its first SET at line 15
 		// (step 5); its tables moved from public. (now read) to the type integer (step 3)
+		// step 3: still no table parses, but every one now gets past its types: 70 stop at a DEFAULT
+		// (nextval, now(), literals: step 4, and SHML_068 for nextval), the 71st
+		// (public.film_embedding) at public.vector(20), a pgvector type that stays unsupported. The whole
+		// file is unchanged
 		check("pagila-schema.sql", statements, 121,
-				new Today(1, "line 15: missing EOF at 'SET'", 0, 0, "public.customer: no viable alternative at input 'integer'"));
+				new Today(1, "line 15: missing EOF at 'SET'", 0, List.of(), "public.customer: mismatched input 'DEFAULT' expecting ')'"));
 	}
 
 	@Test

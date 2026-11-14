@@ -4,8 +4,10 @@
 #
 #   bench/integration/test-examples.sh [model.shardml ...]
 #
-# Defaults to every examples/*.shardml. Needs the CLI jar (mvn install) and
-# Docker; starts the cluster with bench/up.sh if it is not running.
+# Defaults to every examples/*.shardml and bench/integration/types/*.shardml
+# (every column type of the .msql grammar on one distributed table). Needs the
+# CLI jar (mvn install) and Docker; starts the cluster with bench/up.sh if it
+# is not running.
 #
 # Per model, in a fresh schema named after the database:
 #   1. <db>-schema.sql        every statement must succeed
@@ -43,7 +45,7 @@ echo "test-examples: using $JAR"
 
 models=("$@")
 if [[ ${#models[@]} -eq 0 ]]; then
-	models=("$ROOT"/examples/*.shardml)
+	models=("$ROOT"/examples/*.shardml "$ROOT"/bench/integration/types/*.shardml)
 fi
 
 if ! up_log=$("$BENCH/up.sh" 2>&1); then

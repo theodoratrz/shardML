@@ -21,6 +21,7 @@ import org.eclipse.emf.ecore.impl.MinimalEObjectImpl;
  * The following features are implemented:
  * </p>
  * <ul>
+ *   <li>{@link io.shardml.sql.impl.VarcharImpl#isVarying <em>Varying</em>}</li>
  *   <li>{@link io.shardml.sql.impl.VarcharImpl#getSize <em>Size</em>}</li>
  * </ul>
  *
@@ -28,6 +29,26 @@ import org.eclipse.emf.ecore.impl.MinimalEObjectImpl;
  */
 public class VarcharImpl extends MinimalEObjectImpl.Container implements Varchar
 {
+  /**
+   * The default value of the '{@link #isVarying() <em>Varying</em>}' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #isVarying()
+   * @generated
+   * @ordered
+   */
+  protected static final boolean VARYING_EDEFAULT = false;
+
+  /**
+   * The cached value of the '{@link #isVarying() <em>Varying</em>}' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #isVarying()
+   * @generated
+   * @ordered
+   */
+  protected boolean varying = VARYING_EDEFAULT;
+
   /**
    * The default value of the '{@link #getSize() <em>Size</em>}' attribute.
    * <!-- begin-user-doc -->
@@ -47,6 +68,15 @@ public class VarcharImpl extends MinimalEObjectImpl.Container implements Varchar
    * @ordered
    */
   protected int size = SIZE_EDEFAULT;
+
+  /**
+   * This is true if the Size attribute has been set.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  protected boolean sizeESet;
 
   /**
    * <!-- begin-user-doc -->
@@ -75,6 +105,31 @@ public class VarcharImpl extends MinimalEObjectImpl.Container implements Varchar
    * @generated
    */
   @Override
+  public boolean isVarying()
+  {
+    return varying;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public void setVarying(boolean newVarying)
+  {
+    boolean oldVarying = varying;
+    varying = newVarying;
+    if (eNotificationRequired())
+      eNotify(new ENotificationImpl(this, Notification.SET, SqlPackage.VARCHAR__VARYING, oldVarying, varying));
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
   public int getSize()
   {
     return size;
@@ -90,8 +145,37 @@ public class VarcharImpl extends MinimalEObjectImpl.Container implements Varchar
   {
     int oldSize = size;
     size = newSize;
+    boolean oldSizeESet = sizeESet;
+    sizeESet = true;
     if (eNotificationRequired())
-      eNotify(new ENotificationImpl(this, Notification.SET, SqlPackage.VARCHAR__SIZE, oldSize, size));
+      eNotify(new ENotificationImpl(this, Notification.SET, SqlPackage.VARCHAR__SIZE, oldSize, size, !oldSizeESet));
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public void unsetSize()
+  {
+    int oldSize = size;
+    boolean oldSizeESet = sizeESet;
+    size = SIZE_EDEFAULT;
+    sizeESet = false;
+    if (eNotificationRequired())
+      eNotify(new ENotificationImpl(this, Notification.UNSET, SqlPackage.VARCHAR__SIZE, oldSize, SIZE_EDEFAULT, oldSizeESet));
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public boolean isSetSize()
+  {
+    return sizeESet;
   }
 
   /**
@@ -104,6 +188,8 @@ public class VarcharImpl extends MinimalEObjectImpl.Container implements Varchar
   {
     switch (featureID)
     {
+      case SqlPackage.VARCHAR__VARYING:
+        return isVarying();
       case SqlPackage.VARCHAR__SIZE:
         return getSize();
     }
@@ -120,6 +206,9 @@ public class VarcharImpl extends MinimalEObjectImpl.Container implements Varchar
   {
     switch (featureID)
     {
+      case SqlPackage.VARCHAR__VARYING:
+        setVarying((Boolean)newValue);
+        return;
       case SqlPackage.VARCHAR__SIZE:
         setSize((Integer)newValue);
         return;
@@ -137,8 +226,11 @@ public class VarcharImpl extends MinimalEObjectImpl.Container implements Varchar
   {
     switch (featureID)
     {
+      case SqlPackage.VARCHAR__VARYING:
+        setVarying(VARYING_EDEFAULT);
+        return;
       case SqlPackage.VARCHAR__SIZE:
-        setSize(SIZE_EDEFAULT);
+        unsetSize();
         return;
     }
     super.eUnset(featureID);
@@ -154,8 +246,10 @@ public class VarcharImpl extends MinimalEObjectImpl.Container implements Varchar
   {
     switch (featureID)
     {
+      case SqlPackage.VARCHAR__VARYING:
+        return varying != VARYING_EDEFAULT;
       case SqlPackage.VARCHAR__SIZE:
-        return size != SIZE_EDEFAULT;
+        return isSetSize();
     }
     return super.eIsSet(featureID);
   }
@@ -171,8 +265,10 @@ public class VarcharImpl extends MinimalEObjectImpl.Container implements Varchar
     if (eIsProxy()) return super.toString();
 
     StringBuilder result = new StringBuilder(super.toString());
-    result.append(" (size: ");
-    result.append(size);
+    result.append(" (varying: ");
+    result.append(varying);
+    result.append(", size: ");
+    if (sizeESet) result.append(size); else result.append("<unset>");
     result.append(')');
     return result.toString();
   }

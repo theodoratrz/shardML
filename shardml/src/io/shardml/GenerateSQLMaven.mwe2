@@ -8,6 +8,10 @@
  * them, so ShardML.xtext would be parsed while SQL.ecore does not yet exist.
  *
  * The cleaner is disabled so that step 2 does not wipe this step's output.
+ *
+ * The language is io.shardml.build.SQLLanguage (shardml/build-src, compiled first by the
+ * compile-build-src execution in pom.xml), a StandardLanguage that makes the attributes of a
+ * column's type unsettable in the inferred Ecore (SqlEcorePostProcessor, Plan-sql 11d).
  */
 module io.shardml.GenerateSQLMaven
 
@@ -47,7 +51,7 @@ Workflow {
 				preferXtendStubs = false
 			}
 		}
-		language = StandardLanguage {
+		language = io.shardml.build.SQLLanguage {
 			name = "io.shardml.SQL"
 			fileExtensions = "msql"
 

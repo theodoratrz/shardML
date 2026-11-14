@@ -19,6 +19,8 @@ import org.eclipse.emf.ecore.EObject;
  *   <li>{@link io.shardml.sql.Column#getName <em>Name</em>}</li>
  *   <li>{@link io.shardml.sql.Column#getSimpleType <em>Simple Type</em>}</li>
  *   <li>{@link io.shardml.sql.Column#getVarchar <em>Varchar</em>}</li>
+ *   <li>{@link io.shardml.sql.Column#getNumeric <em>Numeric</em>}</li>
+ *   <li>{@link io.shardml.sql.Column#getChar <em>Char</em>}</li>
  *   <li>{@link io.shardml.sql.Column#getConstraint <em>Constraint</em>}</li>
  * </ul>
  *
@@ -57,9 +59,11 @@ public interface Column extends EObject
    * <!-- end-user-doc -->
    * @return the value of the '<em>Simple Type</em>' attribute.
    * @see io.shardml.sql.AllTypes
+   * @see #isSetSimpleType()
+   * @see #unsetSimpleType()
    * @see #setSimpleType(AllTypes)
    * @see io.shardml.sql.SqlPackage#getColumn_SimpleType()
-   * @model
+   * @model unsettable="true"
    * @generated
    */
   AllTypes getSimpleType();
@@ -70,10 +74,35 @@ public interface Column extends EObject
    * <!-- end-user-doc -->
    * @param value the new value of the '<em>Simple Type</em>' attribute.
    * @see io.shardml.sql.AllTypes
+   * @see #isSetSimpleType()
+   * @see #unsetSimpleType()
    * @see #getSimpleType()
    * @generated
    */
   void setSimpleType(AllTypes value);
+
+  /**
+   * Unsets the value of the '{@link io.shardml.sql.Column#getSimpleType <em>Simple Type</em>}' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #isSetSimpleType()
+   * @see #getSimpleType()
+   * @see #setSimpleType(AllTypes)
+   * @generated
+   */
+  void unsetSimpleType();
+
+  /**
+   * Returns whether the value of the '{@link io.shardml.sql.Column#getSimpleType <em>Simple Type</em>}' attribute is set.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return whether the value of the '<em>Simple Type</em>' attribute is set.
+   * @see #unsetSimpleType()
+   * @see #getSimpleType()
+   * @see #setSimpleType(AllTypes)
+   * @generated
+   */
+  boolean isSetSimpleType();
 
   /**
    * Returns the value of the '<em><b>Varchar</b></em>' containment reference.
@@ -96,6 +125,50 @@ public interface Column extends EObject
    * @generated
    */
   void setVarchar(Varchar value);
+
+  /**
+   * Returns the value of the '<em><b>Numeric</b></em>' containment reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the value of the '<em>Numeric</em>' containment reference.
+   * @see #setNumeric(Numeric)
+   * @see io.shardml.sql.SqlPackage#getColumn_Numeric()
+   * @model containment="true"
+   * @generated
+   */
+  Numeric getNumeric();
+
+  /**
+   * Sets the value of the '{@link io.shardml.sql.Column#getNumeric <em>Numeric</em>}' containment reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @param value the new value of the '<em>Numeric</em>' containment reference.
+   * @see #getNumeric()
+   * @generated
+   */
+  void setNumeric(Numeric value);
+
+  /**
+   * Returns the value of the '<em><b>Char</b></em>' containment reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the value of the '<em>Char</em>' containment reference.
+   * @see #setChar(Char)
+   * @see io.shardml.sql.SqlPackage#getColumn_Char()
+   * @model containment="true"
+   * @generated
+   */
+  Char getChar();
+
+  /**
+   * Sets the value of the '{@link io.shardml.sql.Column#getChar <em>Char</em>}' containment reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @param value the new value of the '<em>Char</em>' containment reference.
+   * @see #getChar()
+   * @generated
+   */
+  void setChar(Char value);
 
   /**
    * Returns the value of the '<em><b>Constraint</b></em>' containment reference list.

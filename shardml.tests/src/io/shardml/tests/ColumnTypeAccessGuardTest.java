@@ -15,9 +15,9 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 // Source scans that keep two readings of the schema in one place each:
-//  - Column types. Column.getSimpleType() returns INT, the enum's default, when a column's type did
-//    not parse, so reading it directly turns a syntax error into an INT column (see
-//    ColumnTypeReadersTest). Only SqlTypes reads the type feature, and SchemaFacts is built on it.
+//  - Column types. A column's type is one of four features (simpleType, varchar, numeric, char),
+//    and simpleType reads INT, the enum's default, when no type parsed; only isSetSimpleType()
+//    tells (see ColumnTypeReadersTest). Only SqlTypes reads them, and SchemaFacts is built on it.
 //  - Identifier names. PostgreSQL folds unquoted names and keeps quoted ones (see SqlNames), so a name
 //    is written to output in one of two forms: quoted where needed (SqlNames.table/column/qualified)
 //    or as stored in the catalog (SqlNames.stored). Code that reads getName() for output or quotes
@@ -35,7 +35,9 @@ public class ColumnTypeAccessGuardTest {
 	private static final Set<String> TYPE_ALLOWED = Set.of("SqlTypes.java", "SchemaFacts.java");
 	private static final Set<String> NAME_ALLOWED = Set.of("SqlNames.java", "SchemaFacts.java");
 
-	private static final Pattern DIRECT_ACCESS = Pattern.compile("\\b(getSimpleType|setSimpleType)\\s*\\(|\\bCOLUMN__SIMPLE_TYPE\\b");
+	// any of a column's four type features, through its getter, setter, isSet / unset, or literal
+	private static final Pattern DIRECT_ACCESS = Pattern.compile(
+			"\\b(get|set|isSet|unset)(SimpleType|Varchar|Numeric|Char)\\s*\\(|\\bCOLUMN__(SIMPLE_TYPE|VARCHAR|NUMERIC|CHAR)\\b");
 
 	// a name read straight off the model in an output path
 	private static final Pattern NAME_READ = Pattern.compile("\\.(getName|getSchemaName)\\s*\\(");
@@ -71,8 +73,8 @@ public class ColumnTypeAccessGuardTest {
 	public void testOnlySqlTypesReadsTheColumnType() throws IOException {
 		List<String> offenders = scan(SOURCES, TYPE_ALLOWED, DIRECT_ACCESS, List.of(), 20);
 		Assertions.assertEquals(List.of(), offenders,
-				"Read column types through io.shardml.schema.SqlTypes.of(column), not Column.getSimpleType(): "
-						+ "an unparsed type reads as INT there");
+				"Read column types through io.shardml.schema.SqlTypes.of(column), not the Column's type features: "
+						+ "an unparsed type reads as INT through getSimpleType()");
 	}
 
 	@Test
@@ -143,7 +145,13 @@ public class ColumnTypeAccessGuardTest {
 		Assertions.assertTrue(DIRECT_ACCESS.matcher("return column.getSimpleType().getLiteral();").find());
 		Assertions.assertTrue(DIRECT_ACCESS.matcher("AllTypes t = c.getSimpleType ();").find());
 		Assertions.assertTrue(DIRECT_ACCESS.matcher("c.eGet(SqlPackage.Literals.COLUMN__SIMPLE_TYPE)").find());
+		Assertions.assertTrue(DIRECT_ACCESS.matcher("if (column.isSetSimpleType())").find());
+		Assertions.assertTrue(DIRECT_ACCESS.matcher("int p = column.getNumeric().getPrecision();").find());
+		Assertions.assertTrue(DIRECT_ACCESS.matcher("Char c = column.getChar();").find());
+		Assertions.assertTrue(DIRECT_ACCESS.matcher("column.getVarchar().getSize()").find());
+		Assertions.assertTrue(DIRECT_ACCESS.matcher("c.eGet(SqlPackage.Literals.COLUMN__NUMERIC)").find());
 		Assertions.assertFalse(DIRECT_ACCESS.matcher("SqlType type = SqlTypes.of(column);").find());
+		Assertions.assertFalse(DIRECT_ACCESS.matcher("char c = token.charAt(0);").find());
 
 		Assertions.assertTrue(NAME_READ.matcher(".append(shard.getId().getName()).append(\"' \");").find());
 		Assertions.assertTrue(NAME_READ.matcher("String s = table.getSchemaName ();").find());

@@ -16,14 +16,32 @@
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="Column">
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="simpleType" eType="#//AllTypes"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="simpleType" eType="#//AllTypes"
+        unsettable="true"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="varchar" eType="#//Varchar"
         containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="numeric" eType="#//Numeric"
+        containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="char" eType="#//Char" containment="true"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="constraint" upperBound="-1"
         eType="#//Constraint" containment="true"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="Varchar">
-    <eStructuralFeatures xsi:type="ecore:EAttribute" name="size" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="varying" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="size" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"
+        unsettable="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Numeric">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="decimal" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="precision" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"
+        unsettable="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="scale" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"
+        unsettable="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Char">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="character" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EBoolean"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="size" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EInt"
+        unsettable="true"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EEnum" name="AllTypes">
     <eLiterals name="INT" literal="INT"/>
@@ -34,6 +52,17 @@
     <eLiterals name="DATE" value="5" literal="DATE"/>
     <eLiterals name="BOOLEAN" value="6" literal="BOOLEAN"/>
     <eLiterals name="TEXT" value="7" literal="TEXT"/>
+    <eLiterals name="INTEGER" value="8" literal="INTEGER"/>
+    <eLiterals name="SMALLINT" value="9" literal="SMALLINT"/>
+    <eLiterals name="SERIAL" value="10" literal="SERIAL"/>
+    <eLiterals name="BIGSERIAL" value="11" literal="BIGSERIAL"/>
+    <eLiterals name="NUMERIC" value="12" literal="NUMERIC"/>
+    <eLiterals name="REAL" value="13" literal="REAL"/>
+    <eLiterals name="FLOAT" value="14" literal="FLOAT"/>
+    <eLiterals name="TIMESTAMPTZ" value="15" literal="TIMESTAMPTZ"/>
+    <eLiterals name="JSONB" value="16" literal="JSONB"/>
+    <eLiterals name="BYTEA" value="17" literal="BYTEA"/>
+    <eLiterals name="DOUBLE_PRECISION" value="18" literal="PRECISION"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="Constraint"/>
   <eClassifiers xsi:type="ecore:EClass" name="PrimaryAnnotation" eSuperTypes="#//Constraint"/>

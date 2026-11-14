@@ -5,8 +5,10 @@ package io.shardml.serializer;
 
 import com.google.inject.Inject;
 import io.shardml.services.SQLGrammarAccess;
+import io.shardml.sql.Char;
 import io.shardml.sql.Column;
 import io.shardml.sql.NotNull;
+import io.shardml.sql.Numeric;
 import io.shardml.sql.PrimaryAnnotation;
 import io.shardml.sql.PrimaryKey;
 import io.shardml.sql.Schema;
@@ -22,9 +24,7 @@ import org.eclipse.xtext.Action;
 import org.eclipse.xtext.Parameter;
 import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.serializer.ISerializationContext;
-import org.eclipse.xtext.serializer.acceptor.SequenceFeeder;
 import org.eclipse.xtext.serializer.sequencer.AbstractDelegatingSemanticSequencer;
-import org.eclipse.xtext.serializer.sequencer.ITransientValueService.ValueTransient;
 
 @SuppressWarnings("all")
 public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
@@ -40,11 +40,17 @@ public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
 		Set<Parameter> parameters = context.getEnabledBooleanParameters();
 		if (epackage == SqlPackage.eINSTANCE)
 			switch (semanticObject.eClass().getClassifierID()) {
+			case SqlPackage.CHAR:
+				sequence_Char(context, (Char) semanticObject); 
+				return; 
 			case SqlPackage.COLUMN:
 				sequence_Column(context, (Column) semanticObject); 
 				return; 
 			case SqlPackage.NOT_NULL:
 				sequence_NotNull(context, (NotNull) semanticObject); 
+				return; 
+			case SqlPackage.NUMERIC:
+				sequence_Numeric(context, (Numeric) semanticObject); 
 				return; 
 			case SqlPackage.PRIMARY_ANNOTATION:
 				sequence_PrimaryAnnotation(context, (PrimaryAnnotation) semanticObject); 
@@ -75,10 +81,36 @@ public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
 	/**
 	 * <pre>
 	 * Contexts:
+	 *     Char returns Char
+	 *
+	 * Constraint:
+	 *     (character?='CHARACTER'? size=INT)
+	 * </pre>
+	 */
+	protected void sequence_Char(ISerializationContext context, Char semanticObject) {
+		genericSequencer.createSequence(context, semanticObject);
+	}
+	
+	
+	/**
+	 * <pre>
+	 * Contexts:
 	 *     Column returns Column
 	 *
 	 * Constraint:
-	 *     (name=Name (simpleType=AllTypes | varchar=Varchar) constraint+=Constraint*)
+	 *     (
+	 *         name=Name 
+	 *         (
+	 *             simpleType=AllTypes | 
+	 *             varchar=Varchar | 
+	 *             numeric=Numeric | 
+	 *             char=Char | 
+	 *             simpleType=DoublePrecision | 
+	 *             simpleType=ZoneNoTz | 
+	 *             simpleType=ZoneTz
+	 *         ) 
+	 *         constraint+=Constraint*
+	 *     )
 	 * </pre>
 	 */
 	protected void sequence_Column(ISerializationContext context, Column semanticObject) {
@@ -97,6 +129,20 @@ public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
 	 * </pre>
 	 */
 	protected void sequence_NotNull(ISerializationContext context, NotNull semanticObject) {
+		genericSequencer.createSequence(context, semanticObject);
+	}
+	
+	
+	/**
+	 * <pre>
+	 * Contexts:
+	 *     Numeric returns Numeric
+	 *
+	 * Constraint:
+	 *     (decimal?='DECIMAL'? precision=INT scale=INT?)
+	 * </pre>
+	 */
+	protected void sequence_Numeric(ISerializationContext context, Numeric semanticObject) {
 		genericSequencer.createSequence(context, semanticObject);
 	}
 	
@@ -202,17 +248,11 @@ public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
 	 *     Varchar returns Varchar
 	 *
 	 * Constraint:
-	 *     size=INT
+	 *     (varying?='CHARACTER'? size=INT)
 	 * </pre>
 	 */
 	protected void sequence_Varchar(ISerializationContext context, Varchar semanticObject) {
-		if (errorAcceptor != null) {
-			if (transientValues.isValueTransient(semanticObject, SqlPackage.Literals.VARCHAR__SIZE) == ValueTransient.YES)
-				errorAcceptor.accept(diagnosticProvider.createFeatureValueMissing(semanticObject, SqlPackage.Literals.VARCHAR__SIZE));
-		}
-		SequenceFeeder feeder = createSequencerFeeder(context, semanticObject);
-		feeder.accept(grammarAccess.getVarcharAccess().getSizeINTTerminalRuleCall_2_0(), semanticObject.getSize());
-		feeder.finish();
+		genericSequencer.createSequence(context, semanticObject);
 	}
 	
 	

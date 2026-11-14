@@ -126,8 +126,8 @@ public class SqlKeywordTest {
 					failures.add(word + " quoted: the name is not kept as written");
 			}
 		}
-		// the six reserved words of the grammar today
-		Assertions.assertEquals(List.of("CREATE", "NOT", "NULL", "PRIMARY", "TABLE", "UNIQUE"), reserved);
+		// the reserved words of the grammar today: step 3 added WITH (TIMESTAMP WITH TIME ZONE)
+		Assertions.assertEquals(List.of("CREATE", "NOT", "NULL", "PRIMARY", "TABLE", "UNIQUE", "WITH"), reserved);
 		Assertions.assertEquals(List.of(), failures);
 	}
 

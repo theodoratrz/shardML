@@ -40,7 +40,9 @@ import io.shardml.validation.ImportedSchemaValidation;
 // before SqlTypes, `code CHAR(2) NOT NULL` (CHAR is not in the grammar yet) passed
 // `shardml validate` and was generated as `code INT`, its NOT NULL and primary key gone. Every
 // reader of column types is checked here: SqlTypes, SchemaFacts, SHML_027, SHML_021, the
-// generator, and the validation of the imported schema the CLI reports.
+// generator, and the validation of the imported schema the CLI reports. Since step 3, CHAR(2) is a
+// type (testCharIsNowReadAsChar), so the unparsed type here is INTERVAL, still not in the grammar,
+// and Column.simpleType is unsettable, so the model itself says no type was parsed.
 @ExtendWith(InjectionExtension.class)
 @InjectWith(ShardMLInjectorProvider.class)
 public class ColumnTypeReadersTest {
@@ -106,10 +108,12 @@ public class ColumnTypeReadersTest {
 
 	@Test
 	public void testUnparsedTypeIsNeverInt() throws Exception {
-		Model model = parse("CHAR(2)");
+		Model model = parse("INTERVAL");
 		Column code = column(model, "t", "code");
-		// the trap this test guards against: the recovered column reads as INT through EMF
+		// the trap this test guards against: the recovered column reads as INT through EMF's getter,
+		// and since step 3 the model says the value was never set
 		Assertions.assertEquals(AllTypes.INT, code.getSimpleType());
+		Assertions.assertFalse(code.isSetSimpleType());
 
 		// SqlTypes and SchemaFacts: UNKNOWN, not INT
 		Assertions.assertEquals(Base.UNKNOWN, SqlTypes.of(code).base());
@@ -173,7 +177,7 @@ public class ColumnTypeReadersTest {
 		cases.put("CREATE TABLE t ( text, id INT )", "text");
 		cases.put("CREATE TABLE t ( date PRIMARY KEY )", "date");
 		cases.put("CREATE TABLE t ( x \"INT\" )", "x");
-		cases.put("CREATE TABLE t ( x integer NOT NULL )", "x"); // INTEGER arrives in step 3
+		cases.put("CREATE TABLE t ( x interval NOT NULL )", "x"); // was integer, a type since step 3
 		cases.put("CREATE TABLE t ( x VARCHAR )", "x");
 		int n = 0;
 		int checked = 0;
@@ -198,9 +202,31 @@ public class ColumnTypeReadersTest {
 	}
 
 	@Test
+	public void testCharIsNowReadAsChar() throws Exception {
+		// the column that started this test class: `code CHAR(2) NOT NULL`, generated as `code INT`
+		// before step 1. Since step 3 it is a CHAR(2), with its NOT NULL and its primary key
+		Model model = parse("CHAR(2)");
+		Column code = column(model, "t", "code");
+		Assertions.assertEquals(Base.BPCHAR, SqlTypes.of(code).base());
+		Assertions.assertEquals("CHAR(2)", SqlTypes.of(code).spelling());
+		Assertions.assertEquals(Base.BPCHAR, SchemaFacts.of(ImportedSchema.of(model)).get("t").column("code").type().base());
+		Assertions.assertTrue(ImportedSchemaValidation.issues(model.eResource()).isEmpty());
+
+		List<Issue> issues = modelIssues(model);
+		Assertions.assertTrue(issues.stream().anyMatch(i -> "SHML_027".equals(i.getCode()) && i.getMessage().startsWith(
+				"Foreign key t.code is CHAR(2), but the shard key it references, p.id, is BIGINT.")), issues.toString());
+
+		InMemoryFileSystemAccess fsa = new InMemoryFileSystemAccess();
+		generator.doGenerate(model.eResource(), fsa, new GeneratorContext());
+		String schemaSql = fsa.getTextFiles().get("DEFAULT_OUTPUTd-schema.sql").toString();
+		Assertions.assertTrue(schemaSql.contains("    code CHAR(2) NOT NULL,\n"), schemaSql);
+		Assertions.assertTrue(schemaSql.contains("    PRIMARY KEY (code, id)\n"), schemaSql);
+	}
+
+	@Test
 	public void testExplicitIntIsInt() throws Exception {
 		// an explicit INT equals the enum default, so eIsSet cannot tell it from a missing type;
-		// SqlTypes looks at the parse instead
+		// Column.simpleType is unsettable, and isSetSimpleType() can
 		Model model = parse("VARCHAR(2)");
 		Column id = column(model, "t", "id");
 		Assertions.assertEquals(Base.INT4, SqlTypes.of(id).base());

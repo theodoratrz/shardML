@@ -101,6 +101,20 @@ public class SqlSwitch<T> extends Switch<T>
         if (result == null) result = defaultCase(theEObject);
         return result;
       }
+      case SqlPackage.NUMERIC:
+      {
+        Numeric numeric = (Numeric)theEObject;
+        T result = caseNumeric(numeric);
+        if (result == null) result = defaultCase(theEObject);
+        return result;
+      }
+      case SqlPackage.CHAR:
+      {
+        Char char_ = (Char)theEObject;
+        T result = caseChar(char_);
+        if (result == null) result = defaultCase(theEObject);
+        return result;
+      }
       case SqlPackage.CONSTRAINT:
       {
         Constraint constraint = (Constraint)theEObject;
@@ -219,6 +233,38 @@ public class SqlSwitch<T> extends Switch<T>
    * @generated
    */
   public T caseVarchar(Varchar object)
+  {
+    return null;
+  }
+
+  /**
+   * Returns the result of interpreting the object as an instance of '<em>Numeric</em>'.
+   * <!-- begin-user-doc -->
+   * This implementation returns null;
+   * returning a non-null result will terminate the switch.
+   * <!-- end-user-doc -->
+   * @param object the target of the switch.
+   * @return the result of interpreting the object as an instance of '<em>Numeric</em>'.
+   * @see #doSwitch(org.eclipse.emf.ecore.EObject) doSwitch(EObject)
+   * @generated
+   */
+  public T caseNumeric(Numeric object)
+  {
+    return null;
+  }
+
+  /**
+   * Returns the result of interpreting the object as an instance of '<em>Char</em>'.
+   * <!-- begin-user-doc -->
+   * This implementation returns null;
+   * returning a non-null result will terminate the switch.
+   * <!-- end-user-doc -->
+   * @param object the target of the switch.
+   * @return the result of interpreting the object as an instance of '<em>Char</em>'.
+   * @see #doSwitch(org.eclipse.emf.ecore.EObject) doSwitch(EObject)
+   * @generated
+   */
+  public T caseChar(Char object)
   {
     return null;
   }

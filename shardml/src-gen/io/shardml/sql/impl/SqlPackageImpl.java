@@ -4,9 +4,11 @@
 package io.shardml.sql.impl;
 
 import io.shardml.sql.AllTypes;
+import io.shardml.sql.Char;
 import io.shardml.sql.Column;
 import io.shardml.sql.Constraint;
 import io.shardml.sql.NotNull;
+import io.shardml.sql.Numeric;
 import io.shardml.sql.PrimaryAnnotation;
 import io.shardml.sql.PrimaryKey;
 import io.shardml.sql.Schema;
@@ -61,6 +63,20 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
    * @generated
    */
   private EClass varcharEClass = null;
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  private EClass numericEClass = null;
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  private EClass charEClass = null;
 
   /**
    * <!-- begin-user-doc -->
@@ -318,9 +334,31 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
    * @generated
    */
   @Override
-  public EReference getColumn_Constraint()
+  public EReference getColumn_Numeric()
   {
     return (EReference)columnEClass.getEStructuralFeatures().get(3);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EReference getColumn_Char()
+  {
+    return (EReference)columnEClass.getEStructuralFeatures().get(4);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EReference getColumn_Constraint()
+  {
+    return (EReference)columnEClass.getEStructuralFeatures().get(5);
   }
 
   /**
@@ -340,9 +378,97 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
    * @generated
    */
   @Override
-  public EAttribute getVarchar_Size()
+  public EAttribute getVarchar_Varying()
   {
     return (EAttribute)varcharEClass.getEStructuralFeatures().get(0);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getVarchar_Size()
+  {
+    return (EAttribute)varcharEClass.getEStructuralFeatures().get(1);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EClass getNumeric()
+  {
+    return numericEClass;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getNumeric_Decimal()
+  {
+    return (EAttribute)numericEClass.getEStructuralFeatures().get(0);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getNumeric_Precision()
+  {
+    return (EAttribute)numericEClass.getEStructuralFeatures().get(1);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getNumeric_Scale()
+  {
+    return (EAttribute)numericEClass.getEStructuralFeatures().get(2);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EClass getChar()
+  {
+    return charEClass;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getChar_Character()
+  {
+    return (EAttribute)charEClass.getEStructuralFeatures().get(0);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getChar_Size()
+  {
+    return (EAttribute)charEClass.getEStructuralFeatures().get(1);
   }
 
   /**
@@ -489,10 +615,22 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
     createEAttribute(columnEClass, COLUMN__NAME);
     createEAttribute(columnEClass, COLUMN__SIMPLE_TYPE);
     createEReference(columnEClass, COLUMN__VARCHAR);
+    createEReference(columnEClass, COLUMN__NUMERIC);
+    createEReference(columnEClass, COLUMN__CHAR);
     createEReference(columnEClass, COLUMN__CONSTRAINT);
 
     varcharEClass = createEClass(VARCHAR);
+    createEAttribute(varcharEClass, VARCHAR__VARYING);
     createEAttribute(varcharEClass, VARCHAR__SIZE);
+
+    numericEClass = createEClass(NUMERIC);
+    createEAttribute(numericEClass, NUMERIC__DECIMAL);
+    createEAttribute(numericEClass, NUMERIC__PRECISION);
+    createEAttribute(numericEClass, NUMERIC__SCALE);
+
+    charEClass = createEClass(CHAR);
+    createEAttribute(charEClass, CHAR__CHARACTER);
+    createEAttribute(charEClass, CHAR__SIZE);
 
     constraintEClass = createEClass(CONSTRAINT);
 
@@ -561,12 +699,24 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
 
     initEClass(columnEClass, Column.class, "Column", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
     initEAttribute(getColumn_Name(), ecorePackage.getEString(), "name", null, 0, 1, Column.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
-    initEAttribute(getColumn_SimpleType(), this.getAllTypes(), "simpleType", null, 0, 1, Column.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getColumn_SimpleType(), this.getAllTypes(), "simpleType", null, 0, 1, Column.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
     initEReference(getColumn_Varchar(), this.getVarchar(), null, "varchar", null, 0, 1, Column.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEReference(getColumn_Numeric(), this.getNumeric(), null, "numeric", null, 0, 1, Column.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEReference(getColumn_Char(), this.getChar(), null, "char", null, 0, 1, Column.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
     initEReference(getColumn_Constraint(), this.getConstraint(), null, "constraint", null, 0, -1, Column.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
     initEClass(varcharEClass, Varchar.class, "Varchar", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
-    initEAttribute(getVarchar_Size(), ecorePackage.getEInt(), "size", null, 0, 1, Varchar.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getVarchar_Varying(), ecorePackage.getEBoolean(), "varying", null, 0, 1, Varchar.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getVarchar_Size(), ecorePackage.getEInt(), "size", null, 0, 1, Varchar.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+
+    initEClass(numericEClass, Numeric.class, "Numeric", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
+    initEAttribute(getNumeric_Decimal(), ecorePackage.getEBoolean(), "decimal", null, 0, 1, Numeric.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getNumeric_Precision(), ecorePackage.getEInt(), "precision", null, 0, 1, Numeric.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getNumeric_Scale(), ecorePackage.getEInt(), "scale", null, 0, 1, Numeric.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+
+    initEClass(charEClass, Char.class, "Char", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
+    initEAttribute(getChar_Character(), ecorePackage.getEBoolean(), "character", null, 0, 1, Char.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getChar_Size(), ecorePackage.getEInt(), "size", null, 0, 1, Char.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
     initEClass(constraintEClass, Constraint.class, "Constraint", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
 
@@ -593,6 +743,17 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
     addEEnumLiteral(allTypesEEnum, AllTypes.DATE);
     addEEnumLiteral(allTypesEEnum, AllTypes.BOOLEAN);
     addEEnumLiteral(allTypesEEnum, AllTypes.TEXT);
+    addEEnumLiteral(allTypesEEnum, AllTypes.INTEGER);
+    addEEnumLiteral(allTypesEEnum, AllTypes.SMALLINT);
+    addEEnumLiteral(allTypesEEnum, AllTypes.SERIAL);
+    addEEnumLiteral(allTypesEEnum, AllTypes.BIGSERIAL);
+    addEEnumLiteral(allTypesEEnum, AllTypes.NUMERIC);
+    addEEnumLiteral(allTypesEEnum, AllTypes.REAL);
+    addEEnumLiteral(allTypesEEnum, AllTypes.FLOAT);
+    addEEnumLiteral(allTypesEEnum, AllTypes.TIMESTAMPTZ);
+    addEEnumLiteral(allTypesEEnum, AllTypes.JSONB);
+    addEEnumLiteral(allTypesEEnum, AllTypes.BYTEA);
+    addEEnumLiteral(allTypesEEnum, AllTypes.DOUBLE_PRECISION);
 
     // Create resource
     createResource(eNS_URI);

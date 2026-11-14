@@ -70,6 +70,8 @@ public class SqlFactoryImpl extends EFactoryImpl implements SqlFactory
       case SqlPackage.TABLE: return createTable();
       case SqlPackage.COLUMN: return createColumn();
       case SqlPackage.VARCHAR: return createVarchar();
+      case SqlPackage.NUMERIC: return createNumeric();
+      case SqlPackage.CHAR: return createChar();
       case SqlPackage.CONSTRAINT: return createConstraint();
       case SqlPackage.PRIMARY_ANNOTATION: return createPrimaryAnnotation();
       case SqlPackage.UNIQUE_ANNOTATION: return createUniqueAnnotation();
@@ -162,6 +164,30 @@ public class SqlFactoryImpl extends EFactoryImpl implements SqlFactory
   {
     VarcharImpl varchar = new VarcharImpl();
     return varchar;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public Numeric createNumeric()
+  {
+    NumericImpl numeric = new NumericImpl();
+    return numeric;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public Char createChar()
+  {
+    CharImpl char_ = new CharImpl();
+    return char_;
   }
 
   /**

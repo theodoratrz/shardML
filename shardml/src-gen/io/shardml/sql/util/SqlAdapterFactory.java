@@ -96,6 +96,16 @@ public class SqlAdapterFactory extends AdapterFactoryImpl
         return createVarcharAdapter();
       }
       @Override
+      public Adapter caseNumeric(Numeric object)
+      {
+        return createNumericAdapter();
+      }
+      @Override
+      public Adapter caseChar(Char object)
+      {
+        return createCharAdapter();
+      }
+      @Override
       public Adapter caseConstraint(Constraint object)
       {
         return createConstraintAdapter();
@@ -208,6 +218,36 @@ public class SqlAdapterFactory extends AdapterFactoryImpl
    * @generated
    */
   public Adapter createVarcharAdapter()
+  {
+    return null;
+  }
+
+  /**
+   * Creates a new adapter for an object of class '{@link io.shardml.sql.Numeric <em>Numeric</em>}'.
+   * <!-- begin-user-doc -->
+   * This default implementation returns null so that we can easily ignore cases;
+   * it's useful to ignore a case when inheritance will catch all the cases anyway.
+   * <!-- end-user-doc -->
+   * @return the new adapter.
+   * @see io.shardml.sql.Numeric
+   * @generated
+   */
+  public Adapter createNumericAdapter()
+  {
+    return null;
+  }
+
+  /**
+   * Creates a new adapter for an object of class '{@link io.shardml.sql.Char <em>Char</em>}'.
+   * <!-- begin-user-doc -->
+   * This default implementation returns null so that we can easily ignore cases;
+   * it's useful to ignore a case when inheritance will catch all the cases anyway.
+   * <!-- end-user-doc -->
+   * @return the new adapter.
+   * @see io.shardml.sql.Char
+   * @generated
+   */
+  public Adapter createCharAdapter()
   {
     return null;
   }

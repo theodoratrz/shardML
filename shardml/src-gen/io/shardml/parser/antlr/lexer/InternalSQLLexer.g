@@ -11,33 +11,71 @@ package io.shardml.parser.antlr.lexer;
 import org.eclipse.xtext.parser.antlr.Lexer;
 }
 
+TIMESTAMPTZ : ('T'|'t')('I'|'i')('M'|'m')('E'|'e')('S'|'s')('T'|'t')('A'|'a')('M'|'m')('P'|'p')('T'|'t')('Z'|'z');
+
+BIGSERIAL : ('B'|'b')('I'|'i')('G'|'g')('S'|'s')('E'|'e')('R'|'r')('I'|'i')('A'|'a')('L'|'l');
+
+CHARACTER : ('C'|'c')('H'|'h')('A'|'a')('R'|'r')('A'|'a')('C'|'c')('T'|'t')('E'|'e')('R'|'r');
+
+PRECISION : ('P'|'p')('R'|'r')('E'|'e')('C'|'c')('I'|'i')('S'|'s')('I'|'i')('O'|'o')('N'|'n');
+
 TIMESTAMP : ('T'|'t')('I'|'i')('M'|'m')('E'|'e')('S'|'s')('T'|'t')('A'|'a')('M'|'m')('P'|'p');
+
+SMALLINT : ('S'|'s')('M'|'m')('A'|'a')('L'|'l')('L'|'l')('I'|'i')('N'|'n')('T'|'t');
 
 BOOLEAN : ('B'|'b')('O'|'o')('O'|'o')('L'|'l')('E'|'e')('A'|'a')('N'|'n');
 
 DECIMAL : ('D'|'d')('E'|'e')('C'|'c')('I'|'i')('M'|'m')('A'|'a')('L'|'l');
 
+INTEGER : ('I'|'i')('N'|'n')('T'|'t')('E'|'e')('G'|'g')('E'|'e')('R'|'r');
+
+NUMERIC : ('N'|'n')('U'|'u')('M'|'m')('E'|'e')('R'|'r')('I'|'i')('C'|'c');
+
 PRIMARY : ('P'|'p')('R'|'r')('I'|'i')('M'|'m')('A'|'a')('R'|'r')('Y'|'y');
 
 VARCHAR : ('V'|'v')('A'|'a')('R'|'r')('C'|'c')('H'|'h')('A'|'a')('R'|'r');
+
+VARYING : ('V'|'v')('A'|'a')('R'|'r')('Y'|'y')('I'|'i')('N'|'n')('G'|'g');
+
+WITHOUT : ('W'|'w')('I'|'i')('T'|'t')('H'|'h')('O'|'o')('U'|'u')('T'|'t');
 
 BIGINT : ('B'|'b')('I'|'i')('G'|'g')('I'|'i')('N'|'n')('T'|'t');
 
 CREATE : ('C'|'c')('R'|'r')('E'|'e')('A'|'a')('T'|'t')('E'|'e');
 
+DOUBLE : ('D'|'d')('O'|'o')('U'|'u')('B'|'b')('L'|'l')('E'|'e');
+
 EXISTS : ('E'|'e')('X'|'x')('I'|'i')('S'|'s')('T'|'t')('S'|'s');
+
+SERIAL : ('S'|'s')('E'|'e')('R'|'r')('I'|'i')('A'|'a')('L'|'l');
 
 UNIQUE : ('U'|'u')('N'|'n')('I'|'i')('Q'|'q')('U'|'u')('E'|'e');
 
+BYTEA : ('B'|'b')('Y'|'y')('T'|'t')('E'|'e')('A'|'a');
+
+FLOAT : ('F'|'f')('L'|'l')('O'|'o')('A'|'a')('T'|'t');
+
+JSONB : ('J'|'j')('S'|'s')('O'|'o')('N'|'n')('B'|'b');
+
 TABLE : ('T'|'t')('A'|'a')('B'|'b')('L'|'l')('E'|'e');
+
+CHAR : ('C'|'c')('H'|'h')('A'|'a')('R'|'r');
 
 DATE : ('D'|'d')('A'|'a')('T'|'t')('E'|'e');
 
 NULL : ('N'|'n')('U'|'u')('L'|'l')('L'|'l');
 
+REAL : ('R'|'r')('E'|'e')('A'|'a')('L'|'l');
+
 TEXT : ('T'|'t')('E'|'e')('X'|'x')('T'|'t');
 
+TIME : ('T'|'t')('I'|'i')('M'|'m')('E'|'e');
+
 UUID : ('U'|'u')('U'|'u')('I'|'i')('D'|'d');
+
+WITH : ('W'|'w')('I'|'i')('T'|'t')('H'|'h');
+
+ZONE : ('Z'|'z')('O'|'o')('N'|'n')('E'|'e');
 
 INT : ('I'|'i')('N'|'n')('T'|'t');
 

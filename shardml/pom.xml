@@ -31,6 +31,14 @@
             <groupId>org.antlr</groupId>
             <artifactId>antlr-runtime</artifactId>
         </dependency>
+        <!-- Only to compile build-src/ (the SQL Ecore post-processor, step 0b below). provided:
+             not in the runtime jar's dependencies, not shaded into the CLI. -->
+        <dependency>
+            <groupId>org.eclipse.xtext</groupId>
+            <artifactId>org.eclipse.xtext.xtext.generator</artifactId>
+            <version>${xtext.version}</version>
+            <scope>provided</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -82,6 +90,31 @@
                                     <directory>${project.basedir}/../shardml.tests/src-gen</directory>
                                 </fileset>
                             </filesets>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- 0b. Compile build-src/ (io.shardml.build: SQLLanguage, SqlEcorePostProcessor) into
+                     target/build-classes for the SQL workflow below. Declared before the exec plugin
+                     so it runs first within generate-sources. build-src/ is not a source root of
+                     the module, so these classes never reach the runtime jar. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>compile-build-src</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <compileSourceRoots>
+                                <compileSourceRoot>${project.basedir}/build-src</compileSourceRoot>
+                            </compileSourceRoots>
+                            <outputDirectory>${project.build.directory}/build-classes</outputDirectory>
+                            <generatedSourcesDirectory>${project.build.directory}/generated-sources/build-annotations</generatedSourcesDirectory>
                         </configuration>
                     </execution>
                 </executions>
@@ -146,6 +179,8 @@
                     <!-- target/classes is still empty at generate-sources time. -->
                     <additionalClasspathElements>
                         <additionalClasspathElement>${project.basedir}/src</additionalClasspathElement>
+                        <!-- io.shardml.build, compiled in step 0b. -->
+                        <additionalClasspathElement>${project.build.directory}/build-classes</additionalClasspathElement>
                     </additionalClasspathElements>
                     <cleanupDaemonThreads>false</cleanupDaemonThreads>
                 </configuration>

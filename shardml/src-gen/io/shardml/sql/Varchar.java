@@ -14,6 +14,7 @@ import org.eclipse.emf.ecore.EObject;
  * The following features are supported:
  * </p>
  * <ul>
+ *   <li>{@link io.shardml.sql.Varchar#isVarying <em>Varying</em>}</li>
  *   <li>{@link io.shardml.sql.Varchar#getSize <em>Size</em>}</li>
  * </ul>
  *
@@ -24,13 +25,37 @@ import org.eclipse.emf.ecore.EObject;
 public interface Varchar extends EObject
 {
   /**
+   * Returns the value of the '<em><b>Varying</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the value of the '<em>Varying</em>' attribute.
+   * @see #setVarying(boolean)
+   * @see io.shardml.sql.SqlPackage#getVarchar_Varying()
+   * @model
+   * @generated
+   */
+  boolean isVarying();
+
+  /**
+   * Sets the value of the '{@link io.shardml.sql.Varchar#isVarying <em>Varying</em>}' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @param value the new value of the '<em>Varying</em>' attribute.
+   * @see #isVarying()
+   * @generated
+   */
+  void setVarying(boolean value);
+
+  /**
    * Returns the value of the '<em><b>Size</b></em>' attribute.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
    * @return the value of the '<em>Size</em>' attribute.
+   * @see #isSetSize()
+   * @see #unsetSize()
    * @see #setSize(int)
    * @see io.shardml.sql.SqlPackage#getVarchar_Size()
-   * @model
+   * @model unsettable="true"
    * @generated
    */
   int getSize();
@@ -40,9 +65,34 @@ public interface Varchar extends EObject
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
    * @param value the new value of the '<em>Size</em>' attribute.
+   * @see #isSetSize()
+   * @see #unsetSize()
    * @see #getSize()
    * @generated
    */
   void setSize(int value);
+
+  /**
+   * Unsets the value of the '{@link io.shardml.sql.Varchar#getSize <em>Size</em>}' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #isSetSize()
+   * @see #getSize()
+   * @see #setSize(int)
+   * @generated
+   */
+  void unsetSize();
+
+  /**
+   * Returns whether the value of the '{@link io.shardml.sql.Varchar#getSize <em>Size</em>}' attribute is set.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return whether the value of the '<em>Size</em>' attribute is set.
+   * @see #unsetSize()
+   * @see #getSize()
+   * @see #setSize(int)
+   * @generated
+   */
+  boolean isSetSize();
 
 } // Varchar

@@ -4,8 +4,10 @@
 package io.shardml.sql.impl;
 
 import io.shardml.sql.AllTypes;
+import io.shardml.sql.Char;
 import io.shardml.sql.Column;
 import io.shardml.sql.Constraint;
+import io.shardml.sql.Numeric;
 import io.shardml.sql.SqlPackage;
 import io.shardml.sql.Varchar;
 
@@ -36,6 +38,8 @@ import org.eclipse.emf.ecore.util.InternalEList;
  *   <li>{@link io.shardml.sql.impl.ColumnImpl#getName <em>Name</em>}</li>
  *   <li>{@link io.shardml.sql.impl.ColumnImpl#getSimpleType <em>Simple Type</em>}</li>
  *   <li>{@link io.shardml.sql.impl.ColumnImpl#getVarchar <em>Varchar</em>}</li>
+ *   <li>{@link io.shardml.sql.impl.ColumnImpl#getNumeric <em>Numeric</em>}</li>
+ *   <li>{@link io.shardml.sql.impl.ColumnImpl#getChar <em>Char</em>}</li>
  *   <li>{@link io.shardml.sql.impl.ColumnImpl#getConstraint <em>Constraint</em>}</li>
  * </ul>
  *
@@ -84,6 +88,15 @@ public class ColumnImpl extends MinimalEObjectImpl.Container implements Column
   protected AllTypes simpleType = SIMPLE_TYPE_EDEFAULT;
 
   /**
+   * This is true if the Simple Type attribute has been set.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  protected boolean simpleTypeESet;
+
+  /**
    * The cached value of the '{@link #getVarchar() <em>Varchar</em>}' containment reference.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
@@ -92,6 +105,26 @@ public class ColumnImpl extends MinimalEObjectImpl.Container implements Column
    * @ordered
    */
   protected Varchar varchar;
+
+  /**
+   * The cached value of the '{@link #getNumeric() <em>Numeric</em>}' containment reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #getNumeric()
+   * @generated
+   * @ordered
+   */
+  protected Numeric numeric;
+
+  /**
+   * The cached value of the '{@link #getChar() <em>Char</em>}' containment reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #getChar()
+   * @generated
+   * @ordered
+   */
+  protected Char char_;
 
   /**
    * The cached value of the '{@link #getConstraint() <em>Constraint</em>}' containment reference list.
@@ -170,8 +203,37 @@ public class ColumnImpl extends MinimalEObjectImpl.Container implements Column
   {
     AllTypes oldSimpleType = simpleType;
     simpleType = newSimpleType == null ? SIMPLE_TYPE_EDEFAULT : newSimpleType;
+    boolean oldSimpleTypeESet = simpleTypeESet;
+    simpleTypeESet = true;
     if (eNotificationRequired())
-      eNotify(new ENotificationImpl(this, Notification.SET, SqlPackage.COLUMN__SIMPLE_TYPE, oldSimpleType, simpleType));
+      eNotify(new ENotificationImpl(this, Notification.SET, SqlPackage.COLUMN__SIMPLE_TYPE, oldSimpleType, simpleType, !oldSimpleTypeESet));
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public void unsetSimpleType()
+  {
+    AllTypes oldSimpleType = simpleType;
+    boolean oldSimpleTypeESet = simpleTypeESet;
+    simpleType = SIMPLE_TYPE_EDEFAULT;
+    simpleTypeESet = false;
+    if (eNotificationRequired())
+      eNotify(new ENotificationImpl(this, Notification.UNSET, SqlPackage.COLUMN__SIMPLE_TYPE, oldSimpleType, SIMPLE_TYPE_EDEFAULT, oldSimpleTypeESet));
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public boolean isSetSimpleType()
+  {
+    return simpleTypeESet;
   }
 
   /**
@@ -230,6 +292,106 @@ public class ColumnImpl extends MinimalEObjectImpl.Container implements Column
    * @generated
    */
   @Override
+  public Numeric getNumeric()
+  {
+    return numeric;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  public NotificationChain basicSetNumeric(Numeric newNumeric, NotificationChain msgs)
+  {
+    Numeric oldNumeric = numeric;
+    numeric = newNumeric;
+    if (eNotificationRequired())
+    {
+      ENotificationImpl notification = new ENotificationImpl(this, Notification.SET, SqlPackage.COLUMN__NUMERIC, oldNumeric, newNumeric);
+      if (msgs == null) msgs = notification; else msgs.add(notification);
+    }
+    return msgs;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public void setNumeric(Numeric newNumeric)
+  {
+    if (newNumeric != numeric)
+    {
+      NotificationChain msgs = null;
+      if (numeric != null)
+        msgs = ((InternalEObject)numeric).eInverseRemove(this, EOPPOSITE_FEATURE_BASE - SqlPackage.COLUMN__NUMERIC, null, msgs);
+      if (newNumeric != null)
+        msgs = ((InternalEObject)newNumeric).eInverseAdd(this, EOPPOSITE_FEATURE_BASE - SqlPackage.COLUMN__NUMERIC, null, msgs);
+      msgs = basicSetNumeric(newNumeric, msgs);
+      if (msgs != null) msgs.dispatch();
+    }
+    else if (eNotificationRequired())
+      eNotify(new ENotificationImpl(this, Notification.SET, SqlPackage.COLUMN__NUMERIC, newNumeric, newNumeric));
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public Char getChar()
+  {
+    return char_;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  public NotificationChain basicSetChar(Char newChar, NotificationChain msgs)
+  {
+    Char oldChar = char_;
+    char_ = newChar;
+    if (eNotificationRequired())
+    {
+      ENotificationImpl notification = new ENotificationImpl(this, Notification.SET, SqlPackage.COLUMN__CHAR, oldChar, newChar);
+      if (msgs == null) msgs = notification; else msgs.add(notification);
+    }
+    return msgs;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public void setChar(Char newChar)
+  {
+    if (newChar != char_)
+    {
+      NotificationChain msgs = null;
+      if (char_ != null)
+        msgs = ((InternalEObject)char_).eInverseRemove(this, EOPPOSITE_FEATURE_BASE - SqlPackage.COLUMN__CHAR, null, msgs);
+      if (newChar != null)
+        msgs = ((InternalEObject)newChar).eInverseAdd(this, EOPPOSITE_FEATURE_BASE - SqlPackage.COLUMN__CHAR, null, msgs);
+      msgs = basicSetChar(newChar, msgs);
+      if (msgs != null) msgs.dispatch();
+    }
+    else if (eNotificationRequired())
+      eNotify(new ENotificationImpl(this, Notification.SET, SqlPackage.COLUMN__CHAR, newChar, newChar));
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
   public EList<Constraint> getConstraint()
   {
     if (constraint == null)
@@ -251,6 +413,10 @@ public class ColumnImpl extends MinimalEObjectImpl.Container implements Column
     {
       case SqlPackage.COLUMN__VARCHAR:
         return basicSetVarchar(null, msgs);
+      case SqlPackage.COLUMN__NUMERIC:
+        return basicSetNumeric(null, msgs);
+      case SqlPackage.COLUMN__CHAR:
+        return basicSetChar(null, msgs);
       case SqlPackage.COLUMN__CONSTRAINT:
         return ((InternalEList<?>)getConstraint()).basicRemove(otherEnd, msgs);
     }
@@ -273,6 +439,10 @@ public class ColumnImpl extends MinimalEObjectImpl.Container implements Column
         return getSimpleType();
       case SqlPackage.COLUMN__VARCHAR:
         return getVarchar();
+      case SqlPackage.COLUMN__NUMERIC:
+        return getNumeric();
+      case SqlPackage.COLUMN__CHAR:
+        return getChar();
       case SqlPackage.COLUMN__CONSTRAINT:
         return getConstraint();
     }
@@ -299,6 +469,12 @@ public class ColumnImpl extends MinimalEObjectImpl.Container implements Column
       case SqlPackage.COLUMN__VARCHAR:
         setVarchar((Varchar)newValue);
         return;
+      case SqlPackage.COLUMN__NUMERIC:
+        setNumeric((Numeric)newValue);
+        return;
+      case SqlPackage.COLUMN__CHAR:
+        setChar((Char)newValue);
+        return;
       case SqlPackage.COLUMN__CONSTRAINT:
         getConstraint().clear();
         getConstraint().addAll((Collection<? extends Constraint>)newValue);
@@ -321,10 +497,16 @@ public class ColumnImpl extends MinimalEObjectImpl.Container implements Column
         setName(NAME_EDEFAULT);
         return;
       case SqlPackage.COLUMN__SIMPLE_TYPE:
-        setSimpleType(SIMPLE_TYPE_EDEFAULT);
+        unsetSimpleType();
         return;
       case SqlPackage.COLUMN__VARCHAR:
         setVarchar((Varchar)null);
+        return;
+      case SqlPackage.COLUMN__NUMERIC:
+        setNumeric((Numeric)null);
+        return;
+      case SqlPackage.COLUMN__CHAR:
+        setChar((Char)null);
         return;
       case SqlPackage.COLUMN__CONSTRAINT:
         getConstraint().clear();
@@ -346,9 +528,13 @@ public class ColumnImpl extends MinimalEObjectImpl.Container implements Column
       case SqlPackage.COLUMN__NAME:
         return NAME_EDEFAULT == null ? name != null : !NAME_EDEFAULT.equals(name);
       case SqlPackage.COLUMN__SIMPLE_TYPE:
-        return simpleType != SIMPLE_TYPE_EDEFAULT;
+        return isSetSimpleType();
       case SqlPackage.COLUMN__VARCHAR:
         return varchar != null;
+      case SqlPackage.COLUMN__NUMERIC:
+        return numeric != null;
+      case SqlPackage.COLUMN__CHAR:
+        return char_ != null;
       case SqlPackage.COLUMN__CONSTRAINT:
         return constraint != null && !constraint.isEmpty();
     }
@@ -369,7 +555,7 @@ public class ColumnImpl extends MinimalEObjectImpl.Container implements Column
     result.append(" (name: ");
     result.append(name);
     result.append(", simpleType: ");
-    result.append(simpleType);
+    if (simpleTypeESet) result.append(simpleType); else result.append("<unset>");
     result.append(')');
     return result.toString();
   }

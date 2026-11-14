@@ -34,19 +34,49 @@ Table:
 ;
 
 // supports zero or more constraints (primary key, unique, not null)
+// Column.simpleType is unsettable (io.shardml.build.SqlEcorePostProcessor, Plan-sql 11b (a)): a
+// column whose type did not parse has isSetSimpleType() false, instead of reading INT.
+// Multi-word types are spelled out here, and their last keyword carries the enum literal.
 Column:
-    name=Name (simpleType=AllTypes | varchar=Varchar) constraint += Constraint*
+	name=Name
+	( simpleType=AllTypes
+	| varchar=Varchar
+	| numeric=Numeric
+	| char=Char
+	| 'DOUBLE' simpleType=DoublePrecision
+	| 'TIMESTAMP' 'WITHOUT' 'TIME' simpleType=ZoneNoTz
+	| 'TIMESTAMP' 'WITH' 'TIME' simpleType=ZoneTz
+	)
+	constraint += Constraint*
 ;
 
-// explicit rule for varchar because of the size paramteter
+// The sized types. Each records which of its keywords was used, so it is written back as spelled.
+// Bare NUMERIC / DECIMAL are AllTypes literals; bare VARCHAR / CHAR are syntax errors here.
 Varchar:
-	'VARCHAR' '(' size=INT ')'
+	('VARCHAR' | varying?='CHARACTER' 'VARYING') '(' size=INT ')'
 ;
 
-// covers most common types
-enum AllTypes:
-    INT='INT'|BIGINT='BIGINT'|UUID='UUID'|DECIMAL='DECIMAL'|TIMESTAMP='TIMESTAMP'|DATE='DATE'|BOOLEAN='BOOLEAN'|TEXT='TEXT'
+Numeric:
+	(decimal?='DECIMAL' | 'NUMERIC') '(' precision=INT (',' scale=INT)? ')'
 ;
+
+Char:
+	(character?='CHARACTER' | 'CHAR') '(' size=INT ')'
+;
+
+// The single-keyword types. The first eight literals keep their place (INT stays ordinal 0); new
+// ones are appended. INT / INTEGER and FLOAT / DOUBLE PRECISION are separate literals so that
+// each is written back as spelled; SqlTypes knows which are the same PostgreSQL type.
+enum AllTypes:
+	INT='INT' | BIGINT='BIGINT' | UUID='UUID' | DECIMAL='DECIMAL' | TIMESTAMP='TIMESTAMP' | DATE='DATE' | BOOLEAN='BOOLEAN' | TEXT='TEXT'
+	| INTEGER='INTEGER' | SMALLINT='SMALLINT' | SERIAL='SERIAL' | BIGSERIAL='BIGSERIAL' | NUMERIC='NUMERIC'
+	| REAL='REAL' | FLOAT='FLOAT' | TIMESTAMPTZ='TIMESTAMPTZ' | JSONB='JSONB' | BYTEA='BYTEA'
+;
+
+// the last keyword of a multi-word type: DOUBLE PRECISION, TIMESTAMP WITH[OUT] TIME ZONE
+enum DoublePrecision returns AllTypes: DOUBLE_PRECISION='PRECISION';
+enum ZoneNoTz returns AllTypes: TIMESTAMP='ZONE';
+enum ZoneTz returns AllTypes: TIMESTAMPTZ='ZONE';
 
 // we use Xtext's forced type instantiation {Type} here
 // this is necessary because each constraint has no feature assignments
@@ -83,14 +113,18 @@ UniqueKey:
 // A table or column name: an identifier, a "quoted identifier", or a keyword of this grammar
 // that PostgreSQL accepts as a bare name (category U or C in pg_get_keywords(), or not a
 // PostgreSQL keyword at all). Reserved words (CREATE, TABLE, PRIMARY, UNIQUE, NOT, NULL) are
-// not names here either, as in PostgreSQL; quoted, they are. SqlKeywordTest checks this list
+// not names here either, as in PostgreSQL; quoted, they are. WITH (of TIMESTAMP WITH TIME ZONE) is
+// reserved too. SqlKeywordTest checks this list
 // against the PostgreSQL 17 keyword golden. Every word that starts a constraint is reserved,
 // so a column and a constraint are told apart by their first token.
 Name:
 	ID | QUOTED_ID
 	| 'KEY' | 'TEXT' | 'IF' | 'EXISTS'                                                   // U, U, U, C
 	| 'INT' | 'BIGINT' | 'DECIMAL' | 'TIMESTAMP' | 'BOOLEAN' | 'VARCHAR'                 // C
-	| 'UUID' | 'DATE'                                                                    // not PostgreSQL keywords
+	| 'INTEGER' | 'SMALLINT' | 'NUMERIC' | 'REAL' | 'FLOAT' | 'PRECISION'                // C
+	| 'CHAR' | 'CHARACTER' | 'TIME'                                                      // C
+	| 'DOUBLE' | 'VARYING' | 'WITHOUT' | 'ZONE'                                          // U
+	| 'UUID' | 'DATE' | 'SERIAL' | 'BIGSERIAL' | 'TIMESTAMPTZ' | 'JSONB' | 'BYTEA'       // not PostgreSQL keywords
 ;
 
 // PostgreSQL's identifier characters (ASCII); no ^ escape, a keyword is quoted instead

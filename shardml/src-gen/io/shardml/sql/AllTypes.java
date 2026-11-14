@@ -98,7 +98,117 @@ public enum AllTypes implements Enumerator
    * @generated
    * @ordered
    */
-  TEXT(7, "TEXT", "TEXT");
+  TEXT(7, "TEXT", "TEXT"),
+
+  /**
+   * The '<em><b>INTEGER</b></em>' literal object.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #INTEGER_VALUE
+   * @generated
+   * @ordered
+   */
+  INTEGER(8, "INTEGER", "INTEGER"),
+
+  /**
+   * The '<em><b>SMALLINT</b></em>' literal object.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #SMALLINT_VALUE
+   * @generated
+   * @ordered
+   */
+  SMALLINT(9, "SMALLINT", "SMALLINT"),
+
+  /**
+   * The '<em><b>SERIAL</b></em>' literal object.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #SERIAL_VALUE
+   * @generated
+   * @ordered
+   */
+  SERIAL(10, "SERIAL", "SERIAL"),
+
+  /**
+   * The '<em><b>BIGSERIAL</b></em>' literal object.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #BIGSERIAL_VALUE
+   * @generated
+   * @ordered
+   */
+  BIGSERIAL(11, "BIGSERIAL", "BIGSERIAL"),
+
+  /**
+   * The '<em><b>NUMERIC</b></em>' literal object.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #NUMERIC_VALUE
+   * @generated
+   * @ordered
+   */
+  NUMERIC(12, "NUMERIC", "NUMERIC"),
+
+  /**
+   * The '<em><b>REAL</b></em>' literal object.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #REAL_VALUE
+   * @generated
+   * @ordered
+   */
+  REAL(13, "REAL", "REAL"),
+
+  /**
+   * The '<em><b>FLOAT</b></em>' literal object.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #FLOAT_VALUE
+   * @generated
+   * @ordered
+   */
+  FLOAT(14, "FLOAT", "FLOAT"),
+
+  /**
+   * The '<em><b>TIMESTAMPTZ</b></em>' literal object.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #TIMESTAMPTZ_VALUE
+   * @generated
+   * @ordered
+   */
+  TIMESTAMPTZ(15, "TIMESTAMPTZ", "TIMESTAMPTZ"),
+
+  /**
+   * The '<em><b>JSONB</b></em>' literal object.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #JSONB_VALUE
+   * @generated
+   * @ordered
+   */
+  JSONB(16, "JSONB", "JSONB"),
+
+  /**
+   * The '<em><b>BYTEA</b></em>' literal object.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #BYTEA_VALUE
+   * @generated
+   * @ordered
+   */
+  BYTEA(17, "BYTEA", "BYTEA"),
+
+  /**
+   * The '<em><b>DOUBLE PRECISION</b></em>' literal object.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #DOUBLE_PRECISION_VALUE
+   * @generated
+   * @ordered
+   */
+  DOUBLE_PRECISION(18, "DOUBLE_PRECISION", "PRECISION");
 
   /**
    * The '<em><b>INT</b></em>' literal value.
@@ -189,6 +299,127 @@ public enum AllTypes implements Enumerator
   public static final int TEXT_VALUE = 7;
 
   /**
+   * The '<em><b>INTEGER</b></em>' literal value.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #INTEGER
+   * @model
+   * @generated
+   * @ordered
+   */
+  public static final int INTEGER_VALUE = 8;
+
+  /**
+   * The '<em><b>SMALLINT</b></em>' literal value.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #SMALLINT
+   * @model
+   * @generated
+   * @ordered
+   */
+  public static final int SMALLINT_VALUE = 9;
+
+  /**
+   * The '<em><b>SERIAL</b></em>' literal value.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #SERIAL
+   * @model
+   * @generated
+   * @ordered
+   */
+  public static final int SERIAL_VALUE = 10;
+
+  /**
+   * The '<em><b>BIGSERIAL</b></em>' literal value.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #BIGSERIAL
+   * @model
+   * @generated
+   * @ordered
+   */
+  public static final int BIGSERIAL_VALUE = 11;
+
+  /**
+   * The '<em><b>NUMERIC</b></em>' literal value.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #NUMERIC
+   * @model
+   * @generated
+   * @ordered
+   */
+  public static final int NUMERIC_VALUE = 12;
+
+  /**
+   * The '<em><b>REAL</b></em>' literal value.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #REAL
+   * @model
+   * @generated
+   * @ordered
+   */
+  public static final int REAL_VALUE = 13;
+
+  /**
+   * The '<em><b>FLOAT</b></em>' literal value.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #FLOAT
+   * @model
+   * @generated
+   * @ordered
+   */
+  public static final int FLOAT_VALUE = 14;
+
+  /**
+   * The '<em><b>TIMESTAMPTZ</b></em>' literal value.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #TIMESTAMPTZ
+   * @model
+   * @generated
+   * @ordered
+   */
+  public static final int TIMESTAMPTZ_VALUE = 15;
+
+  /**
+   * The '<em><b>JSONB</b></em>' literal value.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #JSONB
+   * @model
+   * @generated
+   * @ordered
+   */
+  public static final int JSONB_VALUE = 16;
+
+  /**
+   * The '<em><b>BYTEA</b></em>' literal value.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #BYTEA
+   * @model
+   * @generated
+   * @ordered
+   */
+  public static final int BYTEA_VALUE = 17;
+
+  /**
+   * The '<em><b>DOUBLE PRECISION</b></em>' literal value.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #DOUBLE_PRECISION
+   * @model literal="PRECISION"
+   * @generated
+   * @ordered
+   */
+  public static final int DOUBLE_PRECISION_VALUE = 18;
+
+  /**
    * An array of all the '<em><b>All Types</b></em>' enumerators.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
@@ -205,6 +436,17 @@ public enum AllTypes implements Enumerator
       DATE,
       BOOLEAN,
       TEXT,
+      INTEGER,
+      SMALLINT,
+      SERIAL,
+      BIGSERIAL,
+      NUMERIC,
+      REAL,
+      FLOAT,
+      TIMESTAMPTZ,
+      JSONB,
+      BYTEA,
+      DOUBLE_PRECISION,
     };
 
   /**
@@ -277,6 +519,17 @@ public enum AllTypes implements Enumerator
       case DATE_VALUE: return DATE;
       case BOOLEAN_VALUE: return BOOLEAN;
       case TEXT_VALUE: return TEXT;
+      case INTEGER_VALUE: return INTEGER;
+      case SMALLINT_VALUE: return SMALLINT;
+      case SERIAL_VALUE: return SERIAL;
+      case BIGSERIAL_VALUE: return BIGSERIAL;
+      case NUMERIC_VALUE: return NUMERIC;
+      case REAL_VALUE: return REAL;
+      case FLOAT_VALUE: return FLOAT;
+      case TIMESTAMPTZ_VALUE: return TIMESTAMPTZ;
+      case JSONB_VALUE: return JSONB;
+      case BYTEA_VALUE: return BYTEA;
+      case DOUBLE_PRECISION_VALUE: return DOUBLE_PRECISION;
     }
     return null;
   }

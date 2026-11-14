@@ -188,16 +188,57 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 		private final RuleCall cSimpleTypeAllTypesEnumRuleCall_1_0_0 = (RuleCall)cSimpleTypeAssignment_1_0.eContents().get(0);
 		private final Assignment cVarcharAssignment_1_1 = (Assignment)cAlternatives_1.eContents().get(1);
 		private final RuleCall cVarcharVarcharParserRuleCall_1_1_0 = (RuleCall)cVarcharAssignment_1_1.eContents().get(0);
+		private final Assignment cNumericAssignment_1_2 = (Assignment)cAlternatives_1.eContents().get(2);
+		private final RuleCall cNumericNumericParserRuleCall_1_2_0 = (RuleCall)cNumericAssignment_1_2.eContents().get(0);
+		private final Assignment cCharAssignment_1_3 = (Assignment)cAlternatives_1.eContents().get(3);
+		private final RuleCall cCharCharParserRuleCall_1_3_0 = (RuleCall)cCharAssignment_1_3.eContents().get(0);
+		private final Group cGroup_1_4 = (Group)cAlternatives_1.eContents().get(4);
+		private final Keyword cDOUBLEKeyword_1_4_0 = (Keyword)cGroup_1_4.eContents().get(0);
+		private final Assignment cSimpleTypeAssignment_1_4_1 = (Assignment)cGroup_1_4.eContents().get(1);
+		private final RuleCall cSimpleTypeDoublePrecisionEnumRuleCall_1_4_1_0 = (RuleCall)cSimpleTypeAssignment_1_4_1.eContents().get(0);
+		private final Group cGroup_1_5 = (Group)cAlternatives_1.eContents().get(5);
+		private final Keyword cTIMESTAMPKeyword_1_5_0 = (Keyword)cGroup_1_5.eContents().get(0);
+		private final Keyword cWITHOUTKeyword_1_5_1 = (Keyword)cGroup_1_5.eContents().get(1);
+		private final Keyword cTIMEKeyword_1_5_2 = (Keyword)cGroup_1_5.eContents().get(2);
+		private final Assignment cSimpleTypeAssignment_1_5_3 = (Assignment)cGroup_1_5.eContents().get(3);
+		private final RuleCall cSimpleTypeZoneNoTzEnumRuleCall_1_5_3_0 = (RuleCall)cSimpleTypeAssignment_1_5_3.eContents().get(0);
+		private final Group cGroup_1_6 = (Group)cAlternatives_1.eContents().get(6);
+		private final Keyword cTIMESTAMPKeyword_1_6_0 = (Keyword)cGroup_1_6.eContents().get(0);
+		private final Keyword cWITHKeyword_1_6_1 = (Keyword)cGroup_1_6.eContents().get(1);
+		private final Keyword cTIMEKeyword_1_6_2 = (Keyword)cGroup_1_6.eContents().get(2);
+		private final Assignment cSimpleTypeAssignment_1_6_3 = (Assignment)cGroup_1_6.eContents().get(3);
+		private final RuleCall cSimpleTypeZoneTzEnumRuleCall_1_6_3_0 = (RuleCall)cSimpleTypeAssignment_1_6_3.eContents().get(0);
 		private final Assignment cConstraintAssignment_2 = (Assignment)cGroup.eContents().get(2);
 		private final RuleCall cConstraintConstraintParserRuleCall_2_0 = (RuleCall)cConstraintAssignment_2.eContents().get(0);
 		
 		//// supports zero or more constraints (primary key, unique, not null)
+		//// Column.simpleType is unsettable (io.shardml.build.SqlEcorePostProcessor, Plan-sql 11b (a)): a
+		//// column whose type did not parse has isSetSimpleType() false, instead of reading INT.
+		//// Multi-word types are spelled out here, and their last keyword carries the enum literal.
 		//Column:
-		//    name=Name (simpleType=AllTypes | varchar=Varchar) constraint += Constraint*
+		//    name=Name
+		//    ( simpleType=AllTypes
+		//    | varchar=Varchar
+		//    | numeric=Numeric
+		//    | char=Char
+		//    | 'DOUBLE' simpleType=DoublePrecision
+		//    | 'TIMESTAMP' 'WITHOUT' 'TIME' simpleType=ZoneNoTz
+		//    | 'TIMESTAMP' 'WITH' 'TIME' simpleType=ZoneTz
+		//    )
+		//    constraint += Constraint*
 		//;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//name=Name (simpleType=AllTypes | varchar=Varchar) constraint += Constraint*
+		//name=Name
+		//( simpleType=AllTypes
+		//| varchar=Varchar
+		//| numeric=Numeric
+		//| char=Char
+		//| 'DOUBLE' simpleType=DoublePrecision
+		//| 'TIMESTAMP' 'WITHOUT' 'TIME' simpleType=ZoneNoTz
+		//| 'TIMESTAMP' 'WITH' 'TIME' simpleType=ZoneTz
+		//)
+		//constraint += Constraint*
 		public Group getGroup() { return cGroup; }
 		
 		//name=Name
@@ -206,7 +247,14 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 		//Name
 		public RuleCall getNameNameParserRuleCall_0_0() { return cNameNameParserRuleCall_0_0; }
 		
-		//(simpleType=AllTypes | varchar=Varchar)
+		//( simpleType=AllTypes
+		//| varchar=Varchar
+		//| numeric=Numeric
+		//| char=Char
+		//| 'DOUBLE' simpleType=DoublePrecision
+		//| 'TIMESTAMP' 'WITHOUT' 'TIME' simpleType=ZoneNoTz
+		//| 'TIMESTAMP' 'WITH' 'TIME' simpleType=ZoneTz
+		//)
 		public Alternatives getAlternatives_1() { return cAlternatives_1; }
 		
 		//simpleType=AllTypes
@@ -221,6 +269,66 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 		//Varchar
 		public RuleCall getVarcharVarcharParserRuleCall_1_1_0() { return cVarcharVarcharParserRuleCall_1_1_0; }
 		
+		//numeric=Numeric
+		public Assignment getNumericAssignment_1_2() { return cNumericAssignment_1_2; }
+		
+		//Numeric
+		public RuleCall getNumericNumericParserRuleCall_1_2_0() { return cNumericNumericParserRuleCall_1_2_0; }
+		
+		//char=Char
+		public Assignment getCharAssignment_1_3() { return cCharAssignment_1_3; }
+		
+		//Char
+		public RuleCall getCharCharParserRuleCall_1_3_0() { return cCharCharParserRuleCall_1_3_0; }
+		
+		//'DOUBLE' simpleType=DoublePrecision
+		public Group getGroup_1_4() { return cGroup_1_4; }
+		
+		//'DOUBLE'
+		public Keyword getDOUBLEKeyword_1_4_0() { return cDOUBLEKeyword_1_4_0; }
+		
+		//simpleType=DoublePrecision
+		public Assignment getSimpleTypeAssignment_1_4_1() { return cSimpleTypeAssignment_1_4_1; }
+		
+		//DoublePrecision
+		public RuleCall getSimpleTypeDoublePrecisionEnumRuleCall_1_4_1_0() { return cSimpleTypeDoublePrecisionEnumRuleCall_1_4_1_0; }
+		
+		//'TIMESTAMP' 'WITHOUT' 'TIME' simpleType=ZoneNoTz
+		public Group getGroup_1_5() { return cGroup_1_5; }
+		
+		//'TIMESTAMP'
+		public Keyword getTIMESTAMPKeyword_1_5_0() { return cTIMESTAMPKeyword_1_5_0; }
+		
+		//'WITHOUT'
+		public Keyword getWITHOUTKeyword_1_5_1() { return cWITHOUTKeyword_1_5_1; }
+		
+		//'TIME'
+		public Keyword getTIMEKeyword_1_5_2() { return cTIMEKeyword_1_5_2; }
+		
+		//simpleType=ZoneNoTz
+		public Assignment getSimpleTypeAssignment_1_5_3() { return cSimpleTypeAssignment_1_5_3; }
+		
+		//ZoneNoTz
+		public RuleCall getSimpleTypeZoneNoTzEnumRuleCall_1_5_3_0() { return cSimpleTypeZoneNoTzEnumRuleCall_1_5_3_0; }
+		
+		//'TIMESTAMP' 'WITH' 'TIME' simpleType=ZoneTz
+		public Group getGroup_1_6() { return cGroup_1_6; }
+		
+		//'TIMESTAMP'
+		public Keyword getTIMESTAMPKeyword_1_6_0() { return cTIMESTAMPKeyword_1_6_0; }
+		
+		//'WITH'
+		public Keyword getWITHKeyword_1_6_1() { return cWITHKeyword_1_6_1; }
+		
+		//'TIME'
+		public Keyword getTIMEKeyword_1_6_2() { return cTIMEKeyword_1_6_2; }
+		
+		//simpleType=ZoneTz
+		public Assignment getSimpleTypeAssignment_1_6_3() { return cSimpleTypeAssignment_1_6_3; }
+		
+		//ZoneTz
+		public RuleCall getSimpleTypeZoneTzEnumRuleCall_1_6_3_0() { return cSimpleTypeZoneTzEnumRuleCall_1_6_3_0; }
+		
 		//constraint += Constraint*
 		public Assignment getConstraintAssignment_2() { return cConstraintAssignment_2; }
 		
@@ -230,23 +338,148 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 	public class VarcharElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.Varchar");
 		private final Group cGroup = (Group)rule.eContents().get(1);
-		private final Keyword cVARCHARKeyword_0 = (Keyword)cGroup.eContents().get(0);
+		private final Alternatives cAlternatives_0 = (Alternatives)cGroup.eContents().get(0);
+		private final Keyword cVARCHARKeyword_0_0 = (Keyword)cAlternatives_0.eContents().get(0);
+		private final Group cGroup_0_1 = (Group)cAlternatives_0.eContents().get(1);
+		private final Assignment cVaryingAssignment_0_1_0 = (Assignment)cGroup_0_1.eContents().get(0);
+		private final Keyword cVaryingCHARACTERKeyword_0_1_0_0 = (Keyword)cVaryingAssignment_0_1_0.eContents().get(0);
+		private final Keyword cVARYINGKeyword_0_1_1 = (Keyword)cGroup_0_1.eContents().get(1);
 		private final Keyword cLeftParenthesisKeyword_1 = (Keyword)cGroup.eContents().get(1);
 		private final Assignment cSizeAssignment_2 = (Assignment)cGroup.eContents().get(2);
 		private final RuleCall cSizeINTTerminalRuleCall_2_0 = (RuleCall)cSizeAssignment_2.eContents().get(0);
 		private final Keyword cRightParenthesisKeyword_3 = (Keyword)cGroup.eContents().get(3);
 		
-		//// explicit rule for varchar because of the size paramteter
+		//// The sized types. Each records which of its keywords was used, so it is written back as spelled.
+		//// Bare NUMERIC / DECIMAL are AllTypes literals; bare VARCHAR / CHAR are syntax errors here.
 		//Varchar:
-		//    'VARCHAR' '(' size=INT ')'
+		//    ('VARCHAR' | varying?='CHARACTER' 'VARYING') '(' size=INT ')'
 		//;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//'VARCHAR' '(' size=INT ')'
+		//('VARCHAR' | varying?='CHARACTER' 'VARYING') '(' size=INT ')'
 		public Group getGroup() { return cGroup; }
 		
+		//('VARCHAR' | varying?='CHARACTER' 'VARYING')
+		public Alternatives getAlternatives_0() { return cAlternatives_0; }
+		
 		//'VARCHAR'
-		public Keyword getVARCHARKeyword_0() { return cVARCHARKeyword_0; }
+		public Keyword getVARCHARKeyword_0_0() { return cVARCHARKeyword_0_0; }
+		
+		//varying?='CHARACTER' 'VARYING'
+		public Group getGroup_0_1() { return cGroup_0_1; }
+		
+		//varying?='CHARACTER'
+		public Assignment getVaryingAssignment_0_1_0() { return cVaryingAssignment_0_1_0; }
+		
+		//'CHARACTER'
+		public Keyword getVaryingCHARACTERKeyword_0_1_0_0() { return cVaryingCHARACTERKeyword_0_1_0_0; }
+		
+		//'VARYING'
+		public Keyword getVARYINGKeyword_0_1_1() { return cVARYINGKeyword_0_1_1; }
+		
+		//'('
+		public Keyword getLeftParenthesisKeyword_1() { return cLeftParenthesisKeyword_1; }
+		
+		//size=INT
+		public Assignment getSizeAssignment_2() { return cSizeAssignment_2; }
+		
+		//INT
+		public RuleCall getSizeINTTerminalRuleCall_2_0() { return cSizeINTTerminalRuleCall_2_0; }
+		
+		//')'
+		public Keyword getRightParenthesisKeyword_3() { return cRightParenthesisKeyword_3; }
+	}
+	public class NumericElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.Numeric");
+		private final Group cGroup = (Group)rule.eContents().get(1);
+		private final Alternatives cAlternatives_0 = (Alternatives)cGroup.eContents().get(0);
+		private final Assignment cDecimalAssignment_0_0 = (Assignment)cAlternatives_0.eContents().get(0);
+		private final Keyword cDecimalDECIMALKeyword_0_0_0 = (Keyword)cDecimalAssignment_0_0.eContents().get(0);
+		private final Keyword cNUMERICKeyword_0_1 = (Keyword)cAlternatives_0.eContents().get(1);
+		private final Keyword cLeftParenthesisKeyword_1 = (Keyword)cGroup.eContents().get(1);
+		private final Assignment cPrecisionAssignment_2 = (Assignment)cGroup.eContents().get(2);
+		private final RuleCall cPrecisionINTTerminalRuleCall_2_0 = (RuleCall)cPrecisionAssignment_2.eContents().get(0);
+		private final Group cGroup_3 = (Group)cGroup.eContents().get(3);
+		private final Keyword cCommaKeyword_3_0 = (Keyword)cGroup_3.eContents().get(0);
+		private final Assignment cScaleAssignment_3_1 = (Assignment)cGroup_3.eContents().get(1);
+		private final RuleCall cScaleINTTerminalRuleCall_3_1_0 = (RuleCall)cScaleAssignment_3_1.eContents().get(0);
+		private final Keyword cRightParenthesisKeyword_4 = (Keyword)cGroup.eContents().get(4);
+		
+		//Numeric:
+		//    (decimal?='DECIMAL' | 'NUMERIC') '(' precision=INT (',' scale=INT)? ')'
+		//;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//(decimal?='DECIMAL' | 'NUMERIC') '(' precision=INT (',' scale=INT)? ')'
+		public Group getGroup() { return cGroup; }
+		
+		//(decimal?='DECIMAL' | 'NUMERIC')
+		public Alternatives getAlternatives_0() { return cAlternatives_0; }
+		
+		//decimal?='DECIMAL'
+		public Assignment getDecimalAssignment_0_0() { return cDecimalAssignment_0_0; }
+		
+		//'DECIMAL'
+		public Keyword getDecimalDECIMALKeyword_0_0_0() { return cDecimalDECIMALKeyword_0_0_0; }
+		
+		//'NUMERIC'
+		public Keyword getNUMERICKeyword_0_1() { return cNUMERICKeyword_0_1; }
+		
+		//'('
+		public Keyword getLeftParenthesisKeyword_1() { return cLeftParenthesisKeyword_1; }
+		
+		//precision=INT
+		public Assignment getPrecisionAssignment_2() { return cPrecisionAssignment_2; }
+		
+		//INT
+		public RuleCall getPrecisionINTTerminalRuleCall_2_0() { return cPrecisionINTTerminalRuleCall_2_0; }
+		
+		//(',' scale=INT)?
+		public Group getGroup_3() { return cGroup_3; }
+		
+		//','
+		public Keyword getCommaKeyword_3_0() { return cCommaKeyword_3_0; }
+		
+		//scale=INT
+		public Assignment getScaleAssignment_3_1() { return cScaleAssignment_3_1; }
+		
+		//INT
+		public RuleCall getScaleINTTerminalRuleCall_3_1_0() { return cScaleINTTerminalRuleCall_3_1_0; }
+		
+		//')'
+		public Keyword getRightParenthesisKeyword_4() { return cRightParenthesisKeyword_4; }
+	}
+	public class CharElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.Char");
+		private final Group cGroup = (Group)rule.eContents().get(1);
+		private final Alternatives cAlternatives_0 = (Alternatives)cGroup.eContents().get(0);
+		private final Assignment cCharacterAssignment_0_0 = (Assignment)cAlternatives_0.eContents().get(0);
+		private final Keyword cCharacterCHARACTERKeyword_0_0_0 = (Keyword)cCharacterAssignment_0_0.eContents().get(0);
+		private final Keyword cCHARKeyword_0_1 = (Keyword)cAlternatives_0.eContents().get(1);
+		private final Keyword cLeftParenthesisKeyword_1 = (Keyword)cGroup.eContents().get(1);
+		private final Assignment cSizeAssignment_2 = (Assignment)cGroup.eContents().get(2);
+		private final RuleCall cSizeINTTerminalRuleCall_2_0 = (RuleCall)cSizeAssignment_2.eContents().get(0);
+		private final Keyword cRightParenthesisKeyword_3 = (Keyword)cGroup.eContents().get(3);
+		
+		//Char:
+		//    (character?='CHARACTER' | 'CHAR') '(' size=INT ')'
+		//;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//(character?='CHARACTER' | 'CHAR') '(' size=INT ')'
+		public Group getGroup() { return cGroup; }
+		
+		//(character?='CHARACTER' | 'CHAR')
+		public Alternatives getAlternatives_0() { return cAlternatives_0; }
+		
+		//character?='CHARACTER'
+		public Assignment getCharacterAssignment_0_0() { return cCharacterAssignment_0_0; }
+		
+		//'CHARACTER'
+		public Keyword getCharacterCHARACTERKeyword_0_0_0() { return cCharacterCHARACTERKeyword_0_0_0; }
+		
+		//'CHAR'
+		public Keyword getCHARKeyword_0_1() { return cCHARKeyword_0_1; }
 		
 		//'('
 		public Keyword getLeftParenthesisKeyword_1() { return cLeftParenthesisKeyword_1; }
@@ -507,27 +740,52 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 		private final Keyword cTIMESTAMPKeyword_9 = (Keyword)cAlternatives.eContents().get(9);
 		private final Keyword cBOOLEANKeyword_10 = (Keyword)cAlternatives.eContents().get(10);
 		private final Keyword cVARCHARKeyword_11 = (Keyword)cAlternatives.eContents().get(11);
-		private final Keyword cUUIDKeyword_12 = (Keyword)cAlternatives.eContents().get(12);
-		private final Keyword cDATEKeyword_13 = (Keyword)cAlternatives.eContents().get(13);
+		private final Keyword cINTEGERKeyword_12 = (Keyword)cAlternatives.eContents().get(12);
+		private final Keyword cSMALLINTKeyword_13 = (Keyword)cAlternatives.eContents().get(13);
+		private final Keyword cNUMERICKeyword_14 = (Keyword)cAlternatives.eContents().get(14);
+		private final Keyword cREALKeyword_15 = (Keyword)cAlternatives.eContents().get(15);
+		private final Keyword cFLOATKeyword_16 = (Keyword)cAlternatives.eContents().get(16);
+		private final Keyword cPRECISIONKeyword_17 = (Keyword)cAlternatives.eContents().get(17);
+		private final Keyword cCHARKeyword_18 = (Keyword)cAlternatives.eContents().get(18);
+		private final Keyword cCHARACTERKeyword_19 = (Keyword)cAlternatives.eContents().get(19);
+		private final Keyword cTIMEKeyword_20 = (Keyword)cAlternatives.eContents().get(20);
+		private final Keyword cDOUBLEKeyword_21 = (Keyword)cAlternatives.eContents().get(21);
+		private final Keyword cVARYINGKeyword_22 = (Keyword)cAlternatives.eContents().get(22);
+		private final Keyword cWITHOUTKeyword_23 = (Keyword)cAlternatives.eContents().get(23);
+		private final Keyword cZONEKeyword_24 = (Keyword)cAlternatives.eContents().get(24);
+		private final Keyword cUUIDKeyword_25 = (Keyword)cAlternatives.eContents().get(25);
+		private final Keyword cDATEKeyword_26 = (Keyword)cAlternatives.eContents().get(26);
+		private final Keyword cSERIALKeyword_27 = (Keyword)cAlternatives.eContents().get(27);
+		private final Keyword cBIGSERIALKeyword_28 = (Keyword)cAlternatives.eContents().get(28);
+		private final Keyword cTIMESTAMPTZKeyword_29 = (Keyword)cAlternatives.eContents().get(29);
+		private final Keyword cJSONBKeyword_30 = (Keyword)cAlternatives.eContents().get(30);
+		private final Keyword cBYTEAKeyword_31 = (Keyword)cAlternatives.eContents().get(31);
 		
 		//// A table or column name: an identifier, a "quoted identifier", or a keyword of this grammar
 		//// that PostgreSQL accepts as a bare name (category U or C in pg_get_keywords(), or not a
 		//// PostgreSQL keyword at all). Reserved words (CREATE, TABLE, PRIMARY, UNIQUE, NOT, NULL) are
-		//// not names here either, as in PostgreSQL; quoted, they are. SqlKeywordTest checks this list
+		//// not names here either, as in PostgreSQL; quoted, they are. WITH (of TIMESTAMP WITH TIME ZONE) is
+		//// reserved too. SqlKeywordTest checks this list
 		//// against the PostgreSQL 17 keyword golden. Every word that starts a constraint is reserved,
 		//// so a column and a constraint are told apart by their first token.
 		//Name:
 		//    ID | QUOTED_ID
 		//    | 'KEY' | 'TEXT' | 'IF' | 'EXISTS'                                                   // U, U, U, C
 		//    | 'INT' | 'BIGINT' | 'DECIMAL' | 'TIMESTAMP' | 'BOOLEAN' | 'VARCHAR'                 // C
-		//    | 'UUID' | 'DATE'                                                                    // not PostgreSQL keywords
+		//    | 'INTEGER' | 'SMALLINT' | 'NUMERIC' | 'REAL' | 'FLOAT' | 'PRECISION'                // C
+		//    | 'CHAR' | 'CHARACTER' | 'TIME'                                                      // C
+		//    | 'DOUBLE' | 'VARYING' | 'WITHOUT' | 'ZONE'                                          // U
+		//    | 'UUID' | 'DATE' | 'SERIAL' | 'BIGSERIAL' | 'TIMESTAMPTZ' | 'JSONB' | 'BYTEA'       // not PostgreSQL keywords
 		//;
 		@Override public ParserRule getRule() { return rule; }
 		
 		//ID | QUOTED_ID
 		//| 'KEY' | 'TEXT' | 'IF' | 'EXISTS'                                                   // U, U, U, C
 		//| 'INT' | 'BIGINT' | 'DECIMAL' | 'TIMESTAMP' | 'BOOLEAN' | 'VARCHAR'                 // C
-		//| 'UUID' | 'DATE'
+		//| 'INTEGER' | 'SMALLINT' | 'NUMERIC' | 'REAL' | 'FLOAT' | 'PRECISION'                // C
+		//| 'CHAR' | 'CHARACTER' | 'TIME'                                                      // C
+		//| 'DOUBLE' | 'VARYING' | 'WITHOUT' | 'ZONE'                                          // U
+		//| 'UUID' | 'DATE' | 'SERIAL' | 'BIGSERIAL' | 'TIMESTAMPTZ' | 'JSONB' | 'BYTEA'
 		public Alternatives getAlternatives() { return cAlternatives; }
 		
 		//ID
@@ -566,11 +824,65 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 		//'VARCHAR'
 		public Keyword getVARCHARKeyword_11() { return cVARCHARKeyword_11; }
 		
+		//'INTEGER'
+		public Keyword getINTEGERKeyword_12() { return cINTEGERKeyword_12; }
+		
+		//'SMALLINT'
+		public Keyword getSMALLINTKeyword_13() { return cSMALLINTKeyword_13; }
+		
+		//'NUMERIC'
+		public Keyword getNUMERICKeyword_14() { return cNUMERICKeyword_14; }
+		
+		//'REAL'
+		public Keyword getREALKeyword_15() { return cREALKeyword_15; }
+		
+		//'FLOAT'
+		public Keyword getFLOATKeyword_16() { return cFLOATKeyword_16; }
+		
+		//'PRECISION'
+		public Keyword getPRECISIONKeyword_17() { return cPRECISIONKeyword_17; }
+		
+		//'CHAR'
+		public Keyword getCHARKeyword_18() { return cCHARKeyword_18; }
+		
+		//'CHARACTER'
+		public Keyword getCHARACTERKeyword_19() { return cCHARACTERKeyword_19; }
+		
+		//'TIME'
+		public Keyword getTIMEKeyword_20() { return cTIMEKeyword_20; }
+		
+		//'DOUBLE'
+		public Keyword getDOUBLEKeyword_21() { return cDOUBLEKeyword_21; }
+		
+		//'VARYING'
+		public Keyword getVARYINGKeyword_22() { return cVARYINGKeyword_22; }
+		
+		//'WITHOUT'
+		public Keyword getWITHOUTKeyword_23() { return cWITHOUTKeyword_23; }
+		
+		//'ZONE'
+		public Keyword getZONEKeyword_24() { return cZONEKeyword_24; }
+		
 		//'UUID'
-		public Keyword getUUIDKeyword_12() { return cUUIDKeyword_12; }
+		public Keyword getUUIDKeyword_25() { return cUUIDKeyword_25; }
 		
 		//'DATE'
-		public Keyword getDATEKeyword_13() { return cDATEKeyword_13; }
+		public Keyword getDATEKeyword_26() { return cDATEKeyword_26; }
+		
+		//'SERIAL'
+		public Keyword getSERIALKeyword_27() { return cSERIALKeyword_27; }
+		
+		//'BIGSERIAL'
+		public Keyword getBIGSERIALKeyword_28() { return cBIGSERIALKeyword_28; }
+		
+		//'TIMESTAMPTZ'
+		public Keyword getTIMESTAMPTZKeyword_29() { return cTIMESTAMPTZKeyword_29; }
+		
+		//'JSONB'
+		public Keyword getJSONBKeyword_30() { return cJSONBKeyword_30; }
+		
+		//'BYTEA'
+		public Keyword getBYTEAKeyword_31() { return cBYTEAKeyword_31; }
 	}
 	
 	public class AllTypesElements extends AbstractElementFinder.AbstractEnumRuleElementFinder {
@@ -592,14 +904,40 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 		private final Keyword cBOOLEANBOOLEANKeyword_6_0 = (Keyword)cBOOLEANEnumLiteralDeclaration_6.eContents().get(0);
 		private final EnumLiteralDeclaration cTEXTEnumLiteralDeclaration_7 = (EnumLiteralDeclaration)cAlternatives.eContents().get(7);
 		private final Keyword cTEXTTEXTKeyword_7_0 = (Keyword)cTEXTEnumLiteralDeclaration_7.eContents().get(0);
+		private final EnumLiteralDeclaration cINTEGEREnumLiteralDeclaration_8 = (EnumLiteralDeclaration)cAlternatives.eContents().get(8);
+		private final Keyword cINTEGERINTEGERKeyword_8_0 = (Keyword)cINTEGEREnumLiteralDeclaration_8.eContents().get(0);
+		private final EnumLiteralDeclaration cSMALLINTEnumLiteralDeclaration_9 = (EnumLiteralDeclaration)cAlternatives.eContents().get(9);
+		private final Keyword cSMALLINTSMALLINTKeyword_9_0 = (Keyword)cSMALLINTEnumLiteralDeclaration_9.eContents().get(0);
+		private final EnumLiteralDeclaration cSERIALEnumLiteralDeclaration_10 = (EnumLiteralDeclaration)cAlternatives.eContents().get(10);
+		private final Keyword cSERIALSERIALKeyword_10_0 = (Keyword)cSERIALEnumLiteralDeclaration_10.eContents().get(0);
+		private final EnumLiteralDeclaration cBIGSERIALEnumLiteralDeclaration_11 = (EnumLiteralDeclaration)cAlternatives.eContents().get(11);
+		private final Keyword cBIGSERIALBIGSERIALKeyword_11_0 = (Keyword)cBIGSERIALEnumLiteralDeclaration_11.eContents().get(0);
+		private final EnumLiteralDeclaration cNUMERICEnumLiteralDeclaration_12 = (EnumLiteralDeclaration)cAlternatives.eContents().get(12);
+		private final Keyword cNUMERICNUMERICKeyword_12_0 = (Keyword)cNUMERICEnumLiteralDeclaration_12.eContents().get(0);
+		private final EnumLiteralDeclaration cREALEnumLiteralDeclaration_13 = (EnumLiteralDeclaration)cAlternatives.eContents().get(13);
+		private final Keyword cREALREALKeyword_13_0 = (Keyword)cREALEnumLiteralDeclaration_13.eContents().get(0);
+		private final EnumLiteralDeclaration cFLOATEnumLiteralDeclaration_14 = (EnumLiteralDeclaration)cAlternatives.eContents().get(14);
+		private final Keyword cFLOATFLOATKeyword_14_0 = (Keyword)cFLOATEnumLiteralDeclaration_14.eContents().get(0);
+		private final EnumLiteralDeclaration cTIMESTAMPTZEnumLiteralDeclaration_15 = (EnumLiteralDeclaration)cAlternatives.eContents().get(15);
+		private final Keyword cTIMESTAMPTZTIMESTAMPTZKeyword_15_0 = (Keyword)cTIMESTAMPTZEnumLiteralDeclaration_15.eContents().get(0);
+		private final EnumLiteralDeclaration cJSONBEnumLiteralDeclaration_16 = (EnumLiteralDeclaration)cAlternatives.eContents().get(16);
+		private final Keyword cJSONBJSONBKeyword_16_0 = (Keyword)cJSONBEnumLiteralDeclaration_16.eContents().get(0);
+		private final EnumLiteralDeclaration cBYTEAEnumLiteralDeclaration_17 = (EnumLiteralDeclaration)cAlternatives.eContents().get(17);
+		private final Keyword cBYTEABYTEAKeyword_17_0 = (Keyword)cBYTEAEnumLiteralDeclaration_17.eContents().get(0);
 		
-		//// covers most common types
+		//// The single-keyword types. The first eight literals keep their place (INT stays ordinal 0); new
+		//// ones are appended. INT / INTEGER and FLOAT / DOUBLE PRECISION are separate literals so that
+		//// each is written back as spelled; SqlTypes knows which are the same PostgreSQL type.
 		//enum AllTypes:
-		//    INT='INT'|BIGINT='BIGINT'|UUID='UUID'|DECIMAL='DECIMAL'|TIMESTAMP='TIMESTAMP'|DATE='DATE'|BOOLEAN='BOOLEAN'|TEXT='TEXT'
+		//    INT='INT' | BIGINT='BIGINT' | UUID='UUID' | DECIMAL='DECIMAL' | TIMESTAMP='TIMESTAMP' | DATE='DATE' | BOOLEAN='BOOLEAN' | TEXT='TEXT'
+		//    | INTEGER='INTEGER' | SMALLINT='SMALLINT' | SERIAL='SERIAL' | BIGSERIAL='BIGSERIAL' | NUMERIC='NUMERIC'
+		//    | REAL='REAL' | FLOAT='FLOAT' | TIMESTAMPTZ='TIMESTAMPTZ' | JSONB='JSONB' | BYTEA='BYTEA'
 		//;
 		public EnumRule getRule() { return rule; }
 		
-		//INT='INT'|BIGINT='BIGINT'|UUID='UUID'|DECIMAL='DECIMAL'|TIMESTAMP='TIMESTAMP'|DATE='DATE'|BOOLEAN='BOOLEAN'|TEXT='TEXT'
+		//INT='INT' | BIGINT='BIGINT' | UUID='UUID' | DECIMAL='DECIMAL' | TIMESTAMP='TIMESTAMP' | DATE='DATE' | BOOLEAN='BOOLEAN' | TEXT='TEXT'
+		//| INTEGER='INTEGER' | SMALLINT='SMALLINT' | SERIAL='SERIAL' | BIGSERIAL='BIGSERIAL' | NUMERIC='NUMERIC'
+		//| REAL='REAL' | FLOAT='FLOAT' | TIMESTAMPTZ='TIMESTAMPTZ' | JSONB='JSONB' | BYTEA='BYTEA'
 		public Alternatives getAlternatives() { return cAlternatives; }
 		
 		//INT='INT'
@@ -649,13 +987,121 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 		
 		//'TEXT'
 		public Keyword getTEXTTEXTKeyword_7_0() { return cTEXTTEXTKeyword_7_0; }
+		
+		//INTEGER='INTEGER'
+		public EnumLiteralDeclaration getINTEGEREnumLiteralDeclaration_8() { return cINTEGEREnumLiteralDeclaration_8; }
+		
+		//'INTEGER'
+		public Keyword getINTEGERINTEGERKeyword_8_0() { return cINTEGERINTEGERKeyword_8_0; }
+		
+		//SMALLINT='SMALLINT'
+		public EnumLiteralDeclaration getSMALLINTEnumLiteralDeclaration_9() { return cSMALLINTEnumLiteralDeclaration_9; }
+		
+		//'SMALLINT'
+		public Keyword getSMALLINTSMALLINTKeyword_9_0() { return cSMALLINTSMALLINTKeyword_9_0; }
+		
+		//SERIAL='SERIAL'
+		public EnumLiteralDeclaration getSERIALEnumLiteralDeclaration_10() { return cSERIALEnumLiteralDeclaration_10; }
+		
+		//'SERIAL'
+		public Keyword getSERIALSERIALKeyword_10_0() { return cSERIALSERIALKeyword_10_0; }
+		
+		//BIGSERIAL='BIGSERIAL'
+		public EnumLiteralDeclaration getBIGSERIALEnumLiteralDeclaration_11() { return cBIGSERIALEnumLiteralDeclaration_11; }
+		
+		//'BIGSERIAL'
+		public Keyword getBIGSERIALBIGSERIALKeyword_11_0() { return cBIGSERIALBIGSERIALKeyword_11_0; }
+		
+		//NUMERIC='NUMERIC'
+		public EnumLiteralDeclaration getNUMERICEnumLiteralDeclaration_12() { return cNUMERICEnumLiteralDeclaration_12; }
+		
+		//'NUMERIC'
+		public Keyword getNUMERICNUMERICKeyword_12_0() { return cNUMERICNUMERICKeyword_12_0; }
+		
+		//REAL='REAL'
+		public EnumLiteralDeclaration getREALEnumLiteralDeclaration_13() { return cREALEnumLiteralDeclaration_13; }
+		
+		//'REAL'
+		public Keyword getREALREALKeyword_13_0() { return cREALREALKeyword_13_0; }
+		
+		//FLOAT='FLOAT'
+		public EnumLiteralDeclaration getFLOATEnumLiteralDeclaration_14() { return cFLOATEnumLiteralDeclaration_14; }
+		
+		//'FLOAT'
+		public Keyword getFLOATFLOATKeyword_14_0() { return cFLOATFLOATKeyword_14_0; }
+		
+		//TIMESTAMPTZ='TIMESTAMPTZ'
+		public EnumLiteralDeclaration getTIMESTAMPTZEnumLiteralDeclaration_15() { return cTIMESTAMPTZEnumLiteralDeclaration_15; }
+		
+		//'TIMESTAMPTZ'
+		public Keyword getTIMESTAMPTZTIMESTAMPTZKeyword_15_0() { return cTIMESTAMPTZTIMESTAMPTZKeyword_15_0; }
+		
+		//JSONB='JSONB'
+		public EnumLiteralDeclaration getJSONBEnumLiteralDeclaration_16() { return cJSONBEnumLiteralDeclaration_16; }
+		
+		//'JSONB'
+		public Keyword getJSONBJSONBKeyword_16_0() { return cJSONBJSONBKeyword_16_0; }
+		
+		//BYTEA='BYTEA'
+		public EnumLiteralDeclaration getBYTEAEnumLiteralDeclaration_17() { return cBYTEAEnumLiteralDeclaration_17; }
+		
+		//'BYTEA'
+		public Keyword getBYTEABYTEAKeyword_17_0() { return cBYTEABYTEAKeyword_17_0; }
+	}
+	public class DoublePrecisionElements extends AbstractElementFinder.AbstractEnumRuleElementFinder {
+		private final EnumRule rule = (EnumRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.DoublePrecision");
+		private final EnumLiteralDeclaration cDOUBLE_PRECISIONEnumLiteralDeclaration = (EnumLiteralDeclaration)rule.eContents().get(1);
+		private final Keyword cDOUBLE_PRECISIONPRECISIONKeyword_0 = (Keyword)cDOUBLE_PRECISIONEnumLiteralDeclaration.eContents().get(0);
+		
+		//// the last keyword of a multi-word type: DOUBLE PRECISION, TIMESTAMP WITH[OUT] TIME ZONE
+		//enum DoublePrecision returns AllTypes: DOUBLE_PRECISION='PRECISION';
+		public EnumRule getRule() { return rule; }
+		
+		//DOUBLE_PRECISION='PRECISION'
+		public EnumLiteralDeclaration getDOUBLE_PRECISIONEnumLiteralDeclaration() { return cDOUBLE_PRECISIONEnumLiteralDeclaration; }
+		
+		//'PRECISION'
+		public Keyword getDOUBLE_PRECISIONPRECISIONKeyword_0() { return cDOUBLE_PRECISIONPRECISIONKeyword_0; }
+	}
+	public class ZoneNoTzElements extends AbstractElementFinder.AbstractEnumRuleElementFinder {
+		private final EnumRule rule = (EnumRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.ZoneNoTz");
+		private final EnumLiteralDeclaration cTIMESTAMPEnumLiteralDeclaration = (EnumLiteralDeclaration)rule.eContents().get(1);
+		private final Keyword cTIMESTAMPZONEKeyword_0 = (Keyword)cTIMESTAMPEnumLiteralDeclaration.eContents().get(0);
+		
+		//enum ZoneNoTz returns AllTypes: TIMESTAMP='ZONE';
+		public EnumRule getRule() { return rule; }
+		
+		//TIMESTAMP='ZONE'
+		public EnumLiteralDeclaration getTIMESTAMPEnumLiteralDeclaration() { return cTIMESTAMPEnumLiteralDeclaration; }
+		
+		//'ZONE'
+		public Keyword getTIMESTAMPZONEKeyword_0() { return cTIMESTAMPZONEKeyword_0; }
+	}
+	public class ZoneTzElements extends AbstractElementFinder.AbstractEnumRuleElementFinder {
+		private final EnumRule rule = (EnumRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.ZoneTz");
+		private final EnumLiteralDeclaration cTIMESTAMPTZEnumLiteralDeclaration = (EnumLiteralDeclaration)rule.eContents().get(1);
+		private final Keyword cTIMESTAMPTZZONEKeyword_0 = (Keyword)cTIMESTAMPTZEnumLiteralDeclaration.eContents().get(0);
+		
+		//enum ZoneTz returns AllTypes: TIMESTAMPTZ='ZONE';
+		public EnumRule getRule() { return rule; }
+		
+		//TIMESTAMPTZ='ZONE'
+		public EnumLiteralDeclaration getTIMESTAMPTZEnumLiteralDeclaration() { return cTIMESTAMPTZEnumLiteralDeclaration; }
+		
+		//'ZONE'
+		public Keyword getTIMESTAMPTZZONEKeyword_0() { return cTIMESTAMPTZZONEKeyword_0; }
 	}
 	
 	private final SchemaElements pSchema;
 	private final TableElements pTable;
 	private final ColumnElements pColumn;
 	private final VarcharElements pVarchar;
+	private final NumericElements pNumeric;
+	private final CharElements pChar;
 	private final AllTypesElements eAllTypes;
+	private final DoublePrecisionElements eDoublePrecision;
+	private final ZoneNoTzElements eZoneNoTz;
+	private final ZoneTzElements eZoneTz;
 	private final ConstraintElements pConstraint;
 	private final PrimaryAnnotationElements pPrimaryAnnotation;
 	private final UniqueAnnotationElements pUniqueAnnotation;
@@ -682,7 +1128,12 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 		this.pTable = new TableElements();
 		this.pColumn = new ColumnElements();
 		this.pVarchar = new VarcharElements();
+		this.pNumeric = new NumericElements();
+		this.pChar = new CharElements();
 		this.eAllTypes = new AllTypesElements();
+		this.eDoublePrecision = new DoublePrecisionElements();
+		this.eZoneNoTz = new ZoneNoTzElements();
+		this.eZoneTz = new ZoneTzElements();
 		this.pConstraint = new ConstraintElements();
 		this.pPrimaryAnnotation = new PrimaryAnnotationElements();
 		this.pUniqueAnnotation = new UniqueAnnotationElements();
@@ -753,8 +1204,20 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 	}
 	
 	//// supports zero or more constraints (primary key, unique, not null)
+	//// Column.simpleType is unsettable (io.shardml.build.SqlEcorePostProcessor, Plan-sql 11b (a)): a
+	//// column whose type did not parse has isSetSimpleType() false, instead of reading INT.
+	//// Multi-word types are spelled out here, and their last keyword carries the enum literal.
 	//Column:
-	//    name=Name (simpleType=AllTypes | varchar=Varchar) constraint += Constraint*
+	//    name=Name
+	//    ( simpleType=AllTypes
+	//    | varchar=Varchar
+	//    | numeric=Numeric
+	//    | char=Char
+	//    | 'DOUBLE' simpleType=DoublePrecision
+	//    | 'TIMESTAMP' 'WITHOUT' 'TIME' simpleType=ZoneNoTz
+	//    | 'TIMESTAMP' 'WITH' 'TIME' simpleType=ZoneTz
+	//    )
+	//    constraint += Constraint*
 	//;
 	public ColumnElements getColumnAccess() {
 		return pColumn;
@@ -764,9 +1227,10 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 		return getColumnAccess().getRule();
 	}
 	
-	//// explicit rule for varchar because of the size paramteter
+	//// The sized types. Each records which of its keywords was used, so it is written back as spelled.
+	//// Bare NUMERIC / DECIMAL are AllTypes literals; bare VARCHAR / CHAR are syntax errors here.
 	//Varchar:
-	//    'VARCHAR' '(' size=INT ')'
+	//    ('VARCHAR' | varying?='CHARACTER' 'VARYING') '(' size=INT ')'
 	//;
 	public VarcharElements getVarcharAccess() {
 		return pVarchar;
@@ -776,9 +1240,35 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 		return getVarcharAccess().getRule();
 	}
 	
-	//// covers most common types
+	//Numeric:
+	//    (decimal?='DECIMAL' | 'NUMERIC') '(' precision=INT (',' scale=INT)? ')'
+	//;
+	public NumericElements getNumericAccess() {
+		return pNumeric;
+	}
+	
+	public ParserRule getNumericRule() {
+		return getNumericAccess().getRule();
+	}
+	
+	//Char:
+	//    (character?='CHARACTER' | 'CHAR') '(' size=INT ')'
+	//;
+	public CharElements getCharAccess() {
+		return pChar;
+	}
+	
+	public ParserRule getCharRule() {
+		return getCharAccess().getRule();
+	}
+	
+	//// The single-keyword types. The first eight literals keep their place (INT stays ordinal 0); new
+	//// ones are appended. INT / INTEGER and FLOAT / DOUBLE PRECISION are separate literals so that
+	//// each is written back as spelled; SqlTypes knows which are the same PostgreSQL type.
 	//enum AllTypes:
-	//    INT='INT'|BIGINT='BIGINT'|UUID='UUID'|DECIMAL='DECIMAL'|TIMESTAMP='TIMESTAMP'|DATE='DATE'|BOOLEAN='BOOLEAN'|TEXT='TEXT'
+	//    INT='INT' | BIGINT='BIGINT' | UUID='UUID' | DECIMAL='DECIMAL' | TIMESTAMP='TIMESTAMP' | DATE='DATE' | BOOLEAN='BOOLEAN' | TEXT='TEXT'
+	//    | INTEGER='INTEGER' | SMALLINT='SMALLINT' | SERIAL='SERIAL' | BIGSERIAL='BIGSERIAL' | NUMERIC='NUMERIC'
+	//    | REAL='REAL' | FLOAT='FLOAT' | TIMESTAMPTZ='TIMESTAMPTZ' | JSONB='JSONB' | BYTEA='BYTEA'
 	//;
 	public AllTypesElements getAllTypesAccess() {
 		return eAllTypes;
@@ -786,6 +1276,34 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 	
 	public EnumRule getAllTypesRule() {
 		return getAllTypesAccess().getRule();
+	}
+	
+	//// the last keyword of a multi-word type: DOUBLE PRECISION, TIMESTAMP WITH[OUT] TIME ZONE
+	//enum DoublePrecision returns AllTypes: DOUBLE_PRECISION='PRECISION';
+	public DoublePrecisionElements getDoublePrecisionAccess() {
+		return eDoublePrecision;
+	}
+	
+	public EnumRule getDoublePrecisionRule() {
+		return getDoublePrecisionAccess().getRule();
+	}
+	
+	//enum ZoneNoTz returns AllTypes: TIMESTAMP='ZONE';
+	public ZoneNoTzElements getZoneNoTzAccess() {
+		return eZoneNoTz;
+	}
+	
+	public EnumRule getZoneNoTzRule() {
+		return getZoneNoTzAccess().getRule();
+	}
+	
+	//enum ZoneTz returns AllTypes: TIMESTAMPTZ='ZONE';
+	public ZoneTzElements getZoneTzAccess() {
+		return eZoneTz;
+	}
+	
+	public EnumRule getZoneTzRule() {
+		return getZoneTzAccess().getRule();
 	}
 	
 	//// we use Xtext's forced type instantiation {Type} here
@@ -872,14 +1390,18 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 	//// A table or column name: an identifier, a "quoted identifier", or a keyword of this grammar
 	//// that PostgreSQL accepts as a bare name (category U or C in pg_get_keywords(), or not a
 	//// PostgreSQL keyword at all). Reserved words (CREATE, TABLE, PRIMARY, UNIQUE, NOT, NULL) are
-	//// not names here either, as in PostgreSQL; quoted, they are. SqlKeywordTest checks this list
+	//// not names here either, as in PostgreSQL; quoted, they are. WITH (of TIMESTAMP WITH TIME ZONE) is
+	//// reserved too. SqlKeywordTest checks this list
 	//// against the PostgreSQL 17 keyword golden. Every word that starts a constraint is reserved,
 	//// so a column and a constraint are told apart by their first token.
 	//Name:
 	//    ID | QUOTED_ID
 	//    | 'KEY' | 'TEXT' | 'IF' | 'EXISTS'                                                   // U, U, U, C
 	//    | 'INT' | 'BIGINT' | 'DECIMAL' | 'TIMESTAMP' | 'BOOLEAN' | 'VARCHAR'                 // C
-	//    | 'UUID' | 'DATE'                                                                    // not PostgreSQL keywords
+	//    | 'INTEGER' | 'SMALLINT' | 'NUMERIC' | 'REAL' | 'FLOAT' | 'PRECISION'                // C
+	//    | 'CHAR' | 'CHARACTER' | 'TIME'                                                      // C
+	//    | 'DOUBLE' | 'VARYING' | 'WITHOUT' | 'ZONE'                                          // U
+	//    | 'UUID' | 'DATE' | 'SERIAL' | 'BIGSERIAL' | 'TIMESTAMPTZ' | 'JSONB' | 'BYTEA'       // not PostgreSQL keywords
 	//;
 	public NameElements getNameAccess() {
 		return pName;

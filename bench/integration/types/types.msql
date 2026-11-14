@@ -1,0 +1,26 @@
+-- One distributed table with every column type of Plan-sql step 3, deployed to the bench Citus
+-- cluster by bench/integration/test-examples.sh. Most columns are named after a type word that
+-- PostgreSQL accepts as a bare column name (category U or C, or not a keyword), so the deploy
+-- also checks that the generator writes those names unquoted and PostgreSQL takes them.
+-- types.probe.sql compares every column's type in the catalog with the one declared here.
+CREATE TABLE all_types (
+    id BIGSERIAL PRIMARY KEY,
+    integer INTEGER NOT NULL,
+    smallint SMALLINT,
+    serial SERIAL,
+    numeric NUMERIC,
+    amount NUMERIC(12),
+    price NUMERIC(12, 2),
+    decimal DECIMAL(5,1),
+    real REAL,
+    float FLOAT,
+    double DOUBLE PRECISION,
+    char CHAR(2),
+    character CHARACTER(3),
+    varying CHARACTER VARYING(20),
+    timestamptz TIMESTAMPTZ,
+    zone TIMESTAMP WITH TIME ZONE,
+    time TIMESTAMP WITHOUT TIME ZONE,
+    jsonb JSONB,
+    bytea BYTEA
+);
