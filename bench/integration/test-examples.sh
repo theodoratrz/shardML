@@ -31,7 +31,10 @@
 #                             succeed. The probe file then counts as one
 #                             failure.
 #
-# Every statement runs on its own, so one failure does not hide the next.
+# Every statement runs on its own, so one failure does not hide the next. Every
+# model must deploy: one that generates no Citus schema is a failure, and the
+# default run fails if one of its required models is missing, so CI cannot
+# pass with a fixture silently left out.
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -56,6 +59,16 @@ models=("$@")
 if [[ ${#models[@]} -eq 0 ]]; then
 	models=("$ROOT"/examples/*.shardml "$ROOT"/bench/integration/types/*.shardml "$ROOT"/bench/integration/fk/*.shardml
 		"$ROOT"/bench/integration/pgdump/*.shardml)
+	# the default run must deploy at least these: a missing file (a renamed fixture, a glob that
+	# matched nothing) fails the run instead of shrinking it
+	required=(examples/banking.shardml examples/social.shardml bench/integration/types/types.shardml
+		bench/integration/fk/fk.shardml bench/integration/pgdump/banking_dump.shardml bench/integration/pgdump/pgbench.shardml)
+	for r in "${required[@]}"; do
+		if [[ ! " ${models[*]} " == *" $ROOT/$r "* ]]; then
+			echo "test-examples: required model $r not found" >&2
+			exit 2
+		fi
+	done
 fi
 
 if ! up_log=$("$BENCH/up.sh" 2>&1); then
@@ -90,6 +103,7 @@ label_of() {
 
 failures=0
 statements=0
+deployed=()
 file_failures=0
 
 # Runs every statement of one file in the given schema and reports each one.
@@ -124,7 +138,9 @@ for model in "${models[@]}"; do
 
 	schema_sql=("$out_dir"/*-schema.sql)
 	if [[ ${#schema_sql[@]} -eq 0 ]]; then
-		echo "  skipped: not a Citus (postgres) target"
+		# never a silent skip: every model given to this script must deploy
+		failures=$((failures + 1))
+		echo "  FAIL  no -schema.sql generated: not a Citus (postgres) target"
 		continue
 	fi
 	db=$(basename "${schema_sql[0]}" -schema.sql)
@@ -153,10 +169,15 @@ for model in "${models[@]}"; do
 	elif [[ -f "$probe" ]]; then
 		apply_file "$db" "$probe"
 	fi
+	deployed+=("$(basename "$model")")
 	rm -rf "$out_dir"
 done
 
 echo
+echo "deployed ${#deployed[@]} of ${#models[@]} models: ${deployed[*]}"
+if [[ ${#deployed[@]} -ne ${#models[@]} && $failures -eq 0 ]]; then
+	failures=1 # a model that left the loop early without a FAIL line
+fi
 if [[ $failures -gt 0 ]]; then
 	echo "FAILED: $failures of $statements statements"
 	exit 1

@@ -40,8 +40,8 @@ import io.shardml.sql.UniqueKey;
  *  - primary key: a column-level PRIMARY KEY, a table-level one, or one added by ALTER TABLE .. ADD
  *    (where pg_dump declares every key);
  *  - unique keys: column-level UNIQUE, table-level and ALTER TABLE UNIQUE, in declaration order,
- *    duplicates kept; then the unique indexes on plain columns without a WHERE (an expression or
- *    partial unique index is no key a foreign key may reference, and is left out);
+ *    duplicates kept; then the unique indexes on plain columns without a WHERE. An expression or
+ *    partial unique index is no key a foreign key may reference: it is in otherUniqueIndexes;
  *  - foreign keys: column-level REFERENCES, table-level and ALTER TABLE FOREIGN KEY, with the
  *    referencing columns filled in, and the referenced columns resolved to the referenced primary
  *    key (wherever it is declared) when the source omits them.
@@ -91,8 +91,15 @@ public final class SchemaFacts {
 		}
 	}
 
+	// a unique index that is no key (an expression part, or a WHERE): name (or null), its plain column
+	// parts in order, and which of the two it has. Citus still requires the distribution column among
+	// the plain parts (measured, Plan-sql 11g)
+	public record UniqueIndexFacts(String name, List<String> plainColumns, boolean expression, boolean partial) {
+	}
+
+	// otherUniqueIndexes: the unique indexes that are not in uniqueKeys
 	public record TableFacts(String schema, String name, List<ColumnFacts> columns, List<String> primaryKey,
-			List<List<String>> uniqueKeys, List<ForeignKeyFacts> foreignKeys) {
+			List<List<String>> uniqueKeys, List<ForeignKeyFacts> foreignKeys, List<UniqueIndexFacts> otherUniqueIndexes) {
 
 		public ColumnFacts column(String name) {
 			return columns.stream().filter(c -> c.name().equals(name)).findFirst().orElse(null);
@@ -161,15 +168,29 @@ public final class SchemaFacts {
 						uniqueKeys.add(names);
 				}
 			}
+			List<UniqueIndexFacts> otherUniqueIndexes = new ArrayList<>();
 			for (Index index : schema.getIndexes()) {
-				if (index.isUnique() && index.getTable() == table && isPlain(index)) {
+				if (!index.isUnique() || index.getTable() != table)
+					continue;
+				if (isPlain(index)) {
 					List<String> names = indexColumns(index);
 					if (names != null)
 						uniqueKeys.add(names);
+				} else {
+					List<Column> plain = new ArrayList<>();
+					for (IndexPart part : index.getParts()) {
+						if (part.getExpression() == null)
+							plain.add(part.getColumn());
+					}
+					List<String> names = names(plain);
+					if (names != null)
+						otherUniqueIndexes.add(new UniqueIndexFacts(index.getName(), names,
+								index.getParts().stream().anyMatch(p -> p.getExpression() != null), isPartial(index)));
 				}
 			}
 			tables.putIfAbsent(table.getName(), new TableFacts(table.getSchemaName(), table.getName(),
-					List.copyOf(columns), primaryKey, List.copyOf(uniqueKeys), List.copyOf(foreignKeys)));
+					List.copyOf(columns), primaryKey, List.copyOf(uniqueKeys), List.copyOf(foreignKeys),
+					List.copyOf(otherUniqueIndexes)));
 		}
 		return tables;
 	}
@@ -217,8 +238,11 @@ public final class SchemaFacts {
 	private static final Pattern WHERE = Pattern.compile("(?i)\\bWHERE\\b");
 
 	private static boolean isPlain(Index index) {
-		return index.getParts().stream().allMatch(p -> p.getExpression() == null)
-				&& (index.getTail() == null || !WHERE.matcher(index.getTail()).find());
+		return index.getParts().stream().allMatch(p -> p.getExpression() == null) && !isPartial(index);
+	}
+
+	private static boolean isPartial(Index index) {
+		return index.getTail() != null && WHERE.matcher(index.getTail()).find();
 	}
 
 	private static List<String> indexColumns(Index index) {

@@ -30,6 +30,7 @@ import io.shardml.schema.SchemaFacts;
 import io.shardml.schema.SchemaFacts.ColumnFacts;
 import io.shardml.schema.SchemaFacts.ForeignKeyFacts;
 import io.shardml.schema.SchemaFacts.TableFacts;
+import io.shardml.schema.SchemaFacts.UniqueIndexFacts;
 import io.shardml.schema.SqlTypes;
 import io.shardml.schema.SqlTypes.Base;
 import io.shardml.schema.SqlTypes.SqlType;
@@ -79,13 +80,15 @@ public class ShardMLValidator extends AbstractShardMLValidator {
 	private static final String PLACEMENT_SKEW            = "SHML_037";
 	private static final String DUPLICATE_PLACEMENT       = "SHML_038";
 	private static final String PLACEMENT_WITHOUT_SHARD   = "SHML_039";
-	// SHML_040-060 are workload codes, 061-068 and 075 SQL (SQLValidator, SQLLinkingDiagnosticMessageProvider)
+	// SHML_040-060 are workload codes, 061-068, 075 and 076 SQL (SQLValidator, SQLLinkingDiagnosticMessageProvider)
 	private static final String FK_KEYS_NOT_PAIRED        = "SHML_069";
 	private static final String FK_NOT_COLOCATED          = "SHML_070";
 	private static final String FK_REFERENCE_TO_DISTRIBUTED = "SHML_071";
 	private static final String FK_SETS_SHARD_KEY         = "SHML_072";
-	// SHML_073 is reserved (Plan-sql step 6: a schema FK with no belongs_to)
+	private static final String FK_WITHOUT_BELONGS_TO     = "SHML_073";
 	private static final String GENERATED_SHARD_KEY       = "SHML_074";
+	// SHML_075 and 076 are SQL codes (SQLValidator)
+	private static final String UNIQUE_INDEX_WITHOUT_SHARD_KEY = "SHML_077";
 
 	// restrict validation to shardML only
 	@Override
@@ -331,6 +334,13 @@ public class ShardMLValidator extends AbstractShardMLValidator {
 							+ "', but the tables are not colocated, and Citus requires it. Add `colocate_with: "
 							+ fk.refTable() + "` to '" + table.getName() + "'.",
 							shard, ShardMLPackage.Literals.SHARD_DECL__ENTITY, FK_NOT_COLOCATED);
+				} else if (parent != shard && !declaresBelongsTo(db, table, parent.getEntity(), shard.getId())) {
+					// the schema says what the model does not: belongs_to .. via stays the authority for
+					// SHML_026 / 030 (Plan-sql 11a, decision 5), so the key only suggests it
+					warning(what + " pairs the shard keys of the colocated tables '" + table.getName() + "' and '"
+							+ fk.refTable() + "', but the model does not declare it. Add `" + table.getName() + " belongs_to "
+							+ fk.refTable() + " via " + key + "`, so that the colocation checks follow the key.",
+							shard, ShardMLPackage.Literals.SHARD_DECL__ENTITY, FK_WITHOUT_BELONGS_TO);
 				}
 			}
 			List<String> writing = fk.actionsWritingColumns();
@@ -342,6 +352,38 @@ public class ShardMLValidator extends AbstractShardMLValidator {
 						+ "NO ACTION.",
 						shard, ShardMLPackage.Literals.SHARD_DECL__ID, FK_SETS_SHARD_KEY);
 			}
+		}
+	}
+
+	private static boolean declaresBelongsTo(Database db, Table subject, Table parent, Column via) {
+		return db.getRelationships().stream().anyMatch(rel -> rel instanceof BelongsTo b && b.getSubject() == subject
+				&& b.getBelongs() == parent && b.getVia() == via);
+	}
+
+	// A unique index that is no key (an expression part, or a WHERE) is still a unique constraint
+	// to Citus: create_distributed_table rejects the table unless the distribution column is one of
+	// the index's plain column parts, whatever its expressions and WHERE (measured on Citus 14.2,
+	// Plan-sql 11g; an expression over the distribution column alone, (k + 0), is rejected too).
+	// SHML_024 covers the unique keys; this covers the rest
+	@Check
+	public void checkUniqueIndexesWithoutShardKey(ShardDecl shard) {
+		if (!isHashed(shard) || !hasKey(shard))
+			return;
+		TableFacts facts = factsOf(shard.getEntity());
+		if (facts == null)
+			return;
+		String key = shard.getId().getName();
+		for (UniqueIndexFacts index : facts.otherUniqueIndexes()) {
+			if (index.plainColumns().contains(key))
+				continue;
+			String kind = index.expression() && index.partial() ? "an expression and a WHERE"
+					: index.expression() ? "an expression" : "a WHERE";
+			error("Unique index " + (index.name() == null ? "" : index.name() + " ") + "on '" + facts.name() + "' has "
+					+ kind + ", and the shard key '" + key + "' is not one of its plain columns. Citus rejects a unique "
+					+ "index on a distributed table unless the distribution column is a plain column of it (an expression "
+					+ "over it does not count). Add " + key + " to the index, or make '" + facts.name()
+					+ "' a reference table (strategy: replicated).", shard, ShardMLPackage.Literals.SHARD_DECL__ID,
+					UNIQUE_INDEX_WITHOUT_SHARD_KEY);
 		}
 	}
 

@@ -42,7 +42,7 @@ public class ShardMLForeignKeyValidationTest {
 	private IResourceValidator validator;
 
 	private static final Set<String> CODES = Set.of("SHML_024", "SHML_069", "SHML_070", "SHML_071", "SHML_072",
-			"SHML_074");
+			"SHML_073", "SHML_074", "SHML_077");
 
 	// the issues of these codes the model gets, as "code: message", after asserting the schema is clean
 	private List<String> issues(String msql, String shards) throws Exception {
@@ -71,6 +71,11 @@ public class ShardMLForeignKeyValidationTest {
 		return "    shard " + table + " {\n        strategy: hash\n        key: " + key + "\n        buckets: 4\n"
 				+ "        colocate_with: " + colocateWith + "\n    }\n";
 	}
+
+	// the belongs_to declarations of the TENANTS keys, which the model needs once they pair colocated
+	// shard keys (else SHML_073)
+	private static final String CAMPAIGNS_LINK = "    campaigns belongs_to companies via company_id\n";
+	private static final String ADS_LINK = "    ads belongs_to campaigns via company_id\n";
 
 	private static String replicated(String table) {
 		return "    shard " + table + " {\n        strategy: replicated\n    }\n";
@@ -137,7 +142,27 @@ public class ShardMLForeignKeyValidationTest {
 		// case 1 (one column), case 15 (composite, the shard keys at different positions), case 13
 		// (ON DELETE CASCADE on the distribution column)
 		Assertions.assertEquals(List.of(), issues(TENANTS, hash("companies", "id") + hash("campaigns", "company_id", "companies")
-				+ hash("ads", "company_id", "campaigns")));
+				+ hash("ads", "company_id", "campaigns") + CAMPAIGNS_LINK + ADS_LINK));
+	}
+
+	@Test
+	public void testColocatedKeysWithoutBelongsTo() throws Exception {
+		// SHML_073 (a warning): the schema pairs colocated shard keys that the model does not declare
+		String layout = hash("companies", "id") + hash("campaigns", "company_id", "companies")
+				+ hash("ads", "company_id", "campaigns");
+		Assertions.assertEquals(List.of("SHML_073: Foreign key campaigns (company_id) -> companies (id) pairs the shard keys "
+				+ "of the colocated tables 'campaigns' and 'companies', but the model does not declare it. Add `campaigns "
+				+ "belongs_to companies via company_id`, so that the colocation checks follow the key."),
+				issues(TENANTS, layout + ADS_LINK));
+		Assertions.assertEquals(List.of("SHML_073", "SHML_073"), codes(TENANTS, layout));
+		// a belongs_to through another column is not the declaration
+		Assertions.assertEquals(List.of("SHML_073"), codes(TENANTS, layout + ADS_LINK
+				+ "    campaigns belongs_to companies via id\n"));
+		// not for keys that are not colocated (SHML_070 instead), or that reference a replicated table
+		Assertions.assertEquals(List.of("SHML_070"), codes(TENANTS, hash("companies", "id")
+				+ hash("campaigns", "company_id", "companies") + hash("ads", "company_id") + CAMPAIGNS_LINK));
+		Assertions.assertEquals(List.of(), codes(TENANTS, replicated("companies") + hash("campaigns", "company_id")
+				+ hash("ads", "company_id", "campaigns") + ADS_LINK));
 	}
 
 	@Test
@@ -165,14 +190,15 @@ public class ShardMLForeignKeyValidationTest {
 		Assertions.assertEquals(List.of("SHML_070: Foreign key ads (campaign_id, company_id) -> campaigns (id, company_id) "
 				+ "pairs the shard keys of 'ads' and 'campaigns', but the tables are not colocated, and Citus requires it. "
 				+ "Add `colocate_with: campaigns` to 'ads'."),
-				issues(TENANTS, hash("companies", "id") + hash("campaigns", "company_id", "companies") + hash("ads", "company_id")));
+				issues(TENANTS, hash("companies", "id") + hash("campaigns", "company_id", "companies") + hash("ads", "company_id")
+						+ CAMPAIGNS_LINK));
 	}
 
 	@Test
 	public void testReferenceAndLocalTables() throws Exception {
 		// case 2: hash-sharded -> replicated is fine
 		Assertions.assertEquals(List.of(), issues(TENANTS, replicated("companies") + hash("campaigns", "company_id")
-				+ hash("ads", "company_id", "campaigns")));
+				+ hash("ads", "company_id", "campaigns") + ADS_LINK));
 		// case 5: replicated -> hash-sharded is not
 		Assertions.assertEquals(List.of("SHML_071: Foreign key campaigns (company_id) -> companies (id) goes from the "
 				+ "replicated table 'campaigns' to the hash-sharded table 'companies'. Citus does not support a foreign key from "
@@ -203,7 +229,7 @@ public class ShardMLForeignKeyValidationTest {
 					+ "a foreign key that writes a distribution column: ON DELETE SET NULL / SET DEFAULT and ON UPDATE SET "
 					+ "NULL / SET DEFAULT / CASCADE. Use ON DELETE CASCADE, RESTRICT or NO ACTION, and ON UPDATE RESTRICT "
 					+ "or NO ACTION."),
-					issues(msql, hash("companies", "id") + hash("campaigns", "company_id", "companies")), action);
+					issues(msql, hash("companies", "id") + hash("campaigns", "company_id", "companies") + CAMPAIGNS_LINK), action);
 			// to a reference table too: the column is still the distribution column (layout B)
 			Assertions.assertEquals(List.of("SHML_072"), codes(msql, replicated("companies") + hash("campaigns", "company_id")),
 					action);
@@ -214,7 +240,7 @@ public class ShardMLForeignKeyValidationTest {
 		}
 		for (String action : ACCEPTED) {
 			String msql = TENANTS.replace("ON DELETE CASCADE", action);
-			Assertions.assertEquals(List.of(), codes(msql, hash("companies", "id") + hash("campaigns", "company_id", "companies")),
+			Assertions.assertEquals(List.of(), codes(msql, hash("companies", "id") + hash("campaigns", "company_id", "companies") + CAMPAIGNS_LINK),
 					action);
 			Assertions.assertEquals(List.of(), codes(msql, replicated("companies") + hash("campaigns", "company_id")), action);
 		}
@@ -222,7 +248,7 @@ public class ShardMLForeignKeyValidationTest {
 		String both = TENANTS.replace("FOREIGN KEY (campaign_id, company_id) REFERENCES campaigns (id, company_id)",
 				"FOREIGN KEY (campaign_id, company_id) REFERENCES campaigns (id, company_id) ON DELETE SET DEFAULT ON UPDATE CASCADE");
 		Assertions.assertTrue(issues(both, hash("companies", "id") + hash("campaigns", "company_id", "companies")
-				+ hash("ads", "company_id", "campaigns")).stream().anyMatch(i -> i.startsWith("SHML_072: Foreign key ads "
+				+ hash("ads", "company_id", "campaigns") + CAMPAIGNS_LINK + ADS_LINK).stream().anyMatch(i -> i.startsWith("SHML_072: Foreign key ads "
 						+ "(campaign_id, company_id) -> campaigns (id, company_id) has ON DELETE SET DEFAULT and ON UPDATE CASCADE,")));
 	}
 
@@ -264,15 +290,46 @@ public class ShardMLForeignKeyValidationTest {
 				+ "Citus enforces uniqueness only within one shard, so it cannot enforce this constraint. Options: enforce it in "
 				+ "the application; a lookup table with PRIMARY KEY (code), distributed by code and written in the same "
 				+ "transaction; or, if 'campaigns' is small, make it a reference table (strategy: replicated)."),
-				issues(dump, hash("companies", "id") + hash("campaigns", "company_id", "companies")));
+				issues(dump, hash("companies", "id") + hash("campaigns", "company_id", "companies") + CAMPAIGNS_LINK));
 		// sharded by code: the ALTER TABLE primary key misses it (SHML_024; the unique index has it), and
 		// the ALTER TABLE foreign key does not pair it with companies.id (SHML_069)
 		Assertions.assertEquals(List.of("SHML_024", "SHML_069"),
 				codes(dump, hash("companies", "id") + hash("campaigns", "code", "companies")));
 		// with the index unique on the shard key too, nothing; a partial or plain index is no key
 		Assertions.assertEquals(List.of(), codes(dump.replace("btree (code)", "btree (company_id, code)"),
-				hash("companies", "id") + hash("campaigns", "company_id", "companies")));
+				hash("companies", "id") + hash("campaigns", "company_id", "companies") + CAMPAIGNS_LINK));
 		Assertions.assertEquals(List.of(), codes(dump.replace("CREATE UNIQUE INDEX", "CREATE INDEX"),
-				hash("companies", "id") + hash("campaigns", "company_id", "companies")));
+				hash("companies", "id") + hash("campaigns", "company_id", "companies") + CAMPAIGNS_LINK));
+	}
+
+	@Test
+	public void testUniqueIndexesThatAreNoKeys() throws Exception {
+		// SHML_077, the measured rule (Plan-sql 11g): Citus accepts a unique index on a distributed table
+		// exactly when the distribution column is one of its plain column parts, whatever its expressions
+		// and WHERE. Each case is a measured one
+		String table = "CREATE TABLE t (k int, a int, email text, PRIMARY KEY (k));\n";
+		String layout = hash("t", "k");
+		String rule = "Citus rejects a unique index on a distributed table unless the distribution column is a plain "
+				+ "column of it (an expression over it does not count). Add k to the index, or make 't' a reference table "
+				+ "(strategy: replicated).";
+		Assertions.assertEquals(List.of("SHML_077: Unique index u1 on 't' has a WHERE, and the shard key 'k' is not one of "
+				+ "its plain columns. " + rule), issues(table + "CREATE UNIQUE INDEX u1 ON t (a) WHERE (a > 0);", layout));
+		Assertions.assertEquals(List.of("SHML_077: Unique index u2 on 't' has an expression, and the shard key 'k' is not one "
+				+ "of its plain columns. " + rule), issues(table + "CREATE UNIQUE INDEX u2 ON t ((lower(email)));", layout));
+		Assertions.assertEquals(List.of("SHML_077: Unique index on 't' has an expression and a WHERE, and the shard key 'k' "
+				+ "is not one of its plain columns. " + rule),
+				issues(table + "CREATE UNIQUE INDEX ON t ((lower(email))) WHERE (a > 0);", layout));
+		// an expression over k alone is rejected too
+		Assertions.assertEquals(List.of("SHML_077"), codes(table + "CREATE UNIQUE INDEX u ON t ((k + 0));", layout));
+		Assertions.assertEquals(List.of("SHML_077"), codes(table + "CREATE UNIQUE INDEX u ON t ((k + a));", layout));
+		// accepted: k a plain part
+		for (String index : List.of("(k, a) WHERE (a > 0)", "(k) WHERE (a > 0)", "(k, (lower(email)))",
+				"(k, (lower(email))) WHERE (a > 0)"))
+			Assertions.assertEquals(List.of(), codes(table + "CREATE UNIQUE INDEX u ON t " + index + ";", layout), index);
+		// not unique, or on a reference table: nothing
+		Assertions.assertEquals(List.of(), codes(table + "CREATE INDEX u ON t ((lower(email)));", layout));
+		Assertions.assertEquals(List.of(), codes(table + "CREATE UNIQUE INDEX u ON t ((lower(email)));", replicated("t")));
+		// a plain unique index without k is SHML_024's (a unique key), not this one's
+		Assertions.assertEquals(List.of("SHML_024"), codes(table + "CREATE UNIQUE INDEX u ON t (a);", layout));
 	}
 }

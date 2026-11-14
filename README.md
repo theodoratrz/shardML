@@ -181,7 +181,9 @@ The schema's foreign keys are also checked against the layout, by the rules Citu
 | SHML_070 | it does, but the tables are not colocated |
 | SHML_071 | a foreign key from a replicated table to a hash-sharded one |
 | SHML_072 | a foreign key whose columns include the shard key has `ON DELETE SET NULL` / `SET DEFAULT`, or `ON UPDATE SET NULL` / `SET DEFAULT` / `CASCADE` (every other action is accepted, and every action on a key that leaves the shard key out) |
+| SHML_073 | (warning) a foreign key pairs the shard keys of two colocated tables, but the model has no `belongs_to .. via` for it; the message names the declaration to add |
 | SHML_074 | the shard key is a stored generated column (`GENERATED ALWAYS AS (..) STORED`); an identity column is fine |
+| SHML_077 | a unique index with an expression or a `WHERE` does not have the shard key among its plain columns (Citus rejects it at distribution; an expression over the shard key does not count). A plain unique index is a unique key, checked by SHML_024 |
 
 A hash-sharded table may reference a replicated one. A foreign key from or to a table the model does not shard is not checked: Citus accepts one from a local table to a distributed one, but enforces it only on the local side.
 
