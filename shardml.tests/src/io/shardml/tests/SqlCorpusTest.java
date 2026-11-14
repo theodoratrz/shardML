@@ -20,6 +20,11 @@ import org.eclipse.emf.ecore.resource.Resource;
 import org.eclipse.xtext.resource.XtextResourceSet;
 import org.eclipse.xtext.testing.InjectWith;
 import org.eclipse.xtext.testing.extensions.InjectionExtension;
+import org.eclipse.xtext.diagnostics.Severity;
+import org.eclipse.xtext.util.CancelIndicator;
+import org.eclipse.xtext.validation.CheckMode;
+import org.eclipse.xtext.validation.IResourceValidator;
+import org.eclipse.xtext.validation.Issue;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +32,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
+import io.shardml.generator.ShardMLGenerator;
+import io.shardml.schema.SchemaFacts;
 import io.shardml.sql.Schema;
 
 // The SQL grammar corpus (resources/sql-corpus, see its README) against the grammar, one test per
@@ -37,7 +44,8 @@ import io.shardml.sql.Schema;
 //    set_config, OWNER TO, the psql restrict / unrestrict lines, GRANT / REVOKE / COMMENT ON,
 //    DROP TABLE), and
 //    the statements that must become located errors;
-//  - how the grammar parses the file today: its syntax errors and the tables it recovers.
+//  - how the grammar reads the whole file today: what the model holds, the errors by kind, the
+//    INFO issue, and for a file with no error, that the generated schema round-trips.
 // Each step of Plan-sql updates the second part, saying why each result moved, so progress shows
 // here; the first part (and with it the INFO counts) does not depend on the grammar and stays fixed.
 @ExtendWith(InjectionExtension.class)
@@ -52,6 +60,10 @@ public class SqlCorpusTest {
 
 	@Inject
 	private Provider<XtextResourceSet> resourceSets;
+	@Inject
+	private IResourceValidator validator;
+	@Inject
+	private ShardMLGenerator generator;
 
 	// --- the grammar-independent statement inventory ---
 
@@ -124,47 +136,81 @@ public class SqlCorpusTest {
 
 	// --- one case per file ---
 
-	// today, for the whole file: its syntax errors, the first one, and the tables recovered; and
-	// for its CREATE TABLE statements parsed one at a time: the tables that parse (step 3: by name,
-	// was a count), and the first error of the first one that does not (its table, then the message). The whole-file error usually sits
-	// in the pg_dump preamble, so the per-table result is the one that shows grammar progress.
-	record Today(int syntaxErrors, String firstError, int tables, List<String> tablesAlone, String firstTableError) {
+	// the whole file, parsed and validated (step 5: was the per-table result, which showed progress
+	// while the whole file still stopped at its preamble): what the model holds (CREATE TABLE, ALTER
+	// TABLE, CREATE INDEX, CREATE SCHEMA, other statements), the errors by kind with their count, and
+	// the INFO issue (SHML_075) counting the preamble left out. An error's kind is its code and the
+	// message up to its first '.', or "syntax" and the message for a parser error, with its line
+	record Result(int tables, int alters, int indexes, int schemas, int statements, Map<String, Integer> errors,
+			String info) {
 	}
 
-	private void check(String file, Map<String, Integer> statements, int preamble, Today today) throws IOException {
+	private void check(String file, Map<String, Integer> statements, int preamble, Result expected) throws IOException {
 		String text = Files.readString(CORPUS.resolve(file), StandardCharsets.UTF_8);
 		Map<String, Integer> actual = inventory(text);
 		Assertions.assertEquals(new TreeMap<>(statements), actual, file + ": statements by kind");
 		int counted = actual.entrySet().stream().filter(e -> PREAMBLE.contains(e.getKey())).mapToInt(Map.Entry::getValue).sum();
 		Assertions.assertEquals(preamble, counted, file + ": preamble statements for the INFO issue");
 
-		XtextResourceSet rs = resourceSets.get();
-		Resource resource = rs.createResource(URI.createURI("dummy:/" + file.replace(".sql", ".msql")));
-		resource.load(new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8)), null);
-		List<Resource.Diagnostic> errors = resource.getErrors();
-		int tables = resource.getContents().isEmpty() ? 0 : ((Schema) resource.getContents().get(0)).getTables().size();
-		List<String> alone = new ArrayList<>();
-		String firstTableError = null;
-		int n = 0;
-		for (String statement : statements(text)) {
-			if (!kind(statement).equals("CREATE TABLE"))
+		Schema schema = load(text, file);
+		Map<String, Integer> errors = new TreeMap<>();
+		String info = null;
+		for (Issue issue : validator.validate(schema.eResource(), CheckMode.ALL, CancelIndicator.NullImpl)) {
+			if (issue.getSeverity() == Severity.INFO) {
+				Assertions.assertNull(info, file + ": one INFO issue per file");
+				info = issue.getCode() + ": " + issue.getMessage();
 				continue;
-			Resource single = resourceSets.get().createResource(URI.createURI("dummy:/t" + (n++) + ".msql"));
-			single.load(new ByteArrayInputStream(statement.getBytes(StandardCharsets.UTF_8)), null);
-			if (single.getErrors().isEmpty())
-				alone.add(tableName(statement));
-			else if (firstTableError == null)
-				firstTableError = tableName(statement) + ": " + single.getErrors().get(0).getMessage();
+			}
+			errors.merge(kindOf(issue), 1, Integer::sum);
 		}
-		Today actualToday = new Today(errors.size(),
-				errors.isEmpty() ? null : "line " + errors.get(0).getLine() + ": " + errors.get(0).getMessage(), tables, alone,
-				firstTableError);
-		Assertions.assertEquals(today, actualToday, file + ": parse result today");
+		Assertions.assertEquals(expected, new Result(schema.getTables().size(), schema.getAlters().size(),
+				schema.getIndexes().size(), schema.getSchemas().size(), schema.getStatements().size(), errors, info),
+				file + ": parse and validation result");
+		// the INFO issue counts exactly the preamble the grammar-independent inventory finds
+		int inInfo = 0;
+		if (info != null) {
+			Matcher m = Pattern.compile("(\\d+) [^,.]+").matcher(info.substring(info.indexOf("Not written back: ")));
+			while (m.find())
+				inInfo += Integer.parseInt(m.group(1));
+		}
+		Assertions.assertEquals(preamble, inInfo, file + ": the INFO issue counts the preamble");
+
+		if (errors.isEmpty()) {
+			// round trip (Plan-sql 6.2): the generated schema and foreign keys parse with no error, as
+			// the same tables and keys, and generate the same text again
+			String emitted = generator.schemaDefinitions(schema) + "\n" + generator.foreignKeyDefinitions("d", schema);
+			Schema again = load(emitted, "again-" + file);
+			Assertions.assertEquals(List.of(), again.eResource().getErrors(), file + ": the generated schema parses");
+			Assertions.assertEquals(List.of(), validator.validate(again.eResource(), CheckMode.ALL, CancelIndicator.NullImpl),
+					file + ": the generated schema validates with no issue (the preamble is gone)");
+			Assertions.assertEquals(SchemaFacts.of(schema), SchemaFacts.of(again), file + ": the same tables and keys");
+			Assertions.assertEquals(emitted,
+					generator.schemaDefinitions(again) + "\n" + generator.foreignKeyDefinitions("d", again),
+					file + ": fixed point");
+		}
 	}
 
-	private static String tableName(String statement) {
-		Matcher m = Pattern.compile("(?i)CREATE TABLE\\s+(?:IF NOT EXISTS\\s+)?([^\\s(]+)").matcher(uncommented(statement));
-		return m.find() ? m.group(1) : "?";
+	private int loaded;
+
+	private Schema load(String text, String file) throws IOException {
+		XtextResourceSet rs = resourceSets.get();
+		Resource resource = rs.createResource(URI.createURI("dummy:/" + (loaded++) + file.replace(".sql", ".msql")));
+		resource.load(new ByteArrayInputStream(text.getBytes(StandardCharsets.UTF_8)), null);
+		return (Schema) resource.getContents().get(0);
+	}
+
+	private static String kindOf(Issue issue) {
+		if (issue.getCode() != null && issue.getCode().startsWith("SHML_")) {
+			// up to the end of the first sentence: a '.' that is not part of '..', then a space
+			Matcher end = Pattern.compile("(?<!\\.)\\.(?!\\.)\\s").matcher(issue.getMessage());
+			return issue.getCode() + ": " + (end.find() ? issue.getMessage().substring(0, end.start()) : issue.getMessage());
+		}
+		return "syntax, line " + issue.getLineNumber() + ": " + issue.getMessage();
+	}
+
+	private static String info(String counts) {
+		return "SHML_075: Not written back: " + counts + ". Session settings, ownership, privileges, comments and DROP "
+				+ "TABLE cleanup (the pg_dump preamble): the generated schema needs none of them.";
 	}
 
 	@Test
@@ -190,8 +236,10 @@ public class SqlCorpusTest {
 				// step 4: FOREIGN KEY .. REFERENCES .. ON DELETE CASCADE (composite included), DEFAULT
 				// CURRENT_TIMESTAMP / DEFAULT NULL and the explicit NULL parse, so all nine tables do. The
 				// whole file is unchanged (DROP TABLE, step 5)
-				new Today(1, "line 7: missing EOF at 'DROP'", 0, List.of("warehouse", "item", "stock", "district", "customer",
-						"history", "oorder", "new_order", "order_line"), null));
+				// step 5: the whole file parses and validates with no error. Its nine DROP TABLE IF EXISTS ..
+				// CASCADE are preamble (the INFO issue; not written back), and CREATE INDEX idx_customer_name
+				// is modelled and written back after the tables
+				new Result(9, 0, 1, 0, 9, Map.of(), info("9 DROP TABLE")));
 	}
 
 	@Test
@@ -206,8 +254,11 @@ public class SqlCorpusTest {
 				// parenthesis at WITH (fillfactor='100'), table options (step 4, RawSql)
 				// step 4: WITH (..) table options parse (kept verbatim), so all four tables do. Their keys
 				// and foreign keys are in ALTER TABLE (step 5); the whole file is unchanged
-				new Today(1, "line 11: missing EOF at '\\'", 0, List.of("public.pgbench_accounts", "public.pgbench_branches",
-						"public.pgbench_history", "public.pgbench_tellers"), null));
+				// step 5: the whole file parses and validates with no error. Its 3 primary keys and 5
+				// foreign keys come from ALTER TABLE ONLY .. ADD CONSTRAINT (alters: 8 ADD plus the 4
+				// ALTER TABLE .. OWNER TO); the rest is preamble, counted in the INFO issue
+				new Result(4, 12, 0, 0, 15, Map.of(),
+						info("12 SET, 1 set_config, 4 ALTER .. OWNER TO, 2 psql restrict / unrestrict")));
 	}
 
 	@Test
@@ -219,8 +270,11 @@ public class SqlCorpusTest {
 				// step 3: numeric(p, s), character varying(n), timestamp with time zone and bigint are
 				// types, so all four tables parse (their keys are in ALTER TABLE, step 5). The whole
 				// file is unchanged
-				new Today(1, "line 11: missing EOF at '\\'", 0,
-						List.of("banking.accounts", "banking.cards", "banking.customers", "banking.transactions"), null));
+				// step 5: the whole file parses and validates with no error: CREATE SCHEMA banking is
+				// modelled (written back IF NOT EXISTS), the four primary keys come from ALTER TABLE ONLY ..
+				// ADD CONSTRAINT, and the rest is preamble (ALTER SCHEMA .. OWNER TO among the 5 OWNER TO)
+				new Result(4, 8, 0, 1, 16, Map.of(),
+						info("12 SET, 1 set_config, 5 ALTER .. OWNER TO, 2 psql restrict / unrestrict")));
 	}
 
 	@Test
@@ -233,8 +287,10 @@ public class SqlCorpusTest {
 				// step 4: named CONSTRAINT x PRIMARY KEY (..) parses, so all 11 tables do, alone and in the
 				// whole file, which now stops after them, at its first ALTER TABLE .. ADD CONSTRAINT ..
 				// FOREIGN KEY (line 160, step 5)
-				new Today(1, "line 160: missing EOF at 'ALTER'", 11, List.of("album", "artist", "customer", "employee", "genre",
-						"invoice", "invoice_line", "media_type", "playlist", "playlist_track", "track"), null));
+				// step 5: the whole file parses and validates with no error: its 11 foreign keys (ALTER
+				// TABLE .. ADD CONSTRAINT, ON DELETE / ON UPDATE NO ACTION) and 11 indexes are modelled. It
+				// has no preamble, so no INFO issue
+				new Result(11, 11, 11, 0, 0, Map.of(), null));
 	}
 
 	@Test
@@ -245,11 +301,11 @@ public class SqlCorpusTest {
 				// step 3: smallint, real, bytea, character varying(n) and character(n) are types, so all
 				// 14 tables parse (keys and FKs are in ALTER TABLE, steps 4 and 5). The whole file is
 				// unchanged
-				new Today(1, "line 12: missing EOF at 'SET'", 0,
-						List.of("categories", "customer_customer_demo", "customer_demographics", "customers", "employees",
-								"employee_territories", "order_details", "orders", "products", "region", "shippers", "suppliers",
-								"territories", "us_states"),
-						null));
+				// step 5: the whole file parses and validates with no error: 14 primary keys and 13 foreign
+				// keys from ALTER TABLE ONLY .. ADD CONSTRAINT, some without a referenced column list
+				// (REFERENCES customers: the primary key, itself declared by a later ALTER TABLE). SET and
+				// DROP TABLE IF EXISTS are preamble
+				new Result(14, 27, 0, 0, 22, Map.of(), info("8 SET, 14 DROP TABLE")));
 	}
 
 	@Test
@@ -272,16 +328,54 @@ public class SqlCorpusTest {
 		// stop: public.film at its column type public.mpaa_rating (a CREATE TYPE enum, unsupported),
 		// public.film_embedding at public.vector(20) (pgvector) and public.payment, the partitioned
 		// parent, at PARTITION BY (unsupported). The whole file is unchanged
-		List<String> tables = new ArrayList<>(List.of("public.customer", "public.actor", "public.category",
-				"public.film_actor", "public.film_category", "public.address", "public.city", "public.country",
-				"public.inventory", "public.language"));
-		for (int year = 2022; year <= 2026; year++) {
-			for (int month = 1; month <= (year == 2026 ? 7 : 12); month++)
-				tables.add(String.format("public.payment_p%d_%02d", year, month));
+		// step 5: the whole file is read to its end, every statement in the model, and every error is
+		// located. Pagila stays a negative fixture; these are its remaining kinds, none of which this
+		// branch implements:
+		//  - 2 syntax errors, user types: film at public.mpaa_rating (CREATE TYPE .. AS ENUM), and
+		//    film_embedding at public.vector(20) (pgvector). The parser resumes after each; the rest of
+		//    the statement gets no SHML_061 of its own;
+		//  - 5 SHML_063, a consequence of the first: film keeps only the columns before the error, so its
+		//    keys, foreign keys and index name columns it lost;
+		//  - 107 SHML_061: 55 ALTER TABLE .. ATTACH PARTITION and 1 PARTITION BY (partitions), 13 CREATE
+		//    SEQUENCE (sequences, deferred), 16 triggers, 9 functions, 7 views, 1 materialized view, 1
+		//    aggregate (kept in a separate migration), 2 domains, 1 enum type, 1 extension;
+		//  - 68 SHML_068: DEFAULT nextval(..), in the 13 tables with a serial key and their 55 partitions;
+		//  - 1 SHML_062: a unique index on the materialized view rental_by_category, which is no table.
+		// The preamble, ALTER .. OWNER TO of sequences, views, functions and types included, is the INFO
+		Map<String, Integer> errors = new TreeMap<>();
+		errors.put("syntax, line 449: no viable alternative at input 'public'", 1);
+		errors.put("syntax, line 512: no viable alternative at input 'public'", 1);
+		errors.put("SHML_063: Unknown column fulltext in table film.", 1);
+		errors.put("SHML_063: Unknown column language_id in table film.", 2);
+		errors.put("SHML_063: Unknown column original_language_id in table film.", 2);
+		errors.put("SHML_061: Unsupported statement ALTER TABLE .. ATTACH PARTITION", 55);
+		errors.put("SHML_061: Unsupported statement PARTITION BY", 1);
+		errors.put("SHML_061: Sequence statement CREATE SEQUENCE", 13);
+		errors.put("SHML_061: Unsupported statement CREATE TRIGGER", 16);
+		errors.put("SHML_061: Unsupported statement CREATE FUNCTION", 9);
+		errors.put("SHML_061: Unsupported statement CREATE VIEW", 7);
+		errors.put("SHML_061: Unsupported statement CREATE MATERIALIZED", 1);
+		errors.put("SHML_061: Unsupported statement CREATE AGGREGATE", 1);
+		errors.put("SHML_061: Unsupported statement CREATE DOMAIN", 2);
+		errors.put("SHML_061: Unsupported statement CREATE TYPE", 1);
+		errors.put("SHML_061: Unsupported statement CREATE EXTENSION", 1);
+		errors.put("SHML_062: Unknown table rental_by_category: no table of that name in schema public of this file.", 1);
+		check("pagila-schema.sql", statements, 121, new Result(71, 199, 38, 0, 83, withNextval(errors),
+				info("11 SET, 1 set_config, 106 ALTER .. OWNER TO, 1 GRANT, 1 REVOKE, 1 COMMENT ON")));
+	}
+
+	// adds the 68 SHML_068 of Pagila, one kind per sequence, as the message names it
+	private static Map<String, Integer> withNextval(Map<String, Integer> errors) throws IOException {
+		String text = Files.readString(CORPUS.resolve("pagila-schema.sql"), StandardCharsets.UTF_8);
+		Matcher m = Pattern.compile("DEFAULT (nextval\\('[^']+'::regclass\\))").matcher(text);
+		int n = 0;
+		while (m.find()) {
+			errors.merge("SHML_068: DEFAULT " + m.group(1) + " uses a sequence, and sequences are not modelled: the generated "
+					+ "schema would not create it", 1, Integer::sum);
+			n++;
 		}
-		tables.addAll(List.of("public.rental", "public.staff", "public.store"));
-		check("pagila-schema.sql", statements, 121,
-				new Today(1, "line 15: missing EOF at 'SET'", 0, tables, "public.film: no viable alternative at input 'public'"));
+		Assertions.assertEquals(68, n);
+		return errors;
 	}
 
 	@Test

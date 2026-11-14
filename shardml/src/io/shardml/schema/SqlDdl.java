@@ -8,6 +8,8 @@ import io.shardml.schema.SqlTypes.SqlType;
 import io.shardml.sql.Column;
 import io.shardml.sql.Constraint;
 import io.shardml.sql.ForeignKey;
+import io.shardml.sql.Index;
+import io.shardml.sql.IndexPart;
 import io.shardml.sql.NamedConstraint;
 import io.shardml.sql.NotNull;
 import io.shardml.sql.Nullable;
@@ -17,6 +19,7 @@ import io.shardml.sql.RawKind;
 import io.shardml.sql.RawSql;
 import io.shardml.sql.RefAction;
 import io.shardml.sql.Schema;
+import io.shardml.sql.SchemaDecl;
 import io.shardml.sql.Table;
 import io.shardml.sql.TableCheck;
 import io.shardml.sql.TableConstraint;
@@ -32,7 +35,8 @@ import io.shardml.sql.UniqueKey;
  *  - names, quoted where the source quoted them or where PostgreSQL needs it (SqlNames), constraint
  *    names included;
  *  - DEFAULT, CHECK and GENERATED expressions and WITH (..) table options, verbatim (RawSql: the
- *    tokens as written, comments dropped, whitespace collapsed), and DEFERRABLE clauses;
+ *    tokens as written, comments dropped, whitespace collapsed), DEFERRABLE clauses, and an index's
+ *    expressions, part options (operator class, ordering) and tail (INCLUDE, WITH, WHERE);
  *  - the optional parts of a foreign key: no referenced column list stays omitted, and an action
  *    or MATCH appears only if the source wrote it.
  * Keywords are upper case. Foreign keys are not written in CREATE TABLE but as ALTER TABLE in
@@ -50,11 +54,16 @@ public final class SqlDdl {
 	private SqlDdl() {
 	}
 
-	// CREATE TABLE statements for every table, in schema order, without their foreign keys
-	public static String createTables(Schema schema) {
+	// The schema without its foreign keys: CREATE SCHEMA IF NOT EXISTS for every CREATE SCHEMA, then
+	// every table in schema order, then every index in source order. A key added by ALTER TABLE ..
+	// ADD is written inline, in the table it belongs to (the catalog is the same); the pg_dump
+	// preamble is left out (SqlStatements)
+	public static String schema(Schema schema) {
 		StringBuilder out = new StringBuilder();
 		if (schema == null)
 			return "";
+		for (SchemaDecl decl : schema.getSchemas())
+			out.append("CREATE SCHEMA IF NOT EXISTS ").append(SqlNames.schema(decl)).append(";\n");
 		for (Table table : schema.getTables()) {
 			if (out.length() > 0)
 				out.append("\n");
@@ -68,7 +77,7 @@ public final class SqlDdl {
 				}
 				lines.add(line.toString());
 			}
-			for (TableConstraint constraint : table.getConstraints()) {
+			for (TableConstraint constraint : SchemaFacts.tableConstraints(table)) {
 				if (!(constraint instanceof ForeignKey))
 					lines.add(named(constraint, tableConstraint(constraint)));
 			}
@@ -81,11 +90,39 @@ public final class SqlDdl {
 				out.append(" ").append(raw(table.getOptions()));
 			out.append(";\n");
 		}
+		if (!schema.getIndexes().isEmpty())
+			out.append("\n");
+		for (Index index : schema.getIndexes())
+			out.append(index(index)).append(";\n");
+		return out.toString();
+	}
+
+	// CREATE [UNIQUE] INDEX [IF NOT EXISTS] [name] ON [ONLY] table [USING method] (parts) [tail]; the
+	// table as declared, the expressions, options and tail verbatim
+	private static String index(Index index) {
+		StringBuilder out = new StringBuilder("CREATE ").append(index.isUnique() ? "UNIQUE " : "").append("INDEX ")
+				.append(index.isIfNotExists() ? "IF NOT EXISTS " : "");
+		String name = SqlNames.index(index);
+		if (name != null)
+			out.append(name).append(" ");
+		out.append("ON ").append(index.isOnly() ? "ONLY " : "").append(SqlNames.qualified(index.getTable()));
+		String method = SqlNames.method(index);
+		if (method != null)
+			out.append(" USING ").append(method);
+		List<String> parts = new ArrayList<>();
+		for (IndexPart part : index.getParts()) {
+			String text = part.getExpression() != null ? part.getExpression() : SqlNames.column(part.getColumn());
+			parts.add(part.getOptions() == null ? text : text + " " + part.getOptions());
+		}
+		out.append(" (").append(String.join(", ", parts)).append(")");
+		if (index.getTail() != null)
+			out.append(" ").append(index.getTail());
 		return out.toString();
 	}
 
 	// one ALTER TABLE .. ADD .. FOREIGN KEY per foreign key, table by table in schema order and in
-	// source order within a table; empty if the schema has none
+	// source order within a table (column-level, then table-level and ALTER TABLE); empty if the
+	// schema has none
 	public static String foreignKeys(Schema schema) {
 		StringBuilder out = new StringBuilder();
 		if (schema == null)
@@ -97,7 +134,7 @@ public final class SqlDdl {
 						appendForeignKey(out, table, SqlNames.column(column), key);
 				}
 			}
-			for (TableConstraint constraint : table.getConstraints()) {
+			for (TableConstraint constraint : SchemaFacts.tableConstraints(table)) {
 				if (constraint instanceof ForeignKey key)
 					appendForeignKey(out, table, columns(key.getColumns()), key);
 			}

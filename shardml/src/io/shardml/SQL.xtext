@@ -19,9 +19,22 @@ generate sql "http://shardml.io/SQL"
 
 import "http://www.eclipse.org/emf/2002/Ecore" as ecore
 
-// Root container
+// Root container: the statements of a schema file, each optionally ended by ';' (pg_dump input,
+// Plan-sql step 5). A statement is one of:
+//  - a modelled one: CREATE TABLE, ALTER TABLE .. ADD constraint (pg_dump declares every key there),
+//    CREATE [UNIQUE] INDEX, CREATE SCHEMA;
+//  - any other statement, kept as its words up to its ';' (Statement) and sorted by SqlStatements
+//    into the pg_dump preamble the generator leaves out (SET, set_config, OWNER TO, psql
+//    restrict / unrestrict lines, GRANT / REVOKE / COMMENT ON, DROP TABLE), counted in one INFO issue
+//    per file, and everything else, a located error (SHML_061). Nothing is skipped silently.
+// The alternatives are told apart by their first two tokens, so no backtracking is needed.
 Schema:
-	(tables += Table ';'?)*
+	( ( tables += Table
+	  | alters += AlterTable
+	  | indexes += Index
+	  | schemas += SchemaDecl
+	  | statements += Statement
+	  ) ';'? )*
 ;
 
 // maps to database table
@@ -36,6 +49,50 @@ Table:
 // WITH (storage_parameter = value, ...) after a table, kept verbatim (pgbench: fillfactor)
 TableOptions returns RawSql:
 	kind=WithKind text=Parenthesized
+;
+
+// ALTER TABLE [IF EXISTS] [ONLY] [schema.]table, then either ADD a table constraint, merged into the
+// table's keys by SchemaFacts, or any other action up to its ';' (OWNER TO, ATTACH PARTITION, ALTER
+// COLUMN, ..), sorted by SqlStatements as a Statement is. Only ADD links its table (the qualifier
+// must match the table's own CREATE TABLE, as in REFERENCES): pg_dump also writes ALTER TABLE ..
+// OWNER TO for sequences and views, so the other actions keep the name as text (target)
+AlterTable:
+	'ALTER' 'TABLE' (ifExists?='IF' 'EXISTS')? only?='ONLY'? (schemaName=Name '.')?
+	( table=[Table|Name] 'ADD' constraint=TableConstraint
+	| target=Name body=AlterTableBody ';'
+	)
+;
+
+// CREATE [UNIQUE] INDEX [IF NOT EXISTS] [name] ON [ONLY] [schema.]table [USING method] (parts)
+// [INCLUDE (..)] [WITH (..)] [WHERE (..)]. A part is a column or a (parenthesized expression), each
+// with its operator class, ordering and collation kept as written; the tail is verbatim. A WHERE
+// predicate must be parenthesized, as pg_dump writes it
+Index:
+	'CREATE' unique?='UNIQUE'? 'INDEX' (ifNotExists?='IF' 'NOT' 'EXISTS')? name=Name?
+	'ON' only?='ONLY'? (schemaName=Name '.')? table=[Table|Name] ('USING' method=Name)?
+	'(' parts += IndexPart (',' parts += IndexPart)* ')'
+	(tail=IndexTail)?
+;
+
+IndexPart:
+	(column=[Column|Name] | expression=Parenthesized) (options=IndexOptions)?
+;
+
+// CREATE SCHEMA [IF NOT EXISTS] name; written back with IF NOT EXISTS
+SchemaDecl:
+	'CREATE' 'SCHEMA' (ifNotExists?='IF' 'NOT' 'EXISTS')? name=Name
+;
+
+// Any statement the grammar does not model: its first word, then its words as written up to its ';'
+// (a dollar-quoted body may contain ';'), or a psql meta-command line. CREATE and ALTER here are
+// the forms whose second word is not one of the modelled ones (TABLE, INDEX, SCHEMA), so a broken
+// CREATE TABLE is a syntax error where it breaks, never an unsupported statement.
+Statement:
+	( verb='CREATE' body=CreateBody
+	| verb='ALTER' body=AlterBody
+	| verb=Verb (body=RawTokens)?
+	) ';'
+	| meta=PSQL_META
 ;
 
 // supports zero or more constraints (primary key, unique, not null)
@@ -233,9 +290,58 @@ Parenthesized:
 
 // inside parentheses: any token but ';' and unbalanced parentheses
 InnerToken:
-	Name | STRING | INT | ANY_OTHER | '.' | ',' | Parenthesized
+	Atom | Parenthesized
+;
+
+// any one token but ';' and the parentheses: every keyword of this grammar is a Name or listed here
+Atom:
+	Name | STRING | INT | ANY_OTHER | DOLLAR_STRING | '.' | ','
 	| 'CREATE' | 'TABLE' | 'NOT' | 'NULL' | 'PRIMARY' | 'UNIQUE' | 'WITH' | 'CONSTRAINT' | 'FOREIGN'
 	| 'REFERENCES' | 'ON' | 'DEFAULT' | 'FULL' | 'DEFERRABLE' | 'INITIALLY' | 'CHECK' | 'AS'
+	| 'ONLY' | 'USING' | 'WHERE'
+;
+
+// the words of a statement the grammar does not model, up to its ';': any token, parentheses
+// unbalanced or not
+RawTokens:
+	RawToken+
+;
+
+RawToken:
+	Atom | '(' | ')'
+;
+
+// after CREATE: not TABLE, INDEX, UNIQUE or SCHEMA (FUNCTION, VIEW, SEQUENCE, TYPE, .. are no keywords here)
+CreateBody:
+	ID RawToken*
+;
+
+// after ALTER: not TABLE (SCHEMA, INDEX, SEQUENCE, FUNCTION, DEFAULT PRIVILEGES, ..)
+AlterBody:
+	(ID | 'SCHEMA' | 'INDEX' | 'DEFAULT') RawToken*
+;
+
+// after ALTER TABLE t: not ADD (OWNER TO, ATTACH PARTITION, ALTER COLUMN, SET .., DROP ..)
+AlterTableBody:
+	(ID | 'ALTER' | 'SET') RawToken*
+;
+
+// the first word of any other statement (SET, SELECT, GRANT, DROP, COMMENT, BEGIN, ..), or a stray
+// character: the rest of a body in an unsupported $tag$ quote, cut at its first ';', is read as
+// statements up to the closing $tag$; (located errors), not as the end of the file
+Verb:
+	ID | 'SET' | 'UPDATE' | 'DELETE' | ANY_OTHER
+;
+
+// an index part's operator class, ASC / DESC, NULLS FIRST / LAST, COLLATE ..: up to its ',' or ')'
+IndexOptions:
+	(Name | STRING | '.' | Parenthesized)+
+;
+
+IndexTail:
+	'INCLUDE' Parenthesized ('WITH' Parenthesized)? ('WHERE' Parenthesized)?
+	| 'WITH' Parenthesized ('WHERE' Parenthesized)?
+	| 'WHERE' Parenthesized
 ;
 
 // A table or column name: an identifier, a "quoted identifier", or a keyword of this grammar
@@ -260,6 +366,7 @@ ExprName:
 	| 'UUID' | 'DATE' | 'SERIAL' | 'BIGSERIAL' | 'TIMESTAMPTZ' | 'JSONB' | 'BYTEA'       // not PostgreSQL keywords
 	| 'DELETE' | 'UPDATE' | 'CASCADE' | 'RESTRICT' | 'NO' | 'ACTION' | 'SET' | 'MATCH'    // U
 	| 'SIMPLE' | 'DEFERRED' | 'IMMEDIATE' | 'ALWAYS' | 'BY' | 'IDENTITY' | 'STORED'       // U
+	| 'ALTER' | 'ADD' | 'INDEX' | 'SCHEMA' | 'INCLUDE'                                   // U
 ;
 
 // PostgreSQL's identifier characters (ASCII); no ^ escape, a keyword is quoted instead
@@ -269,6 +376,12 @@ terminal QUOTED_ID: '"' ('""' | !'"')* '"';
 // SQL strings: single quotes, '' stands for one '
 terminal STRING: "'" ("''" | !"'")* "'";
 terminal INT returns ecore::EInt: ('0'..'9')+;
+// a dollar-quoted string (function bodies) with the tags pg_dump writes: $$, else $_$, else $__$
+// (it adds '_' until the tag is not in the body). Other tags ($body$ .. $body$) are not supported: a
+// lexer rule cannot match a closing tag to its opening one
+terminal DOLLAR_STRING: '$$' -> '$$' | '$_$' -> '$_$' | '$__$' -> '$__$';
+// a psql meta-command (a backslash, then the rest of its line)
+terminal PSQL_META: '\\' !('\n'|'\r')*;
 terminal ML_COMMENT: '/*' -> '*/';
 terminal SL_COMMENT: '--' !('\n'|'\r')* ('\r'? '\n')?;
 terminal WS: (' '|'\t'|'\r'|'\n')+;

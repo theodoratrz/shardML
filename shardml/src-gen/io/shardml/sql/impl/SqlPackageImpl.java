@@ -4,10 +4,13 @@
 package io.shardml.sql.impl;
 
 import io.shardml.sql.AllTypes;
+import io.shardml.sql.AlterTable;
 import io.shardml.sql.Char;
 import io.shardml.sql.Column;
 import io.shardml.sql.Constraint;
 import io.shardml.sql.ForeignKey;
+import io.shardml.sql.Index;
+import io.shardml.sql.IndexPart;
 import io.shardml.sql.MatchKind;
 import io.shardml.sql.NamedConstraint;
 import io.shardml.sql.NotNull;
@@ -19,8 +22,10 @@ import io.shardml.sql.RawKind;
 import io.shardml.sql.RawSql;
 import io.shardml.sql.RefAction;
 import io.shardml.sql.Schema;
+import io.shardml.sql.SchemaDecl;
 import io.shardml.sql.SqlFactory;
 import io.shardml.sql.SqlPackage;
+import io.shardml.sql.Statement;
 import io.shardml.sql.Table;
 import io.shardml.sql.TableCheck;
 import io.shardml.sql.TableConstraint;
@@ -64,6 +69,41 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
    * @generated
    */
   private EClass rawSqlEClass = null;
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  private EClass alterTableEClass = null;
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  private EClass indexEClass = null;
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  private EClass indexPartEClass = null;
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  private EClass schemaDeclEClass = null;
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  private EClass statementEClass = null;
 
   /**
    * <!-- begin-user-doc -->
@@ -288,6 +328,50 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
    * @generated
    */
   @Override
+  public EReference getSchema_Alters()
+  {
+    return (EReference)schemaEClass.getEStructuralFeatures().get(1);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EReference getSchema_Indexes()
+  {
+    return (EReference)schemaEClass.getEStructuralFeatures().get(2);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EReference getSchema_Schemas()
+  {
+    return (EReference)schemaEClass.getEStructuralFeatures().get(3);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EReference getSchema_Statements()
+  {
+    return (EReference)schemaEClass.getEStructuralFeatures().get(4);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
   public EClass getTable()
   {
     return tableEClass;
@@ -390,6 +474,325 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
   public EAttribute getRawSql_Text()
   {
     return (EAttribute)rawSqlEClass.getEStructuralFeatures().get(1);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EClass getAlterTable()
+  {
+    return alterTableEClass;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getAlterTable_IfExists()
+  {
+    return (EAttribute)alterTableEClass.getEStructuralFeatures().get(0);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getAlterTable_Only()
+  {
+    return (EAttribute)alterTableEClass.getEStructuralFeatures().get(1);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getAlterTable_SchemaName()
+  {
+    return (EAttribute)alterTableEClass.getEStructuralFeatures().get(2);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EReference getAlterTable_Table()
+  {
+    return (EReference)alterTableEClass.getEStructuralFeatures().get(3);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EReference getAlterTable_Constraint()
+  {
+    return (EReference)alterTableEClass.getEStructuralFeatures().get(4);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getAlterTable_Target()
+  {
+    return (EAttribute)alterTableEClass.getEStructuralFeatures().get(5);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getAlterTable_Body()
+  {
+    return (EAttribute)alterTableEClass.getEStructuralFeatures().get(6);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EClass getIndex()
+  {
+    return indexEClass;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getIndex_Unique()
+  {
+    return (EAttribute)indexEClass.getEStructuralFeatures().get(0);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getIndex_IfNotExists()
+  {
+    return (EAttribute)indexEClass.getEStructuralFeatures().get(1);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getIndex_Name()
+  {
+    return (EAttribute)indexEClass.getEStructuralFeatures().get(2);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getIndex_Only()
+  {
+    return (EAttribute)indexEClass.getEStructuralFeatures().get(3);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getIndex_SchemaName()
+  {
+    return (EAttribute)indexEClass.getEStructuralFeatures().get(4);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EReference getIndex_Table()
+  {
+    return (EReference)indexEClass.getEStructuralFeatures().get(5);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getIndex_Method()
+  {
+    return (EAttribute)indexEClass.getEStructuralFeatures().get(6);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EReference getIndex_Parts()
+  {
+    return (EReference)indexEClass.getEStructuralFeatures().get(7);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getIndex_Tail()
+  {
+    return (EAttribute)indexEClass.getEStructuralFeatures().get(8);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EClass getIndexPart()
+  {
+    return indexPartEClass;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EReference getIndexPart_Column()
+  {
+    return (EReference)indexPartEClass.getEStructuralFeatures().get(0);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getIndexPart_Expression()
+  {
+    return (EAttribute)indexPartEClass.getEStructuralFeatures().get(1);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getIndexPart_Options()
+  {
+    return (EAttribute)indexPartEClass.getEStructuralFeatures().get(2);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EClass getSchemaDecl()
+  {
+    return schemaDeclEClass;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getSchemaDecl_IfNotExists()
+  {
+    return (EAttribute)schemaDeclEClass.getEStructuralFeatures().get(0);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getSchemaDecl_Name()
+  {
+    return (EAttribute)schemaDeclEClass.getEStructuralFeatures().get(1);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EClass getStatement()
+  {
+    return statementEClass;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getStatement_Verb()
+  {
+    return (EAttribute)statementEClass.getEStructuralFeatures().get(0);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getStatement_Body()
+  {
+    return (EAttribute)statementEClass.getEStructuralFeatures().get(1);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getStatement_Meta()
+  {
+    return (EAttribute)statementEClass.getEStructuralFeatures().get(2);
   }
 
   /**
@@ -887,6 +1290,10 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
     // Create classes and their features
     schemaEClass = createEClass(SCHEMA);
     createEReference(schemaEClass, SCHEMA__TABLES);
+    createEReference(schemaEClass, SCHEMA__ALTERS);
+    createEReference(schemaEClass, SCHEMA__INDEXES);
+    createEReference(schemaEClass, SCHEMA__SCHEMAS);
+    createEReference(schemaEClass, SCHEMA__STATEMENTS);
 
     tableEClass = createEClass(TABLE);
     createEAttribute(tableEClass, TABLE__IF_NOT_EXISTS);
@@ -899,6 +1306,40 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
     rawSqlEClass = createEClass(RAW_SQL);
     createEAttribute(rawSqlEClass, RAW_SQL__KIND);
     createEAttribute(rawSqlEClass, RAW_SQL__TEXT);
+
+    alterTableEClass = createEClass(ALTER_TABLE);
+    createEAttribute(alterTableEClass, ALTER_TABLE__IF_EXISTS);
+    createEAttribute(alterTableEClass, ALTER_TABLE__ONLY);
+    createEAttribute(alterTableEClass, ALTER_TABLE__SCHEMA_NAME);
+    createEReference(alterTableEClass, ALTER_TABLE__TABLE);
+    createEReference(alterTableEClass, ALTER_TABLE__CONSTRAINT);
+    createEAttribute(alterTableEClass, ALTER_TABLE__TARGET);
+    createEAttribute(alterTableEClass, ALTER_TABLE__BODY);
+
+    indexEClass = createEClass(INDEX);
+    createEAttribute(indexEClass, INDEX__UNIQUE);
+    createEAttribute(indexEClass, INDEX__IF_NOT_EXISTS);
+    createEAttribute(indexEClass, INDEX__NAME);
+    createEAttribute(indexEClass, INDEX__ONLY);
+    createEAttribute(indexEClass, INDEX__SCHEMA_NAME);
+    createEReference(indexEClass, INDEX__TABLE);
+    createEAttribute(indexEClass, INDEX__METHOD);
+    createEReference(indexEClass, INDEX__PARTS);
+    createEAttribute(indexEClass, INDEX__TAIL);
+
+    indexPartEClass = createEClass(INDEX_PART);
+    createEReference(indexPartEClass, INDEX_PART__COLUMN);
+    createEAttribute(indexPartEClass, INDEX_PART__EXPRESSION);
+    createEAttribute(indexPartEClass, INDEX_PART__OPTIONS);
+
+    schemaDeclEClass = createEClass(SCHEMA_DECL);
+    createEAttribute(schemaDeclEClass, SCHEMA_DECL__IF_NOT_EXISTS);
+    createEAttribute(schemaDeclEClass, SCHEMA_DECL__NAME);
+
+    statementEClass = createEClass(STATEMENT);
+    createEAttribute(statementEClass, STATEMENT__VERB);
+    createEAttribute(statementEClass, STATEMENT__BODY);
+    createEAttribute(statementEClass, STATEMENT__META);
 
     columnEClass = createEClass(COLUMN);
     createEAttribute(columnEClass, COLUMN__NAME);
@@ -1005,6 +1446,10 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
     // Initialize classes and features; add operations and parameters
     initEClass(schemaEClass, Schema.class, "Schema", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
     initEReference(getSchema_Tables(), this.getTable(), null, "tables", null, 0, -1, Schema.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEReference(getSchema_Alters(), this.getAlterTable(), null, "alters", null, 0, -1, Schema.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEReference(getSchema_Indexes(), this.getIndex(), null, "indexes", null, 0, -1, Schema.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEReference(getSchema_Schemas(), this.getSchemaDecl(), null, "schemas", null, 0, -1, Schema.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEReference(getSchema_Statements(), this.getStatement(), null, "statements", null, 0, -1, Schema.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
     initEClass(tableEClass, Table.class, "Table", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
     initEAttribute(getTable_IfNotExists(), ecorePackage.getEBoolean(), "ifNotExists", null, 0, 1, Table.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
@@ -1017,6 +1462,40 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
     initEClass(rawSqlEClass, RawSql.class, "RawSql", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
     initEAttribute(getRawSql_Kind(), this.getRawKind(), "kind", null, 0, 1, RawSql.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
     initEAttribute(getRawSql_Text(), ecorePackage.getEString(), "text", null, 0, 1, RawSql.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+
+    initEClass(alterTableEClass, AlterTable.class, "AlterTable", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
+    initEAttribute(getAlterTable_IfExists(), ecorePackage.getEBoolean(), "ifExists", null, 0, 1, AlterTable.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getAlterTable_Only(), ecorePackage.getEBoolean(), "only", null, 0, 1, AlterTable.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getAlterTable_SchemaName(), ecorePackage.getEString(), "schemaName", null, 0, 1, AlterTable.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEReference(getAlterTable_Table(), this.getTable(), null, "table", null, 0, 1, AlterTable.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_COMPOSITE, IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEReference(getAlterTable_Constraint(), this.getTableConstraint(), null, "constraint", null, 0, 1, AlterTable.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getAlterTable_Target(), ecorePackage.getEString(), "target", null, 0, 1, AlterTable.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getAlterTable_Body(), ecorePackage.getEString(), "body", null, 0, 1, AlterTable.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+
+    initEClass(indexEClass, Index.class, "Index", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
+    initEAttribute(getIndex_Unique(), ecorePackage.getEBoolean(), "unique", null, 0, 1, Index.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getIndex_IfNotExists(), ecorePackage.getEBoolean(), "ifNotExists", null, 0, 1, Index.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getIndex_Name(), ecorePackage.getEString(), "name", null, 0, 1, Index.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getIndex_Only(), ecorePackage.getEBoolean(), "only", null, 0, 1, Index.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getIndex_SchemaName(), ecorePackage.getEString(), "schemaName", null, 0, 1, Index.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEReference(getIndex_Table(), this.getTable(), null, "table", null, 0, 1, Index.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_COMPOSITE, IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getIndex_Method(), ecorePackage.getEString(), "method", null, 0, 1, Index.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEReference(getIndex_Parts(), this.getIndexPart(), null, "parts", null, 0, -1, Index.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getIndex_Tail(), ecorePackage.getEString(), "tail", null, 0, 1, Index.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+
+    initEClass(indexPartEClass, IndexPart.class, "IndexPart", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
+    initEReference(getIndexPart_Column(), this.getColumn(), null, "column", null, 0, 1, IndexPart.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_COMPOSITE, IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getIndexPart_Expression(), ecorePackage.getEString(), "expression", null, 0, 1, IndexPart.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getIndexPart_Options(), ecorePackage.getEString(), "options", null, 0, 1, IndexPart.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+
+    initEClass(schemaDeclEClass, SchemaDecl.class, "SchemaDecl", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
+    initEAttribute(getSchemaDecl_IfNotExists(), ecorePackage.getEBoolean(), "ifNotExists", null, 0, 1, SchemaDecl.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getSchemaDecl_Name(), ecorePackage.getEString(), "name", null, 0, 1, SchemaDecl.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+
+    initEClass(statementEClass, Statement.class, "Statement", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
+    initEAttribute(getStatement_Verb(), ecorePackage.getEString(), "verb", null, 0, 1, Statement.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getStatement_Body(), ecorePackage.getEString(), "body", null, 0, 1, Statement.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getStatement_Meta(), ecorePackage.getEString(), "meta", null, 0, 1, Statement.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
     initEClass(columnEClass, Column.class, "Column", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
     initEAttribute(getColumn_Name(), ecorePackage.getEString(), "name", null, 0, 1, Column.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);

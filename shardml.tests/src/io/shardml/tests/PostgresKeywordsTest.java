@@ -109,6 +109,11 @@ public class PostgresKeywordsTest {
 				Map.entry("FULL", "T"), Map.entry("GENERATED", "U"), Map.entry("IDENTITY", "U"), Map.entry("IMMEDIATE", "U"),
 				Map.entry("INITIALLY", "R"), Map.entry("MATCH", "U"), Map.entry("NO", "U"), Map.entry("ON", "R"),
 				Map.entry("REFERENCES", "R"), Map.entry("RESTRICT", "U"), Map.entry("SET", "U"), Map.entry("SIMPLE", "U"),
-				Map.entry("STORED", "U"), Map.entry("UPDATE", "U")), categories);
+				Map.entry("STORED", "U"), Map.entry("UPDATE", "U"),
+				// step 5: ALTER TABLE .. ADD, CREATE [UNIQUE] INDEX .. ON [ONLY] .. USING .. INCLUDE / WHERE,
+				// CREATE SCHEMA. Other statements are not parsed word by word, so their words (SELECT,
+				// GRANT, OWNER, TO, ..) are not keywords here
+				Map.entry("ADD", "U"), Map.entry("ALTER", "U"), Map.entry("INCLUDE", "U"), Map.entry("INDEX", "U"),
+				Map.entry("ONLY", "R"), Map.entry("SCHEMA", "U"), Map.entry("USING", "R"), Map.entry("WHERE", "R")), categories);
 	}
 }

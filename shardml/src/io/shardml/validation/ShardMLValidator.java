@@ -79,7 +79,7 @@ public class ShardMLValidator extends AbstractShardMLValidator {
 	private static final String PLACEMENT_SKEW            = "SHML_037";
 	private static final String DUPLICATE_PLACEMENT       = "SHML_038";
 	private static final String PLACEMENT_WITHOUT_SHARD   = "SHML_039";
-	// SHML_040-060 are workload codes, 061-068 SQL (SQLValidator, SQLLinkingDiagnosticMessageProvider)
+	// SHML_040-060 are workload codes, 061-068 and 075 SQL (SQLValidator, SQLLinkingDiagnosticMessageProvider)
 	private static final String FK_KEYS_NOT_PAIRED        = "SHML_069";
 	private static final String FK_NOT_COLOCATED          = "SHML_070";
 	private static final String FK_REFERENCE_TO_DISTRIBUTED = "SHML_071";

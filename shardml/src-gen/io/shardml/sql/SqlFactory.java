@@ -51,6 +51,51 @@ public interface SqlFactory extends EFactory
   RawSql createRawSql();
 
   /**
+   * Returns a new object of class '<em>Alter Table</em>'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return a new object of class '<em>Alter Table</em>'.
+   * @generated
+   */
+  AlterTable createAlterTable();
+
+  /**
+   * Returns a new object of class '<em>Index</em>'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return a new object of class '<em>Index</em>'.
+   * @generated
+   */
+  Index createIndex();
+
+  /**
+   * Returns a new object of class '<em>Index Part</em>'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return a new object of class '<em>Index Part</em>'.
+   * @generated
+   */
+  IndexPart createIndexPart();
+
+  /**
+   * Returns a new object of class '<em>Schema Decl</em>'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return a new object of class '<em>Schema Decl</em>'.
+   * @generated
+   */
+  SchemaDecl createSchemaDecl();
+
+  /**
+   * Returns a new object of class '<em>Statement</em>'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return a new object of class '<em>Statement</em>'.
+   * @generated
+   */
+  Statement createStatement();
+
+  /**
    * Returns a new object of class '<em>Column</em>'.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->

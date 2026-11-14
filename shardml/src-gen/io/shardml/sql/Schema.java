@@ -17,6 +17,10 @@ import org.eclipse.emf.ecore.EObject;
  * </p>
  * <ul>
  *   <li>{@link io.shardml.sql.Schema#getTables <em>Tables</em>}</li>
+ *   <li>{@link io.shardml.sql.Schema#getAlters <em>Alters</em>}</li>
+ *   <li>{@link io.shardml.sql.Schema#getIndexes <em>Indexes</em>}</li>
+ *   <li>{@link io.shardml.sql.Schema#getSchemas <em>Schemas</em>}</li>
+ *   <li>{@link io.shardml.sql.Schema#getStatements <em>Statements</em>}</li>
  * </ul>
  *
  * @see io.shardml.sql.SqlPackage#getSchema()
@@ -36,5 +40,53 @@ public interface Schema extends EObject
    * @generated
    */
   EList<Table> getTables();
+
+  /**
+   * Returns the value of the '<em><b>Alters</b></em>' containment reference list.
+   * The list contents are of type {@link io.shardml.sql.AlterTable}.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the value of the '<em>Alters</em>' containment reference list.
+   * @see io.shardml.sql.SqlPackage#getSchema_Alters()
+   * @model containment="true"
+   * @generated
+   */
+  EList<AlterTable> getAlters();
+
+  /**
+   * Returns the value of the '<em><b>Indexes</b></em>' containment reference list.
+   * The list contents are of type {@link io.shardml.sql.Index}.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the value of the '<em>Indexes</em>' containment reference list.
+   * @see io.shardml.sql.SqlPackage#getSchema_Indexes()
+   * @model containment="true"
+   * @generated
+   */
+  EList<Index> getIndexes();
+
+  /**
+   * Returns the value of the '<em><b>Schemas</b></em>' containment reference list.
+   * The list contents are of type {@link io.shardml.sql.SchemaDecl}.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the value of the '<em>Schemas</em>' containment reference list.
+   * @see io.shardml.sql.SqlPackage#getSchema_Schemas()
+   * @model containment="true"
+   * @generated
+   */
+  EList<SchemaDecl> getSchemas();
+
+  /**
+   * Returns the value of the '<em><b>Statements</b></em>' containment reference list.
+   * The list contents are of type {@link io.shardml.sql.Statement}.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the value of the '<em>Statements</em>' containment reference list.
+   * @see io.shardml.sql.SqlPackage#getSchema_Statements()
+   * @model containment="true"
+   * @generated
+   */
+  EList<Statement> getStatements();
 
 } // Schema

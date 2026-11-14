@@ -69,6 +69,11 @@ public class SqlFactoryImpl extends EFactoryImpl implements SqlFactory
       case SqlPackage.SCHEMA: return createSchema();
       case SqlPackage.TABLE: return createTable();
       case SqlPackage.RAW_SQL: return createRawSql();
+      case SqlPackage.ALTER_TABLE: return createAlterTable();
+      case SqlPackage.INDEX: return createIndex();
+      case SqlPackage.INDEX_PART: return createIndexPart();
+      case SqlPackage.SCHEMA_DECL: return createSchemaDecl();
+      case SqlPackage.STATEMENT: return createStatement();
       case SqlPackage.COLUMN: return createColumn();
       case SqlPackage.VARCHAR: return createVarchar();
       case SqlPackage.NUMERIC: return createNumeric();
@@ -169,6 +174,66 @@ public class SqlFactoryImpl extends EFactoryImpl implements SqlFactory
   {
     RawSqlImpl rawSql = new RawSqlImpl();
     return rawSql;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public AlterTable createAlterTable()
+  {
+    AlterTableImpl alterTable = new AlterTableImpl();
+    return alterTable;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public Index createIndex()
+  {
+    IndexImpl index = new IndexImpl();
+    return index;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public IndexPart createIndexPart()
+  {
+    IndexPartImpl indexPart = new IndexPartImpl();
+    return indexPart;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public SchemaDecl createSchemaDecl()
+  {
+    SchemaDeclImpl schemaDecl = new SchemaDeclImpl();
+    return schemaDecl;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public Statement createStatement()
+  {
+    StatementImpl statement = new StatementImpl();
+    return statement;
   }
 
   /**

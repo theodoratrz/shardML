@@ -95,7 +95,7 @@ public class ShardMLGenerator extends AbstractGenerator {
 	// so the schema and distribution scripts together deploy to an empty database.
 	// Foreign keys are left out: they go to foreignKeyDefinitions
 	public CharSequence schemaDefinitions(Schema schema) {
-		return SqlDdl.createTables(schema);
+		return SqlDdl.schema(schema);
 	}
 
 	// the schema's foreign keys as ALTER TABLE statements, applied after the distribution script:

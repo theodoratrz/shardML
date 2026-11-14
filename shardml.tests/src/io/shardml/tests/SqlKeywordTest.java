@@ -139,9 +139,11 @@ public class SqlKeywordTest {
 		}
 		// the reserved words of the grammar today: step 3 added WITH (TIMESTAMP WITH TIME ZONE), step 4
 		// the constraint words (AS, CHECK, CONSTRAINT, DEFAULT, DEFERRABLE, FOREIGN, INITIALLY, ON,
-		// REFERENCES) and FULL (category T, MATCH FULL)
+		// REFERENCES) and FULL (category T, MATCH FULL), step 5 ONLY (ALTER TABLE ONLY, ON ONLY), USING and
+		// WHERE (CREATE INDEX)
 		Assertions.assertEquals(List.of("AS", "CHECK", "CONSTRAINT", "CREATE", "DEFAULT", "DEFERRABLE", "FOREIGN", "FULL",
-				"INITIALLY", "NOT", "NULL", "ON", "PRIMARY", "REFERENCES", "TABLE", "UNIQUE", "WITH"), reserved);
+				"INITIALLY", "NOT", "NULL", "ON", "ONLY", "PRIMARY", "REFERENCES", "TABLE", "UNIQUE", "USING", "WHERE", "WITH"),
+				reserved);
 		Assertions.assertEquals(List.of(), failures);
 	}
 

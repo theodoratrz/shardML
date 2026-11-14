@@ -10,7 +10,9 @@ import org.eclipse.xtext.nodemodel.INode;
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils;
 
 import io.shardml.sql.Column;
+import io.shardml.sql.Index;
 import io.shardml.sql.NamedConstraint;
+import io.shardml.sql.SchemaDecl;
 import io.shardml.sql.SqlPackage;
 import io.shardml.sql.Table;
 
@@ -105,6 +107,21 @@ public final class SqlNames {
 	public static String constraint(NamedConstraint constraint) {
 		return constraint.getName() == null ? null
 				: write(constraint, SqlPackage.Literals.NAMED_CONSTRAINT__NAME, constraint.getName());
+	}
+
+	// an index's name, or null if it has none (CREATE INDEX ON t ..)
+	public static String index(Index index) {
+		return index.getName() == null ? null : write(index, SqlPackage.Literals.INDEX__NAME, index.getName());
+	}
+
+	// an index's access method (USING btree), or null if it has none
+	public static String method(Index index) {
+		return index.getMethod() == null ? null : write(index, SqlPackage.Literals.INDEX__METHOD, index.getMethod());
+	}
+
+	// the schema of a CREATE SCHEMA
+	public static String schema(SchemaDecl schema) {
+		return write(schema, SqlPackage.Literals.SCHEMA_DECL__NAME, schema.getName());
 	}
 
 	public static String schema(Table table) {

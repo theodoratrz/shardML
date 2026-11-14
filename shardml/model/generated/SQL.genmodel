@@ -46,6 +46,10 @@
     </genEnums>
     <genClasses ecoreClass="SQL.ecore#//Schema">
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference SQL.ecore#//Schema/tables"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference SQL.ecore#//Schema/alters"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference SQL.ecore#//Schema/indexes"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference SQL.ecore#//Schema/schemas"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference SQL.ecore#//Schema/statements"/>
     </genClasses>
     <genClasses ecoreClass="SQL.ecore#//Table">
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Table/ifNotExists"/>
@@ -58,6 +62,40 @@
     <genClasses ecoreClass="SQL.ecore#//RawSql">
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//RawSql/kind"/>
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//RawSql/text"/>
+    </genClasses>
+    <genClasses ecoreClass="SQL.ecore#//AlterTable">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//AlterTable/ifExists"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//AlterTable/only"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//AlterTable/schemaName"/>
+      <genFeatures notify="false" createChild="false" propertySortChoices="true" ecoreFeature="ecore:EReference SQL.ecore#//AlterTable/table"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference SQL.ecore#//AlterTable/constraint"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//AlterTable/target"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//AlterTable/body"/>
+    </genClasses>
+    <genClasses ecoreClass="SQL.ecore#//Index">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Index/unique"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Index/ifNotExists"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Index/name"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Index/only"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Index/schemaName"/>
+      <genFeatures notify="false" createChild="false" propertySortChoices="true" ecoreFeature="ecore:EReference SQL.ecore#//Index/table"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Index/method"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference SQL.ecore#//Index/parts"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Index/tail"/>
+    </genClasses>
+    <genClasses ecoreClass="SQL.ecore#//IndexPart">
+      <genFeatures notify="false" createChild="false" propertySortChoices="true" ecoreFeature="ecore:EReference SQL.ecore#//IndexPart/column"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//IndexPart/expression"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//IndexPart/options"/>
+    </genClasses>
+    <genClasses ecoreClass="SQL.ecore#//SchemaDecl">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//SchemaDecl/ifNotExists"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//SchemaDecl/name"/>
+    </genClasses>
+    <genClasses ecoreClass="SQL.ecore#//Statement">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Statement/verb"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Statement/body"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Statement/meta"/>
     </genClasses>
     <genClasses ecoreClass="SQL.ecore#//Column">
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Column/name"/>

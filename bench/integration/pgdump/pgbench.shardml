@@ -1,0 +1,33 @@
+import "pgbench.msql"
+
+// pgbench's schema as pg_dump writes it (the corpus file, linked here as a .msql): its primary keys
+// and five foreign keys are all in ALTER TABLE ONLY .. ADD CONSTRAINT. A layout Citus accepts every
+// one of them under: accounts and history sharded by aid and colocated (history -> accounts pairs
+// the shard keys), branches and tellers replicated (the other four reference a reference table).
+// The probe checks the keys in the catalog and that each foreign key is enforced.
+database pgbench {
+    type: postgres
+
+    shard pgbench_branches {
+        strategy: replicated
+    }
+
+    shard pgbench_tellers {
+        strategy: replicated
+    }
+
+    shard pgbench_accounts {
+        strategy: hash
+        key: aid
+        buckets: 4
+    }
+
+    shard pgbench_history {
+        strategy: hash
+        key: aid
+        buckets: 4
+        colocate_with: pgbench_accounts
+    }
+
+    pgbench_history belongs_to pgbench_accounts via aid
+}

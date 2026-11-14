@@ -1,0 +1,40 @@
+import "banking-pg_dump.msql"
+
+// examples/banking as pg_dump writes it back (the corpus file, linked here as a .msql): the schema
+// banking created by CREATE SCHEMA, bare tables, every primary key in ALTER TABLE ONLY .. ADD
+// CONSTRAINT, and the pg_dump preamble (one INFO issue, not written back). Deployed with the
+// layout of examples/banking; the probe checks that the keys reached the catalog.
+database banking_dump {
+    type: postgres
+
+    shard customers {
+        strategy: hash
+        key: id
+        buckets: 4
+    }
+
+    shard accounts {
+        strategy: hash
+        key: customer_id
+        buckets: 4
+        colocate_with: customers
+    }
+
+    shard transactions {
+        strategy: hash
+        key: customer_id
+        buckets: 4
+        colocate_with: accounts
+    }
+
+    shard cards {
+        strategy: hash
+        key: customer_id
+        buckets: 4
+        colocate_with: customers
+    }
+
+    accounts belongs_to customers via customer_id
+    transactions belongs_to accounts via customer_id
+    cards belongs_to customers via customer_id
+}

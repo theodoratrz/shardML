@@ -63,7 +63,7 @@ database banking {
 | File | Contents |
 |---|---|
 | `<database>-sharding.json` | Distribution config in JSON |
-| `<database>-schema.sql` | `CREATE TABLE` statements for the imported schema (apply before the distribution script) |
+| `<database>-schema.sql` | The imported schema without its foreign keys: `CREATE SCHEMA IF NOT EXISTS`, `CREATE TABLE` (keys added by `ALTER TABLE` written inline), then `CREATE INDEX` (apply before the distribution script) |
 | `<database>-distribution.sql` | Citus SQL commands (`create_distributed_table`, `create_reference_table`); every root (a table without `colocate_with`) gets `colocate_with => 'none'`, so it starts its own Citus colocation group instead of joining another table of the same shape |
 | `<database>-foreign-keys.sql` | Only when the schema has foreign keys: one `ALTER TABLE .. ADD .. FOREIGN KEY` each, applied after the distribution script. Citus rejects a foreign key to a table it has not distributed yet, so foreign keys are never written inside `CREATE TABLE` |
 | `<database>-placement.sql` | Only for a model that declares `node`s: moves every shard to the node the model assigns it (apply last, see below) |
@@ -165,8 +165,9 @@ The generator writes foreign keys to `<database>-foreign-keys.sql`; everything e
 
 | Code | |
 |---|---|
-| SHML_062 | unknown table in `REFERENCES` |
-| SHML_063 | unknown column in a key or a foreign key |
+| SHML_061 | a statement that is neither modelled nor pg_dump preamble (see below) |
+| SHML_062 | unknown table in `REFERENCES`, `ALTER TABLE .. ADD` or `CREATE INDEX` |
+| SHML_063 | unknown column in a key, a foreign key or an index |
 | SHML_064 | a foreign key's column count differs from the referenced one's (or from the referenced primary key's) |
 | SHML_065 | a foreign key references columns that are neither the primary key nor a `UNIQUE`; or omits them, and the table has no primary key |
 | SHML_067 | more than one `PRIMARY KEY` on a table |
@@ -185,6 +186,19 @@ The schema's foreign keys are also checked against the layout, by the rules Citu
 A hash-sharded table may reference a replicated one. A foreign key from or to a table the model does not shard is not checked: Citus accepts one from a local table to a distributed one, but enforces it only on the local side.
 
 Verbatim text is not checked beyond `nextval`, and can fail on deploy although the schema validated: a function, type or collation the schema does not create cannot be told from a built-in without a database. PostgreSQL 18's `VIRTUAL` generated columns are a syntax error. `bench/integration/fk/` deploys foreign keys of every allowed kind and verbatim constraints to the bench cluster and checks that each is enforced.
+
+### pg_dump files as `.msql` schemas
+
+A `pg_dump --schema-only` file can be imported as it is (rename or link it to `.msql`). Besides `CREATE TABLE`, a schema file may hold:
+
+- **`ALTER TABLE [IF EXISTS] [ONLY] t ADD [CONSTRAINT n] PRIMARY KEY | UNIQUE | FOREIGN KEY | CHECK ..`**, where pg_dump declares every key. Such a key belongs to its table exactly as if it were declared inline: the validators see it, and the generator writes it inline in `CREATE TABLE` (a foreign key in `<database>-foreign-keys.sql`).
+- **`CREATE [UNIQUE] INDEX [IF NOT EXISTS] [name] ON [ONLY] t [USING method] (..)`**, with columns or `(expressions)`, operator classes and ordering, and `INCLUDE (..)`, `WITH (..)` and `WHERE (..)` (the predicate parenthesized, as pg_dump writes it); written back after the tables. A unique index on plain columns without a `WHERE` is a unique key, for SHML_024 and for foreign keys.
+- **`CREATE SCHEMA [IF NOT EXISTS] s`**, written back as `CREATE SCHEMA IF NOT EXISTS s`.
+- **The pg_dump preamble**, recognised one kind at a time and left out of the generated schema: `SET`, `SELECT pg_catalog.set_config(..)`, `ALTER .. OWNER TO`, the psql `\restrict` / `\unrestrict` lines, `GRANT`, `REVOKE`, `COMMENT ON`, and `DROP TABLE [IF EXISTS]`. Each file gets one INFO issue counting them (SHML_075). The exception is a non-empty `search_path` (`SET search_path = s`, or `set_config('search_path', 's', ..)`): it is not written back either, but it decides where unqualified tables land, so it is a warning (SHML_076); qualify the tables, or apply the generated files with that `search_path`. pg_dump's own empty `search_path` (it qualifies every name) is preamble.
+
+Any other statement is an error at its first word (SHML_061), which says what to do with it: functions, triggers, views, materialized views and aggregates belong in a separate migration applied after the generated files; user-defined types, domains, extensions and partitioned tables (`PARTITION BY`, `ATTACH PARTITION`) are not supported; sequences (`CREATE SEQUENCE`, `ALTER SEQUENCE`, a `nextval` default or identity added by `ALTER TABLE`) are the planned follow-up; any other `DROP`, and psql meta-commands other than `\restrict` / `\unrestrict`, are errors too. Nothing is skipped silently. Function bodies may be dollar-quoted with the tags pg_dump writes (`$$`, `$_$`, `$__$`); any other tag (`$body$`) is an error that says so, and the statements after it are still read.
+
+`ALTER TABLE .. ADD` and `CREATE INDEX` name their table like `REFERENCES`: unknown tables are SHML_062 and unknown columns SHML_063. `bench/integration/pgdump/` deploys two pg_dump files of the corpus (`banking-pg_dump`, `pgbench`) through schema, distribution and foreign keys, and checks the keys in the catalog and that each foreign key is enforced.
 
 ### Table relationships vs. foreign keys
 
@@ -251,7 +265,7 @@ The tests cover all major validators and the generator, including multi-resource
 
 ## Limitations
 
-- The SQL grammar supports a subset of DDL: `CREATE TABLE` only (no `ALTER TABLE`, no indexes, no sequences yet).
+- The SQL grammar supports a subset of DDL: `CREATE TABLE`, `ALTER TABLE .. ADD` constraint, `CREATE [UNIQUE] INDEX`, `CREATE SCHEMA` and the pg_dump preamble. Sequences, user-defined types, partitions, functions, triggers and views are errors (SHML_061), and other `ALTER TABLE` actions (`ALTER COLUMN`, `ADD COLUMN`, ..) are not supported.
 - `via` is trusted. `X belongs_to Y via k`, with `k` the shard key of `X`, is taken to mean that `k` references the shard key of `Y`. Nothing checks which column `k` really references, so a model that names the wrong column still validates; only the type check (SHML_027) and the examples' probe joins against a real cluster catch it.
 - Citus is the only target; Vitess is not supported.
 - Query patterns are declared manually and must be kept in sync with application code.

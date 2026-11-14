@@ -91,6 +91,31 @@ public class SqlAdapterFactory extends AdapterFactoryImpl
         return createRawSqlAdapter();
       }
       @Override
+      public Adapter caseAlterTable(AlterTable object)
+      {
+        return createAlterTableAdapter();
+      }
+      @Override
+      public Adapter caseIndex(Index object)
+      {
+        return createIndexAdapter();
+      }
+      @Override
+      public Adapter caseIndexPart(IndexPart object)
+      {
+        return createIndexPartAdapter();
+      }
+      @Override
+      public Adapter caseSchemaDecl(SchemaDecl object)
+      {
+        return createSchemaDeclAdapter();
+      }
+      @Override
+      public Adapter caseStatement(Statement object)
+      {
+        return createStatementAdapter();
+      }
+      @Override
       public Adapter caseColumn(Column object)
       {
         return createColumnAdapter();
@@ -228,6 +253,81 @@ public class SqlAdapterFactory extends AdapterFactoryImpl
    * @generated
    */
   public Adapter createRawSqlAdapter()
+  {
+    return null;
+  }
+
+  /**
+   * Creates a new adapter for an object of class '{@link io.shardml.sql.AlterTable <em>Alter Table</em>}'.
+   * <!-- begin-user-doc -->
+   * This default implementation returns null so that we can easily ignore cases;
+   * it's useful to ignore a case when inheritance will catch all the cases anyway.
+   * <!-- end-user-doc -->
+   * @return the new adapter.
+   * @see io.shardml.sql.AlterTable
+   * @generated
+   */
+  public Adapter createAlterTableAdapter()
+  {
+    return null;
+  }
+
+  /**
+   * Creates a new adapter for an object of class '{@link io.shardml.sql.Index <em>Index</em>}'.
+   * <!-- begin-user-doc -->
+   * This default implementation returns null so that we can easily ignore cases;
+   * it's useful to ignore a case when inheritance will catch all the cases anyway.
+   * <!-- end-user-doc -->
+   * @return the new adapter.
+   * @see io.shardml.sql.Index
+   * @generated
+   */
+  public Adapter createIndexAdapter()
+  {
+    return null;
+  }
+
+  /**
+   * Creates a new adapter for an object of class '{@link io.shardml.sql.IndexPart <em>Index Part</em>}'.
+   * <!-- begin-user-doc -->
+   * This default implementation returns null so that we can easily ignore cases;
+   * it's useful to ignore a case when inheritance will catch all the cases anyway.
+   * <!-- end-user-doc -->
+   * @return the new adapter.
+   * @see io.shardml.sql.IndexPart
+   * @generated
+   */
+  public Adapter createIndexPartAdapter()
+  {
+    return null;
+  }
+
+  /**
+   * Creates a new adapter for an object of class '{@link io.shardml.sql.SchemaDecl <em>Schema Decl</em>}'.
+   * <!-- begin-user-doc -->
+   * This default implementation returns null so that we can easily ignore cases;
+   * it's useful to ignore a case when inheritance will catch all the cases anyway.
+   * <!-- end-user-doc -->
+   * @return the new adapter.
+   * @see io.shardml.sql.SchemaDecl
+   * @generated
+   */
+  public Adapter createSchemaDeclAdapter()
+  {
+    return null;
+  }
+
+  /**
+   * Creates a new adapter for an object of class '{@link io.shardml.sql.Statement <em>Statement</em>}'.
+   * <!-- begin-user-doc -->
+   * This default implementation returns null so that we can easily ignore cases;
+   * it's useful to ignore a case when inheritance will catch all the cases anyway.
+   * <!-- end-user-doc -->
+   * @return the new adapter.
+   * @see io.shardml.sql.Statement
+   * @generated
+   */
+  public Adapter createStatementAdapter()
   {
     return null;
   }

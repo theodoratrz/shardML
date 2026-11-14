@@ -1,11 +1,16 @@
 package io.shardml.validation;
 
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
 import org.eclipse.emf.ecore.EObject;
+import org.eclipse.emf.ecore.resource.Resource;
+import org.eclipse.xtext.nodemodel.ICompositeNode;
+import org.eclipse.xtext.nodemodel.util.NodeModelUtils;
+import org.eclipse.xtext.resource.XtextSyntaxDiagnostic;
 import org.eclipse.xtext.EcoreUtil2;
 import org.eclipse.xtext.validation.Check;
 
@@ -13,10 +18,15 @@ import io.shardml.schema.SchemaFacts;
 import io.shardml.schema.SchemaFacts.ForeignKeyFacts;
 import io.shardml.schema.SchemaFacts.TableFacts;
 import io.shardml.schema.SqlNames;
+import io.shardml.schema.SqlStatements;
+import io.shardml.schema.SqlStatements.Kind;
+import io.shardml.schema.SqlStatements.Sorted;
+import io.shardml.sql.AlterTable;
 import io.shardml.sql.ForeignKey;
 import io.shardml.sql.RawSql;
 import io.shardml.sql.Schema;
 import io.shardml.sql.SqlPackage;
+import io.shardml.sql.Statement;
 import io.shardml.sql.Table;
 
 /* Checks on a .msql schema beyond its syntax (SHML_061 onward, Plan-sql section 7). The CLI
@@ -25,11 +35,15 @@ import io.shardml.sql.Table;
  * Constraints are read through SchemaFacts. */
 public class SQLValidator extends AbstractSQLValidator {
 
+	public static final String UNSUPPORTED_STATEMENT = "SHML_061";
 	public static final String FK_COLUMN_COUNT = "SHML_064";
 	public static final String FK_NOT_A_KEY = "SHML_065";
 	public static final String DUPLICATE_TABLE = "SHML_066";
 	public static final String MULTIPLE_PRIMARY_KEYS = "SHML_067";
 	public static final String SEQUENCE_DEFAULT = "SHML_068";
+	// 069-074 are ShardML codes (the schema's keys against the layout)
+	public static final String PREAMBLE_LEFT_OUT = "SHML_075";
+	public static final String SEARCH_PATH_LEFT_OUT = "SHML_076";
 
 	// ShardML and workloads refer to a table by its unqualified name, so two tables of one name
 	// would link to whichever comes first: also across schemas (a.t and b.t), for now
@@ -108,5 +122,71 @@ public class SQLValidator extends AbstractSQLValidator {
 					+ "not create it. Use SERIAL / BIGSERIAL, or GENERATED ... AS IDENTITY.", raw,
 					SqlPackage.Literals.RAW_SQL__TEXT, SEQUENCE_DEFAULT);
 		}
+	}
+
+	// A statement the grammar does not model is either pg_dump preamble (counted below) or an error
+	// here, at its first word, saying what to do with it (SqlStatements). Never skipped silently.
+	// A statement that starts at a syntax error is the rest of a broken one, which the parser resumed
+	// after (`rating public.mpaa_rating ..` in a CREATE TABLE): the syntax error says what broke there
+	@Check
+	public void checkStatement(Statement statement) {
+		Sorted sorted = SqlStatements.of(statement);
+		if (sorted.kind() == Kind.SEARCH_PATH) {
+			warning(sorted.what() + " to " + sorted.advice() + " is not written back, so the unqualified names in the generated "
+					+ "schema resolve against the connection's default schema instead (usually public). Qualify the "
+					+ "tables (CREATE TABLE s.t), or apply the generated files with that search_path.", statement,
+					SqlPackage.Literals.STATEMENT__VERB, SEARCH_PATH_LEFT_OUT);
+			return;
+		}
+		if (!sorted.kind().isPreamble() && !startsAtSyntaxError(statement))
+			error(unsupported(sorted), statement,
+					statement.getMeta() != null ? SqlPackage.Literals.STATEMENT__META : SqlPackage.Literals.STATEMENT__VERB,
+					UNSUPPORTED_STATEMENT);
+	}
+
+	@Check
+	public void checkAlterTableAction(AlterTable alter) {
+		if (alter.getBody() == null)
+			return; // ADD constraint: modelled
+		Sorted sorted = SqlStatements.of(alter);
+		if (!sorted.kind().isPreamble())
+			error(unsupported(sorted), alter, SqlPackage.Literals.ALTER_TABLE__BODY, UNSUPPORTED_STATEMENT);
+	}
+
+	private static boolean startsAtSyntaxError(Statement statement) {
+		ICompositeNode node = NodeModelUtils.getNode(statement);
+		if (node == null || statement.eResource() == null)
+			return false;
+		int start = node.getTotalOffset();
+		int end = node.getTotalEndOffset();
+		for (Resource.Diagnostic error : statement.eResource().getErrors()) {
+			if (error instanceof XtextSyntaxDiagnostic syntax && syntax.getOffset() >= start && syntax.getOffset() < end)
+				return true;
+		}
+		return false;
+	}
+
+	private static String unsupported(Sorted sorted) {
+		return (sorted.kind() == Kind.SEQUENCE ? "Sequence statement " : "Unsupported statement ") + sorted.what() + ". "
+				+ sorted.advice();
+	}
+
+	// one INFO issue per file: the pg_dump preamble it read and the generator leaves out, by kind
+	@Check
+	public void checkPreamble(Schema schema) {
+		Map<Kind, Integer> counts = new EnumMap<>(Kind.class);
+		for (Statement statement : schema.getStatements())
+			counts.merge(SqlStatements.of(statement).kind(), 1, Integer::sum);
+		for (AlterTable alter : schema.getAlters()) {
+			if (alter.getBody() != null)
+				counts.merge(SqlStatements.of(alter).kind(), 1, Integer::sum);
+		}
+		List<String> parts = counts.entrySet().stream().filter(e -> e.getKey().isPreamble())
+				.map(e -> e.getValue() + " " + e.getKey().label()).toList();
+		if (parts.isEmpty())
+			return;
+		info("Not written back: " + String.join(", ", parts) + ". Session settings, ownership, privileges, comments "
+				+ "and DROP TABLE cleanup (the pg_dump preamble): the generated schema needs none of them.", schema, null,
+				PREAMBLE_LEFT_OUT);
 	}
 }

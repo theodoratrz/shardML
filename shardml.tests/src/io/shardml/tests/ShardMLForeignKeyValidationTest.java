@@ -247,4 +247,32 @@ public class ShardMLForeignKeyValidationTest {
 		// a replicated table has no distribution column
 		Assertions.assertEquals(List.of(), codes(msql, replicated("events")));
 	}
+
+	@Test
+	public void testKeysFromAlterTableAndUniqueIndexes() throws Exception {
+		// pg_dump's shape (step 5): bare tables, keys in ALTER TABLE, unique indexes. SHML_024 and the
+		// foreign key rules read them exactly as if they were declared inline
+		String dump = """
+				CREATE TABLE companies (id bigint NOT NULL);
+				CREATE TABLE campaigns (company_id bigint NOT NULL, id bigint NOT NULL, code text);
+				ALTER TABLE ONLY companies ADD CONSTRAINT companies_pkey PRIMARY KEY (id);
+				ALTER TABLE ONLY campaigns ADD CONSTRAINT campaigns_pkey PRIMARY KEY (company_id, id);
+				ALTER TABLE ONLY campaigns ADD CONSTRAINT campaigns_company_fkey FOREIGN KEY (company_id) REFERENCES companies(id);
+				CREATE UNIQUE INDEX campaigns_code_key ON campaigns USING btree (code);
+				""";
+		Assertions.assertEquals(List.of("SHML_024: UNIQUE (code) on 'campaigns' does not include the shard key 'company_id'. "
+				+ "Citus enforces uniqueness only within one shard, so it cannot enforce this constraint. Options: enforce it in "
+				+ "the application; a lookup table with PRIMARY KEY (code), distributed by code and written in the same "
+				+ "transaction; or, if 'campaigns' is small, make it a reference table (strategy: replicated)."),
+				issues(dump, hash("companies", "id") + hash("campaigns", "company_id", "companies")));
+		// sharded by code: the ALTER TABLE primary key misses it (SHML_024; the unique index has it), and
+		// the ALTER TABLE foreign key does not pair it with companies.id (SHML_069)
+		Assertions.assertEquals(List.of("SHML_024", "SHML_069"),
+				codes(dump, hash("companies", "id") + hash("campaigns", "code", "companies")));
+		// with the index unique on the shard key too, nothing; a partial or plain index is no key
+		Assertions.assertEquals(List.of(), codes(dump.replace("btree (code)", "btree (company_id, code)"),
+				hash("companies", "id") + hash("campaigns", "company_id", "companies")));
+		Assertions.assertEquals(List.of(), codes(dump.replace("CREATE UNIQUE INDEX", "CREATE INDEX"),
+				hash("companies", "id") + hash("campaigns", "company_id", "companies")));
+	}
 }

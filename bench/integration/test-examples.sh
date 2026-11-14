@@ -5,12 +5,15 @@
 #   bench/integration/test-examples.sh [model.shardml ...]
 #
 # Defaults to every examples/*.shardml, bench/integration/types/*.shardml
-# (every column type of the .msql grammar on one distributed table) and
-# bench/integration/fk/*.shardml (foreign keys and verbatim constraints). Needs
-# the CLI jar (mvn install) and Docker; starts the cluster with bench/up.sh if
-# it is not running.
+# (every column type of the .msql grammar on one distributed table),
+# bench/integration/fk/*.shardml (foreign keys and verbatim constraints) and
+# bench/integration/pgdump/*.shardml (pg_dump files of the SQL corpus, linked
+# as .msql). Needs the CLI jar (mvn install) and Docker; starts the cluster
+# with bench/up.sh if it is not running.
 #
-# Per model, in a fresh schema named after the database:
+# Per model, in a fresh schema named after the database (a schema-qualified
+# table of a pg_dump lands in its own schema instead, so every table the
+# generated schema creates is dropped first):
 #   1. <db>-schema.sql        every statement must succeed
 #   2. <db>-distribution.sql  every statement must succeed
 #   3. <db>-foreign-keys.sql  if generated (the schema has foreign keys): every
@@ -51,7 +54,8 @@ echo "test-examples: using $JAR"
 
 models=("$@")
 if [[ ${#models[@]} -eq 0 ]]; then
-	models=("$ROOT"/examples/*.shardml "$ROOT"/bench/integration/types/*.shardml "$ROOT"/bench/integration/fk/*.shardml)
+	models=("$ROOT"/examples/*.shardml "$ROOT"/bench/integration/types/*.shardml "$ROOT"/bench/integration/fk/*.shardml
+		"$ROOT"/bench/integration/pgdump/*.shardml)
 fi
 
 if ! up_log=$("$BENCH/up.sh" 2>&1); then
@@ -127,6 +131,12 @@ for model in "${models[@]}"; do
 
 	psql_coord -c "DROP SCHEMA IF EXISTS $db CASCADE;" -c "CREATE SCHEMA $db;" >/dev/null 2>&1 \
 		|| { echo "test-examples: could not reset schema $db" >&2; exit 2; }
+	# tables qualified with another schema (banking.accounts, public.pgbench_accounts) from an earlier run
+	while read -r table; do
+		# </dev/null: docker compose exec would read the rest of the loop's input
+		psql_coord -c "SET search_path TO $db;" -c "DROP TABLE IF EXISTS $table CASCADE;" </dev/null >/dev/null 2>&1 \
+			|| { echo "test-examples: could not drop $table" >&2; exit 2; }
+	done < <(sed -nE 's/^CREATE TABLE (IF NOT EXISTS )?([^ (]+) \($/\2/p' "${schema_sql[0]}")
 
 	apply_file "$db" "${schema_sql[0]}"
 	apply_file "$db" "$out_dir/$db-distribution.sql"

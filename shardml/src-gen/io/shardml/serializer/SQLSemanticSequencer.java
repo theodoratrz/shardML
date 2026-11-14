@@ -5,9 +5,12 @@ package io.shardml.serializer;
 
 import com.google.inject.Inject;
 import io.shardml.services.SQLGrammarAccess;
+import io.shardml.sql.AlterTable;
 import io.shardml.sql.Char;
 import io.shardml.sql.Column;
 import io.shardml.sql.ForeignKey;
+import io.shardml.sql.Index;
+import io.shardml.sql.IndexPart;
 import io.shardml.sql.NotNull;
 import io.shardml.sql.Nullable;
 import io.shardml.sql.Numeric;
@@ -15,7 +18,9 @@ import io.shardml.sql.PrimaryAnnotation;
 import io.shardml.sql.PrimaryKey;
 import io.shardml.sql.RawSql;
 import io.shardml.sql.Schema;
+import io.shardml.sql.SchemaDecl;
 import io.shardml.sql.SqlPackage;
+import io.shardml.sql.Statement;
 import io.shardml.sql.Table;
 import io.shardml.sql.TableCheck;
 import io.shardml.sql.UniqueAnnotation;
@@ -46,6 +51,9 @@ public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
 		Set<Parameter> parameters = context.getEnabledBooleanParameters();
 		if (epackage == SqlPackage.eINSTANCE)
 			switch (semanticObject.eClass().getClassifierID()) {
+			case SqlPackage.ALTER_TABLE:
+				sequence_AlterTable(context, (AlterTable) semanticObject); 
+				return; 
 			case SqlPackage.CHAR:
 				sequence_Char(context, (Char) semanticObject); 
 				return; 
@@ -68,6 +76,12 @@ public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
 					return; 
 				}
 				else break;
+			case SqlPackage.INDEX:
+				sequence_Index(context, (Index) semanticObject); 
+				return; 
+			case SqlPackage.INDEX_PART:
+				sequence_IndexPart(context, (IndexPart) semanticObject); 
+				return; 
 			case SqlPackage.NOT_NULL:
 				sequence_ConstraintName_NotNull(context, (NotNull) semanticObject); 
 				return; 
@@ -102,6 +116,12 @@ public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
 			case SqlPackage.SCHEMA:
 				sequence_Schema(context, (Schema) semanticObject); 
 				return; 
+			case SqlPackage.SCHEMA_DECL:
+				sequence_SchemaDecl(context, (SchemaDecl) semanticObject); 
+				return; 
+			case SqlPackage.STATEMENT:
+				sequence_Statement(context, (Statement) semanticObject); 
+				return; 
 			case SqlPackage.TABLE:
 				sequence_Table(context, (Table) semanticObject); 
 				return; 
@@ -121,6 +141,20 @@ public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
 		if (errorAcceptor != null)
 			errorAcceptor.accept(diagnosticProvider.createInvalidContextOrTypeDiagnostic(semanticObject, context));
 	}
+	
+	/**
+	 * <pre>
+	 * Contexts:
+	 *     AlterTable returns AlterTable
+	 *
+	 * Constraint:
+	 *     (ifExists?='IF'? only?='ONLY'? schemaName=Name? ((table=[Table|Name] constraint=TableConstraint) | (target=Name body=AlterTableBody)))
+	 * </pre>
+	 */
+	protected void sequence_AlterTable(ISerializationContext context, AlterTable semanticObject) {
+		genericSequencer.createSequence(context, semanticObject);
+	}
+	
 	
 	/**
 	 * <pre>
@@ -400,6 +434,45 @@ public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
 	/**
 	 * <pre>
 	 * Contexts:
+	 *     IndexPart returns IndexPart
+	 *
+	 * Constraint:
+	 *     ((column=[Column|Name] | expression=Parenthesized) options=IndexOptions?)
+	 * </pre>
+	 */
+	protected void sequence_IndexPart(ISerializationContext context, IndexPart semanticObject) {
+		genericSequencer.createSequence(context, semanticObject);
+	}
+	
+	
+	/**
+	 * <pre>
+	 * Contexts:
+	 *     Index returns Index
+	 *
+	 * Constraint:
+	 *     (
+	 *         unique?='UNIQUE'? 
+	 *         ifNotExists?='IF'? 
+	 *         name=Name? 
+	 *         only?='ONLY'? 
+	 *         schemaName=Name? 
+	 *         table=[Table|Name] 
+	 *         method=Name? 
+	 *         parts+=IndexPart 
+	 *         parts+=IndexPart* 
+	 *         tail=IndexTail?
+	 *     )
+	 * </pre>
+	 */
+	protected void sequence_Index(ISerializationContext context, Index semanticObject) {
+		genericSequencer.createSequence(context, semanticObject);
+	}
+	
+	
+	/**
+	 * <pre>
+	 * Contexts:
 	 *     Numeric returns Numeric
 	 *
 	 * Constraint:
@@ -414,13 +487,41 @@ public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
 	/**
 	 * <pre>
 	 * Contexts:
+	 *     SchemaDecl returns SchemaDecl
+	 *
+	 * Constraint:
+	 *     (ifNotExists?='IF'? name=Name)
+	 * </pre>
+	 */
+	protected void sequence_SchemaDecl(ISerializationContext context, SchemaDecl semanticObject) {
+		genericSequencer.createSequence(context, semanticObject);
+	}
+	
+	
+	/**
+	 * <pre>
+	 * Contexts:
 	 *     Schema returns Schema
 	 *
 	 * Constraint:
-	 *     tables+=Table+
+	 *     (tables+=Table | alters+=AlterTable | indexes+=Index | schemas+=SchemaDecl | statements+=Statement)+
 	 * </pre>
 	 */
 	protected void sequence_Schema(ISerializationContext context, Schema semanticObject) {
+		genericSequencer.createSequence(context, semanticObject);
+	}
+	
+	
+	/**
+	 * <pre>
+	 * Contexts:
+	 *     Statement returns Statement
+	 *
+	 * Constraint:
+	 *     ((verb='CREATE' body=CreateBody) | (verb='ALTER' body=AlterBody) | (verb=Verb body=RawTokens?) | meta=PSQL_META)
+	 * </pre>
+	 */
+	protected void sequence_Statement(ISerializationContext context, Statement semanticObject) {
 		genericSequencer.createSequence(context, semanticObject);
 	}
 	

@@ -3,8 +3,12 @@
  */
 package io.shardml.sql.impl;
 
+import io.shardml.sql.AlterTable;
+import io.shardml.sql.Index;
 import io.shardml.sql.Schema;
+import io.shardml.sql.SchemaDecl;
 import io.shardml.sql.SqlPackage;
+import io.shardml.sql.Statement;
 import io.shardml.sql.Table;
 
 import java.util.Collection;
@@ -30,6 +34,10 @@ import org.eclipse.emf.ecore.util.InternalEList;
  * </p>
  * <ul>
  *   <li>{@link io.shardml.sql.impl.SchemaImpl#getTables <em>Tables</em>}</li>
+ *   <li>{@link io.shardml.sql.impl.SchemaImpl#getAlters <em>Alters</em>}</li>
+ *   <li>{@link io.shardml.sql.impl.SchemaImpl#getIndexes <em>Indexes</em>}</li>
+ *   <li>{@link io.shardml.sql.impl.SchemaImpl#getSchemas <em>Schemas</em>}</li>
+ *   <li>{@link io.shardml.sql.impl.SchemaImpl#getStatements <em>Statements</em>}</li>
  * </ul>
  *
  * @generated
@@ -45,6 +53,46 @@ public class SchemaImpl extends MinimalEObjectImpl.Container implements Schema
    * @ordered
    */
   protected EList<Table> tables;
+
+  /**
+   * The cached value of the '{@link #getAlters() <em>Alters</em>}' containment reference list.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #getAlters()
+   * @generated
+   * @ordered
+   */
+  protected EList<AlterTable> alters;
+
+  /**
+   * The cached value of the '{@link #getIndexes() <em>Indexes</em>}' containment reference list.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #getIndexes()
+   * @generated
+   * @ordered
+   */
+  protected EList<Index> indexes;
+
+  /**
+   * The cached value of the '{@link #getSchemas() <em>Schemas</em>}' containment reference list.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #getSchemas()
+   * @generated
+   * @ordered
+   */
+  protected EList<SchemaDecl> schemas;
+
+  /**
+   * The cached value of the '{@link #getStatements() <em>Statements</em>}' containment reference list.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #getStatements()
+   * @generated
+   * @ordered
+   */
+  protected EList<Statement> statements;
 
   /**
    * <!-- begin-user-doc -->
@@ -88,12 +136,80 @@ public class SchemaImpl extends MinimalEObjectImpl.Container implements Schema
    * @generated
    */
   @Override
+  public EList<AlterTable> getAlters()
+  {
+    if (alters == null)
+    {
+      alters = new EObjectContainmentEList<AlterTable>(AlterTable.class, this, SqlPackage.SCHEMA__ALTERS);
+    }
+    return alters;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EList<Index> getIndexes()
+  {
+    if (indexes == null)
+    {
+      indexes = new EObjectContainmentEList<Index>(Index.class, this, SqlPackage.SCHEMA__INDEXES);
+    }
+    return indexes;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EList<SchemaDecl> getSchemas()
+  {
+    if (schemas == null)
+    {
+      schemas = new EObjectContainmentEList<SchemaDecl>(SchemaDecl.class, this, SqlPackage.SCHEMA__SCHEMAS);
+    }
+    return schemas;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EList<Statement> getStatements()
+  {
+    if (statements == null)
+    {
+      statements = new EObjectContainmentEList<Statement>(Statement.class, this, SqlPackage.SCHEMA__STATEMENTS);
+    }
+    return statements;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
   public NotificationChain eInverseRemove(InternalEObject otherEnd, int featureID, NotificationChain msgs)
   {
     switch (featureID)
     {
       case SqlPackage.SCHEMA__TABLES:
         return ((InternalEList<?>)getTables()).basicRemove(otherEnd, msgs);
+      case SqlPackage.SCHEMA__ALTERS:
+        return ((InternalEList<?>)getAlters()).basicRemove(otherEnd, msgs);
+      case SqlPackage.SCHEMA__INDEXES:
+        return ((InternalEList<?>)getIndexes()).basicRemove(otherEnd, msgs);
+      case SqlPackage.SCHEMA__SCHEMAS:
+        return ((InternalEList<?>)getSchemas()).basicRemove(otherEnd, msgs);
+      case SqlPackage.SCHEMA__STATEMENTS:
+        return ((InternalEList<?>)getStatements()).basicRemove(otherEnd, msgs);
     }
     return super.eInverseRemove(otherEnd, featureID, msgs);
   }
@@ -110,6 +226,14 @@ public class SchemaImpl extends MinimalEObjectImpl.Container implements Schema
     {
       case SqlPackage.SCHEMA__TABLES:
         return getTables();
+      case SqlPackage.SCHEMA__ALTERS:
+        return getAlters();
+      case SqlPackage.SCHEMA__INDEXES:
+        return getIndexes();
+      case SqlPackage.SCHEMA__SCHEMAS:
+        return getSchemas();
+      case SqlPackage.SCHEMA__STATEMENTS:
+        return getStatements();
     }
     return super.eGet(featureID, resolve, coreType);
   }
@@ -129,6 +253,22 @@ public class SchemaImpl extends MinimalEObjectImpl.Container implements Schema
         getTables().clear();
         getTables().addAll((Collection<? extends Table>)newValue);
         return;
+      case SqlPackage.SCHEMA__ALTERS:
+        getAlters().clear();
+        getAlters().addAll((Collection<? extends AlterTable>)newValue);
+        return;
+      case SqlPackage.SCHEMA__INDEXES:
+        getIndexes().clear();
+        getIndexes().addAll((Collection<? extends Index>)newValue);
+        return;
+      case SqlPackage.SCHEMA__SCHEMAS:
+        getSchemas().clear();
+        getSchemas().addAll((Collection<? extends SchemaDecl>)newValue);
+        return;
+      case SqlPackage.SCHEMA__STATEMENTS:
+        getStatements().clear();
+        getStatements().addAll((Collection<? extends Statement>)newValue);
+        return;
     }
     super.eSet(featureID, newValue);
   }
@@ -146,6 +286,18 @@ public class SchemaImpl extends MinimalEObjectImpl.Container implements Schema
       case SqlPackage.SCHEMA__TABLES:
         getTables().clear();
         return;
+      case SqlPackage.SCHEMA__ALTERS:
+        getAlters().clear();
+        return;
+      case SqlPackage.SCHEMA__INDEXES:
+        getIndexes().clear();
+        return;
+      case SqlPackage.SCHEMA__SCHEMAS:
+        getSchemas().clear();
+        return;
+      case SqlPackage.SCHEMA__STATEMENTS:
+        getStatements().clear();
+        return;
     }
     super.eUnset(featureID);
   }
@@ -162,6 +314,14 @@ public class SchemaImpl extends MinimalEObjectImpl.Container implements Schema
     {
       case SqlPackage.SCHEMA__TABLES:
         return tables != null && !tables.isEmpty();
+      case SqlPackage.SCHEMA__ALTERS:
+        return alters != null && !alters.isEmpty();
+      case SqlPackage.SCHEMA__INDEXES:
+        return indexes != null && !indexes.isEmpty();
+      case SqlPackage.SCHEMA__SCHEMAS:
+        return schemas != null && !schemas.isEmpty();
+      case SqlPackage.SCHEMA__STATEMENTS:
+        return statements != null && !statements.isEmpty();
     }
     return super.eIsSet(featureID);
   }

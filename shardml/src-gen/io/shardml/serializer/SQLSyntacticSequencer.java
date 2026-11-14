@@ -52,7 +52,35 @@ public class SQLSyntacticSequencer extends AbstractSyntacticSequencer {
 	 *     ';'?
 	 *
 	 * This ambiguous syntax occurs at:
+	 *     alters+=AlterTable (ambiguity) (rule end)
+	 *     alters+=AlterTable (ambiguity) alters+=AlterTable
+	 *     alters+=AlterTable (ambiguity) indexes+=Index
+	 *     alters+=AlterTable (ambiguity) schemas+=SchemaDecl
+	 *     alters+=AlterTable (ambiguity) statements+=Statement
+	 *     alters+=AlterTable (ambiguity) tables+=Table
+	 *     indexes+=Index (ambiguity) (rule end)
+	 *     indexes+=Index (ambiguity) alters+=AlterTable
+	 *     indexes+=Index (ambiguity) indexes+=Index
+	 *     indexes+=Index (ambiguity) schemas+=SchemaDecl
+	 *     indexes+=Index (ambiguity) statements+=Statement
+	 *     indexes+=Index (ambiguity) tables+=Table
+	 *     schemas+=SchemaDecl (ambiguity) (rule end)
+	 *     schemas+=SchemaDecl (ambiguity) alters+=AlterTable
+	 *     schemas+=SchemaDecl (ambiguity) indexes+=Index
+	 *     schemas+=SchemaDecl (ambiguity) schemas+=SchemaDecl
+	 *     schemas+=SchemaDecl (ambiguity) statements+=Statement
+	 *     schemas+=SchemaDecl (ambiguity) tables+=Table
+	 *     statements+=Statement (ambiguity) (rule end)
+	 *     statements+=Statement (ambiguity) alters+=AlterTable
+	 *     statements+=Statement (ambiguity) indexes+=Index
+	 *     statements+=Statement (ambiguity) schemas+=SchemaDecl
+	 *     statements+=Statement (ambiguity) statements+=Statement
+	 *     statements+=Statement (ambiguity) tables+=Table
 	 *     tables+=Table (ambiguity) (rule end)
+	 *     tables+=Table (ambiguity) alters+=AlterTable
+	 *     tables+=Table (ambiguity) indexes+=Index
+	 *     tables+=Table (ambiguity) schemas+=SchemaDecl
+	 *     tables+=Table (ambiguity) statements+=Statement
 	 *     tables+=Table (ambiguity) tables+=Table
 	 
 	 * </pre>

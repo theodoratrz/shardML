@@ -10,9 +10,12 @@ import org.eclipse.emf.ecore.EObject;
 
 import io.shardml.schema.SqlTypes.Base;
 import io.shardml.schema.SqlTypes.SqlType;
+import io.shardml.sql.AlterTable;
 import io.shardml.sql.Column;
 import io.shardml.sql.Constraint;
 import io.shardml.sql.ForeignKey;
+import io.shardml.sql.Index;
+import io.shardml.sql.IndexPart;
 import io.shardml.sql.NotNull;
 import io.shardml.sql.PrimaryAnnotation;
 import io.shardml.sql.PrimaryKey;
@@ -34,13 +37,16 @@ import io.shardml.sql.UniqueKey;
  * time: an FK read as a UNIQUE, a column-level REFERENCES without its column, a missing
  * referenced column list that means the primary key. Here, every form of a key comes out in one
  * shape:
- *  - primary key: a column-level PRIMARY KEY or a table-level one;
- *  - unique keys: column-level UNIQUE and table-level UNIQUE, in declaration order, duplicates kept;
- *  - foreign keys: table-level FOREIGN KEY and column-level REFERENCES, with the referencing
- *    columns filled in, and the referenced columns resolved to the referenced primary key
- *    when the source omits them.
- * Keys added by ALTER TABLE and unique indexes join it with the grammar that declares them
- * (Plan-sql, step 5). CHECK, DEFAULT and GENERATED are not keys, and never appear as one.
+ *  - primary key: a column-level PRIMARY KEY, a table-level one, or one added by ALTER TABLE .. ADD
+ *    (where pg_dump declares every key);
+ *  - unique keys: column-level UNIQUE, table-level and ALTER TABLE UNIQUE, in declaration order,
+ *    duplicates kept; then the unique indexes on plain columns without a WHERE (an expression or
+ *    partial unique index is no key a foreign key may reference, and is left out);
+ *  - foreign keys: column-level REFERENCES, table-level and ALTER TABLE FOREIGN KEY, with the
+ *    referencing columns filled in, and the referenced columns resolved to the referenced primary
+ *    key (wherever it is declared) when the source omits them.
+ * A table's constraints are its own and those ALTER TABLE adds to it (tableConstraints). CHECK,
+ * DEFAULT and GENERATED are not keys, and never appear as one.
  *
  * The static methods that take a model object (foreignKey, primaryKeyDeclarations, defaultText)
  * are for validators, which report on that object. */
@@ -143,7 +149,7 @@ public final class SchemaFacts {
 				columns.add(new ColumnFacts(column.getName(), type, !notNull, defaultText, storedGenerated));
 			}
 			// table-level keys after the column-level ones; a foreign key comes out at its position among
-			// the column-level REFERENCES and the table-level FOREIGN KEYs, in source order
+			// the column-level REFERENCES and the table-level and ALTER TABLE FOREIGN KEYs, in source order
 			for (EObject key : keysInOrder(table)) {
 				if (key instanceof ForeignKey fk) {
 					ForeignKeyFacts facts = foreignKey(fk);
@@ -151,6 +157,13 @@ public final class SchemaFacts {
 						foreignKeys.add(facts);
 				} else if (key instanceof UniqueKey unique) {
 					List<String> names = names(unique.getColumns());
+					if (names != null)
+						uniqueKeys.add(names);
+				}
+			}
+			for (Index index : schema.getIndexes()) {
+				if (index.isUnique() && index.getTable() == table && isPlain(index)) {
+					List<String> names = indexColumns(index);
 					if (names != null)
 						uniqueKeys.add(names);
 				}
@@ -170,14 +183,55 @@ public final class SchemaFacts {
 					keys.add(constraint);
 			}
 		}
-		keys.addAll(table.getConstraints());
+		keys.addAll(tableConstraints(table));
 		return keys;
+	}
+
+	// a table's own table constraints, then those ALTER TABLE .. ADD adds to it, in source order
+	public static List<TableConstraint> tableConstraints(Table table) {
+		List<TableConstraint> constraints = new ArrayList<>(table.getConstraints());
+		if (table.eContainer() instanceof Schema schema) {
+			for (AlterTable alter : schema.getAlters()) {
+				if (alter.getConstraint() != null && alter.getTable() == table)
+					constraints.add(alter.getConstraint());
+			}
+		}
+		return constraints;
+	}
+
+	// the table a constraint, index part or ALTER TABLE belongs to: the CREATE TABLE around it, or the
+	// table an ALTER TABLE or index names; null if that is unresolved
+	public static Table owningTable(EObject object) {
+		for (EObject o = object; o != null; o = o.eContainer()) {
+			if (o instanceof Table table)
+				return table;
+			if (o instanceof AlterTable alter)
+				return alter.getTable() == null || alter.getTable().eIsProxy() ? null : alter.getTable();
+			if (o instanceof Index index)
+				return index.getTable() == null || index.getTable().eIsProxy() ? null : index.getTable();
+		}
+		return null;
+	}
+
+	// a unique index on plain columns, without a WHERE: one a foreign key may reference
+	private static final Pattern WHERE = Pattern.compile("(?i)\\bWHERE\\b");
+
+	private static boolean isPlain(Index index) {
+		return index.getParts().stream().allMatch(p -> p.getExpression() == null)
+				&& (index.getTail() == null || !WHERE.matcher(index.getTail()).find());
+	}
+
+	private static List<String> indexColumns(Index index) {
+		List<Column> columns = new ArrayList<>();
+		for (IndexPart part : index.getParts())
+			columns.add(part.getColumn());
+		return names(columns);
 	}
 
 	// a foreign key, normalised; null if its table, its referenced table or one of its columns is
 	// unresolved (a linking error is reported there) or unnamed
 	public static ForeignKeyFacts foreignKey(ForeignKey key) {
-		Table table = (Table) org.eclipse.xtext.EcoreUtil2.getContainerOfType(key, Table.class);
+		Table table = owningTable(key);
 		Table refTable = key.getRefTable();
 		if (table == null || table.getName() == null || refTable == null || refTable.eIsProxy() || refTable.getName() == null)
 			return null;
@@ -212,8 +266,8 @@ public final class SchemaFacts {
 		};
 	}
 
-	// every PRIMARY KEY a table declares, column-level and table-level, in source order. More than one
-	// is an error (SHML_067); of() reads the first
+	// every PRIMARY KEY a table declares, column-level, table-level and by ALTER TABLE, in source
+	// order. More than one is an error (SHML_067); of() reads the first
 	public static List<EObject> primaryKeyDeclarations(Table table) {
 		List<EObject> keys = new ArrayList<>();
 		for (Column column : table.getColumns()) {
@@ -222,7 +276,7 @@ public final class SchemaFacts {
 					keys.add(constraint);
 			}
 		}
-		for (TableConstraint constraint : table.getConstraints()) {
+		for (TableConstraint constraint : tableConstraints(table)) {
 			if (constraint instanceof PrimaryKey)
 				keys.add(constraint);
 		}

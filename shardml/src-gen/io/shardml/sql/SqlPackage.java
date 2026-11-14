@@ -78,13 +78,49 @@ public interface SqlPackage extends EPackage
   int SCHEMA__TABLES = 0;
 
   /**
+   * The feature id for the '<em><b>Alters</b></em>' containment reference list.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int SCHEMA__ALTERS = 1;
+
+  /**
+   * The feature id for the '<em><b>Indexes</b></em>' containment reference list.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int SCHEMA__INDEXES = 2;
+
+  /**
+   * The feature id for the '<em><b>Schemas</b></em>' containment reference list.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int SCHEMA__SCHEMAS = 3;
+
+  /**
+   * The feature id for the '<em><b>Statements</b></em>' containment reference list.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int SCHEMA__STATEMENTS = 4;
+
+  /**
    * The number of structural features of the '<em>Schema</em>' class.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
    * @generated
    * @ordered
    */
-  int SCHEMA_FEATURE_COUNT = 1;
+  int SCHEMA_FEATURE_COUNT = 5;
 
   /**
    * The meta object id for the '{@link io.shardml.sql.impl.TableImpl <em>Table</em>}' class.
@@ -167,7 +203,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getNamedConstraint()
    * @generated
    */
-  int NAMED_CONSTRAINT = 7;
+  int NAMED_CONSTRAINT = 12;
 
   /**
    * The feature id for the '<em><b>Name</b></em>' attribute.
@@ -195,7 +231,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getConstraint()
    * @generated
    */
-  int CONSTRAINT = 8;
+  int CONSTRAINT = 13;
 
   /**
    * The feature id for the '<em><b>Name</b></em>' attribute.
@@ -262,6 +298,317 @@ public interface SqlPackage extends EPackage
   int RAW_SQL_FEATURE_COUNT = CONSTRAINT_FEATURE_COUNT + 2;
 
   /**
+   * The meta object id for the '{@link io.shardml.sql.impl.AlterTableImpl <em>Alter Table</em>}' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see io.shardml.sql.impl.AlterTableImpl
+   * @see io.shardml.sql.impl.SqlPackageImpl#getAlterTable()
+   * @generated
+   */
+  int ALTER_TABLE = 3;
+
+  /**
+   * The feature id for the '<em><b>If Exists</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int ALTER_TABLE__IF_EXISTS = 0;
+
+  /**
+   * The feature id for the '<em><b>Only</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int ALTER_TABLE__ONLY = 1;
+
+  /**
+   * The feature id for the '<em><b>Schema Name</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int ALTER_TABLE__SCHEMA_NAME = 2;
+
+  /**
+   * The feature id for the '<em><b>Table</b></em>' reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int ALTER_TABLE__TABLE = 3;
+
+  /**
+   * The feature id for the '<em><b>Constraint</b></em>' containment reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int ALTER_TABLE__CONSTRAINT = 4;
+
+  /**
+   * The feature id for the '<em><b>Target</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int ALTER_TABLE__TARGET = 5;
+
+  /**
+   * The feature id for the '<em><b>Body</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int ALTER_TABLE__BODY = 6;
+
+  /**
+   * The number of structural features of the '<em>Alter Table</em>' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int ALTER_TABLE_FEATURE_COUNT = 7;
+
+  /**
+   * The meta object id for the '{@link io.shardml.sql.impl.IndexImpl <em>Index</em>}' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see io.shardml.sql.impl.IndexImpl
+   * @see io.shardml.sql.impl.SqlPackageImpl#getIndex()
+   * @generated
+   */
+  int INDEX = 4;
+
+  /**
+   * The feature id for the '<em><b>Unique</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int INDEX__UNIQUE = 0;
+
+  /**
+   * The feature id for the '<em><b>If Not Exists</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int INDEX__IF_NOT_EXISTS = 1;
+
+  /**
+   * The feature id for the '<em><b>Name</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int INDEX__NAME = 2;
+
+  /**
+   * The feature id for the '<em><b>Only</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int INDEX__ONLY = 3;
+
+  /**
+   * The feature id for the '<em><b>Schema Name</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int INDEX__SCHEMA_NAME = 4;
+
+  /**
+   * The feature id for the '<em><b>Table</b></em>' reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int INDEX__TABLE = 5;
+
+  /**
+   * The feature id for the '<em><b>Method</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int INDEX__METHOD = 6;
+
+  /**
+   * The feature id for the '<em><b>Parts</b></em>' containment reference list.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int INDEX__PARTS = 7;
+
+  /**
+   * The feature id for the '<em><b>Tail</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int INDEX__TAIL = 8;
+
+  /**
+   * The number of structural features of the '<em>Index</em>' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int INDEX_FEATURE_COUNT = 9;
+
+  /**
+   * The meta object id for the '{@link io.shardml.sql.impl.IndexPartImpl <em>Index Part</em>}' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see io.shardml.sql.impl.IndexPartImpl
+   * @see io.shardml.sql.impl.SqlPackageImpl#getIndexPart()
+   * @generated
+   */
+  int INDEX_PART = 5;
+
+  /**
+   * The feature id for the '<em><b>Column</b></em>' reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int INDEX_PART__COLUMN = 0;
+
+  /**
+   * The feature id for the '<em><b>Expression</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int INDEX_PART__EXPRESSION = 1;
+
+  /**
+   * The feature id for the '<em><b>Options</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int INDEX_PART__OPTIONS = 2;
+
+  /**
+   * The number of structural features of the '<em>Index Part</em>' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int INDEX_PART_FEATURE_COUNT = 3;
+
+  /**
+   * The meta object id for the '{@link io.shardml.sql.impl.SchemaDeclImpl <em>Schema Decl</em>}' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see io.shardml.sql.impl.SchemaDeclImpl
+   * @see io.shardml.sql.impl.SqlPackageImpl#getSchemaDecl()
+   * @generated
+   */
+  int SCHEMA_DECL = 6;
+
+  /**
+   * The feature id for the '<em><b>If Not Exists</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int SCHEMA_DECL__IF_NOT_EXISTS = 0;
+
+  /**
+   * The feature id for the '<em><b>Name</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int SCHEMA_DECL__NAME = 1;
+
+  /**
+   * The number of structural features of the '<em>Schema Decl</em>' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int SCHEMA_DECL_FEATURE_COUNT = 2;
+
+  /**
+   * The meta object id for the '{@link io.shardml.sql.impl.StatementImpl <em>Statement</em>}' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see io.shardml.sql.impl.StatementImpl
+   * @see io.shardml.sql.impl.SqlPackageImpl#getStatement()
+   * @generated
+   */
+  int STATEMENT = 7;
+
+  /**
+   * The feature id for the '<em><b>Verb</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int STATEMENT__VERB = 0;
+
+  /**
+   * The feature id for the '<em><b>Body</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int STATEMENT__BODY = 1;
+
+  /**
+   * The feature id for the '<em><b>Meta</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int STATEMENT__META = 2;
+
+  /**
+   * The number of structural features of the '<em>Statement</em>' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int STATEMENT_FEATURE_COUNT = 3;
+
+  /**
    * The meta object id for the '{@link io.shardml.sql.impl.ColumnImpl <em>Column</em>}' class.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
@@ -269,7 +616,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getColumn()
    * @generated
    */
-  int COLUMN = 3;
+  int COLUMN = 8;
 
   /**
    * The feature id for the '<em><b>Name</b></em>' attribute.
@@ -342,7 +689,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getVarchar()
    * @generated
    */
-  int VARCHAR = 4;
+  int VARCHAR = 9;
 
   /**
    * The feature id for the '<em><b>Varying</b></em>' attribute.
@@ -379,7 +726,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getNumeric()
    * @generated
    */
-  int NUMERIC = 5;
+  int NUMERIC = 10;
 
   /**
    * The feature id for the '<em><b>Decimal</b></em>' attribute.
@@ -425,7 +772,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getChar()
    * @generated
    */
-  int CHAR = 6;
+  int CHAR = 11;
 
   /**
    * The feature id for the '<em><b>Character</b></em>' attribute.
@@ -462,7 +809,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getPrimaryAnnotation()
    * @generated
    */
-  int PRIMARY_ANNOTATION = 9;
+  int PRIMARY_ANNOTATION = 14;
 
   /**
    * The feature id for the '<em><b>Name</b></em>' attribute.
@@ -490,7 +837,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getUniqueAnnotation()
    * @generated
    */
-  int UNIQUE_ANNOTATION = 10;
+  int UNIQUE_ANNOTATION = 15;
 
   /**
    * The feature id for the '<em><b>Name</b></em>' attribute.
@@ -518,7 +865,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getNotNull()
    * @generated
    */
-  int NOT_NULL = 11;
+  int NOT_NULL = 16;
 
   /**
    * The feature id for the '<em><b>Name</b></em>' attribute.
@@ -546,7 +893,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getNullable()
    * @generated
    */
-  int NULLABLE = 12;
+  int NULLABLE = 17;
 
   /**
    * The feature id for the '<em><b>Name</b></em>' attribute.
@@ -574,7 +921,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getForeignKey()
    * @generated
    */
-  int FOREIGN_KEY = 13;
+  int FOREIGN_KEY = 18;
 
   /**
    * The feature id for the '<em><b>Name</b></em>' attribute.
@@ -674,7 +1021,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getTableConstraint()
    * @generated
    */
-  int TABLE_CONSTRAINT = 14;
+  int TABLE_CONSTRAINT = 19;
 
   /**
    * The feature id for the '<em><b>Name</b></em>' attribute.
@@ -711,7 +1058,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getPrimaryKey()
    * @generated
    */
-  int PRIMARY_KEY = 15;
+  int PRIMARY_KEY = 20;
 
   /**
    * The feature id for the '<em><b>Name</b></em>' attribute.
@@ -748,7 +1095,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getUniqueKey()
    * @generated
    */
-  int UNIQUE_KEY = 16;
+  int UNIQUE_KEY = 21;
 
   /**
    * The feature id for the '<em><b>Name</b></em>' attribute.
@@ -785,7 +1132,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getTableCheck()
    * @generated
    */
-  int TABLE_CHECK = 17;
+  int TABLE_CHECK = 22;
 
   /**
    * The feature id for the '<em><b>Name</b></em>' attribute.
@@ -831,7 +1178,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getAllTypes()
    * @generated
    */
-  int ALL_TYPES = 18;
+  int ALL_TYPES = 23;
 
   /**
    * The meta object id for the '{@link io.shardml.sql.RefAction <em>Ref Action</em>}' enum.
@@ -841,7 +1188,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getRefAction()
    * @generated
    */
-  int REF_ACTION = 19;
+  int REF_ACTION = 24;
 
   /**
    * The meta object id for the '{@link io.shardml.sql.MatchKind <em>Match Kind</em>}' enum.
@@ -851,7 +1198,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getMatchKind()
    * @generated
    */
-  int MATCH_KIND = 20;
+  int MATCH_KIND = 25;
 
   /**
    * The meta object id for the '{@link io.shardml.sql.RawKind <em>Raw Kind</em>}' enum.
@@ -861,7 +1208,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getRawKind()
    * @generated
    */
-  int RAW_KIND = 21;
+  int RAW_KIND = 26;
 
 
   /**
@@ -884,6 +1231,50 @@ public interface SqlPackage extends EPackage
    * @generated
    */
   EReference getSchema_Tables();
+
+  /**
+   * Returns the meta object for the containment reference list '{@link io.shardml.sql.Schema#getAlters <em>Alters</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the containment reference list '<em>Alters</em>'.
+   * @see io.shardml.sql.Schema#getAlters()
+   * @see #getSchema()
+   * @generated
+   */
+  EReference getSchema_Alters();
+
+  /**
+   * Returns the meta object for the containment reference list '{@link io.shardml.sql.Schema#getIndexes <em>Indexes</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the containment reference list '<em>Indexes</em>'.
+   * @see io.shardml.sql.Schema#getIndexes()
+   * @see #getSchema()
+   * @generated
+   */
+  EReference getSchema_Indexes();
+
+  /**
+   * Returns the meta object for the containment reference list '{@link io.shardml.sql.Schema#getSchemas <em>Schemas</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the containment reference list '<em>Schemas</em>'.
+   * @see io.shardml.sql.Schema#getSchemas()
+   * @see #getSchema()
+   * @generated
+   */
+  EReference getSchema_Schemas();
+
+  /**
+   * Returns the meta object for the containment reference list '{@link io.shardml.sql.Schema#getStatements <em>Statements</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the containment reference list '<em>Statements</em>'.
+   * @see io.shardml.sql.Schema#getStatements()
+   * @see #getSchema()
+   * @generated
+   */
+  EReference getSchema_Statements();
 
   /**
    * Returns the meta object for class '{@link io.shardml.sql.Table <em>Table</em>}'.
@@ -992,6 +1383,320 @@ public interface SqlPackage extends EPackage
    * @generated
    */
   EAttribute getRawSql_Text();
+
+  /**
+   * Returns the meta object for class '{@link io.shardml.sql.AlterTable <em>Alter Table</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for class '<em>Alter Table</em>'.
+   * @see io.shardml.sql.AlterTable
+   * @generated
+   */
+  EClass getAlterTable();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.AlterTable#isIfExists <em>If Exists</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>If Exists</em>'.
+   * @see io.shardml.sql.AlterTable#isIfExists()
+   * @see #getAlterTable()
+   * @generated
+   */
+  EAttribute getAlterTable_IfExists();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.AlterTable#isOnly <em>Only</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Only</em>'.
+   * @see io.shardml.sql.AlterTable#isOnly()
+   * @see #getAlterTable()
+   * @generated
+   */
+  EAttribute getAlterTable_Only();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.AlterTable#getSchemaName <em>Schema Name</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Schema Name</em>'.
+   * @see io.shardml.sql.AlterTable#getSchemaName()
+   * @see #getAlterTable()
+   * @generated
+   */
+  EAttribute getAlterTable_SchemaName();
+
+  /**
+   * Returns the meta object for the reference '{@link io.shardml.sql.AlterTable#getTable <em>Table</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the reference '<em>Table</em>'.
+   * @see io.shardml.sql.AlterTable#getTable()
+   * @see #getAlterTable()
+   * @generated
+   */
+  EReference getAlterTable_Table();
+
+  /**
+   * Returns the meta object for the containment reference '{@link io.shardml.sql.AlterTable#getConstraint <em>Constraint</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the containment reference '<em>Constraint</em>'.
+   * @see io.shardml.sql.AlterTable#getConstraint()
+   * @see #getAlterTable()
+   * @generated
+   */
+  EReference getAlterTable_Constraint();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.AlterTable#getTarget <em>Target</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Target</em>'.
+   * @see io.shardml.sql.AlterTable#getTarget()
+   * @see #getAlterTable()
+   * @generated
+   */
+  EAttribute getAlterTable_Target();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.AlterTable#getBody <em>Body</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Body</em>'.
+   * @see io.shardml.sql.AlterTable#getBody()
+   * @see #getAlterTable()
+   * @generated
+   */
+  EAttribute getAlterTable_Body();
+
+  /**
+   * Returns the meta object for class '{@link io.shardml.sql.Index <em>Index</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for class '<em>Index</em>'.
+   * @see io.shardml.sql.Index
+   * @generated
+   */
+  EClass getIndex();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.Index#isUnique <em>Unique</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Unique</em>'.
+   * @see io.shardml.sql.Index#isUnique()
+   * @see #getIndex()
+   * @generated
+   */
+  EAttribute getIndex_Unique();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.Index#isIfNotExists <em>If Not Exists</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>If Not Exists</em>'.
+   * @see io.shardml.sql.Index#isIfNotExists()
+   * @see #getIndex()
+   * @generated
+   */
+  EAttribute getIndex_IfNotExists();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.Index#getName <em>Name</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Name</em>'.
+   * @see io.shardml.sql.Index#getName()
+   * @see #getIndex()
+   * @generated
+   */
+  EAttribute getIndex_Name();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.Index#isOnly <em>Only</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Only</em>'.
+   * @see io.shardml.sql.Index#isOnly()
+   * @see #getIndex()
+   * @generated
+   */
+  EAttribute getIndex_Only();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.Index#getSchemaName <em>Schema Name</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Schema Name</em>'.
+   * @see io.shardml.sql.Index#getSchemaName()
+   * @see #getIndex()
+   * @generated
+   */
+  EAttribute getIndex_SchemaName();
+
+  /**
+   * Returns the meta object for the reference '{@link io.shardml.sql.Index#getTable <em>Table</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the reference '<em>Table</em>'.
+   * @see io.shardml.sql.Index#getTable()
+   * @see #getIndex()
+   * @generated
+   */
+  EReference getIndex_Table();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.Index#getMethod <em>Method</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Method</em>'.
+   * @see io.shardml.sql.Index#getMethod()
+   * @see #getIndex()
+   * @generated
+   */
+  EAttribute getIndex_Method();
+
+  /**
+   * Returns the meta object for the containment reference list '{@link io.shardml.sql.Index#getParts <em>Parts</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the containment reference list '<em>Parts</em>'.
+   * @see io.shardml.sql.Index#getParts()
+   * @see #getIndex()
+   * @generated
+   */
+  EReference getIndex_Parts();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.Index#getTail <em>Tail</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Tail</em>'.
+   * @see io.shardml.sql.Index#getTail()
+   * @see #getIndex()
+   * @generated
+   */
+  EAttribute getIndex_Tail();
+
+  /**
+   * Returns the meta object for class '{@link io.shardml.sql.IndexPart <em>Index Part</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for class '<em>Index Part</em>'.
+   * @see io.shardml.sql.IndexPart
+   * @generated
+   */
+  EClass getIndexPart();
+
+  /**
+   * Returns the meta object for the reference '{@link io.shardml.sql.IndexPart#getColumn <em>Column</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the reference '<em>Column</em>'.
+   * @see io.shardml.sql.IndexPart#getColumn()
+   * @see #getIndexPart()
+   * @generated
+   */
+  EReference getIndexPart_Column();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.IndexPart#getExpression <em>Expression</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Expression</em>'.
+   * @see io.shardml.sql.IndexPart#getExpression()
+   * @see #getIndexPart()
+   * @generated
+   */
+  EAttribute getIndexPart_Expression();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.IndexPart#getOptions <em>Options</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Options</em>'.
+   * @see io.shardml.sql.IndexPart#getOptions()
+   * @see #getIndexPart()
+   * @generated
+   */
+  EAttribute getIndexPart_Options();
+
+  /**
+   * Returns the meta object for class '{@link io.shardml.sql.SchemaDecl <em>Schema Decl</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for class '<em>Schema Decl</em>'.
+   * @see io.shardml.sql.SchemaDecl
+   * @generated
+   */
+  EClass getSchemaDecl();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.SchemaDecl#isIfNotExists <em>If Not Exists</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>If Not Exists</em>'.
+   * @see io.shardml.sql.SchemaDecl#isIfNotExists()
+   * @see #getSchemaDecl()
+   * @generated
+   */
+  EAttribute getSchemaDecl_IfNotExists();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.SchemaDecl#getName <em>Name</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Name</em>'.
+   * @see io.shardml.sql.SchemaDecl#getName()
+   * @see #getSchemaDecl()
+   * @generated
+   */
+  EAttribute getSchemaDecl_Name();
+
+  /**
+   * Returns the meta object for class '{@link io.shardml.sql.Statement <em>Statement</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for class '<em>Statement</em>'.
+   * @see io.shardml.sql.Statement
+   * @generated
+   */
+  EClass getStatement();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.Statement#getVerb <em>Verb</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Verb</em>'.
+   * @see io.shardml.sql.Statement#getVerb()
+   * @see #getStatement()
+   * @generated
+   */
+  EAttribute getStatement_Verb();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.Statement#getBody <em>Body</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Body</em>'.
+   * @see io.shardml.sql.Statement#getBody()
+   * @see #getStatement()
+   * @generated
+   */
+  EAttribute getStatement_Body();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.Statement#getMeta <em>Meta</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Meta</em>'.
+   * @see io.shardml.sql.Statement#getMeta()
+   * @see #getStatement()
+   * @generated
+   */
+  EAttribute getStatement_Meta();
 
   /**
    * Returns the meta object for class '{@link io.shardml.sql.Column <em>Column</em>}'.
@@ -1478,6 +2183,38 @@ public interface SqlPackage extends EPackage
     EReference SCHEMA__TABLES = eINSTANCE.getSchema_Tables();
 
     /**
+     * The meta object literal for the '<em><b>Alters</b></em>' containment reference list feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EReference SCHEMA__ALTERS = eINSTANCE.getSchema_Alters();
+
+    /**
+     * The meta object literal for the '<em><b>Indexes</b></em>' containment reference list feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EReference SCHEMA__INDEXES = eINSTANCE.getSchema_Indexes();
+
+    /**
+     * The meta object literal for the '<em><b>Schemas</b></em>' containment reference list feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EReference SCHEMA__SCHEMAS = eINSTANCE.getSchema_Schemas();
+
+    /**
+     * The meta object literal for the '<em><b>Statements</b></em>' containment reference list feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EReference SCHEMA__STATEMENTS = eINSTANCE.getSchema_Statements();
+
+    /**
      * The meta object literal for the '{@link io.shardml.sql.impl.TableImpl <em>Table</em>}' class.
      * <!-- begin-user-doc -->
      * <!-- end-user-doc -->
@@ -1560,6 +2297,248 @@ public interface SqlPackage extends EPackage
      * @generated
      */
     EAttribute RAW_SQL__TEXT = eINSTANCE.getRawSql_Text();
+
+    /**
+     * The meta object literal for the '{@link io.shardml.sql.impl.AlterTableImpl <em>Alter Table</em>}' class.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @see io.shardml.sql.impl.AlterTableImpl
+     * @see io.shardml.sql.impl.SqlPackageImpl#getAlterTable()
+     * @generated
+     */
+    EClass ALTER_TABLE = eINSTANCE.getAlterTable();
+
+    /**
+     * The meta object literal for the '<em><b>If Exists</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute ALTER_TABLE__IF_EXISTS = eINSTANCE.getAlterTable_IfExists();
+
+    /**
+     * The meta object literal for the '<em><b>Only</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute ALTER_TABLE__ONLY = eINSTANCE.getAlterTable_Only();
+
+    /**
+     * The meta object literal for the '<em><b>Schema Name</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute ALTER_TABLE__SCHEMA_NAME = eINSTANCE.getAlterTable_SchemaName();
+
+    /**
+     * The meta object literal for the '<em><b>Table</b></em>' reference feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EReference ALTER_TABLE__TABLE = eINSTANCE.getAlterTable_Table();
+
+    /**
+     * The meta object literal for the '<em><b>Constraint</b></em>' containment reference feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EReference ALTER_TABLE__CONSTRAINT = eINSTANCE.getAlterTable_Constraint();
+
+    /**
+     * The meta object literal for the '<em><b>Target</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute ALTER_TABLE__TARGET = eINSTANCE.getAlterTable_Target();
+
+    /**
+     * The meta object literal for the '<em><b>Body</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute ALTER_TABLE__BODY = eINSTANCE.getAlterTable_Body();
+
+    /**
+     * The meta object literal for the '{@link io.shardml.sql.impl.IndexImpl <em>Index</em>}' class.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @see io.shardml.sql.impl.IndexImpl
+     * @see io.shardml.sql.impl.SqlPackageImpl#getIndex()
+     * @generated
+     */
+    EClass INDEX = eINSTANCE.getIndex();
+
+    /**
+     * The meta object literal for the '<em><b>Unique</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute INDEX__UNIQUE = eINSTANCE.getIndex_Unique();
+
+    /**
+     * The meta object literal for the '<em><b>If Not Exists</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute INDEX__IF_NOT_EXISTS = eINSTANCE.getIndex_IfNotExists();
+
+    /**
+     * The meta object literal for the '<em><b>Name</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute INDEX__NAME = eINSTANCE.getIndex_Name();
+
+    /**
+     * The meta object literal for the '<em><b>Only</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute INDEX__ONLY = eINSTANCE.getIndex_Only();
+
+    /**
+     * The meta object literal for the '<em><b>Schema Name</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute INDEX__SCHEMA_NAME = eINSTANCE.getIndex_SchemaName();
+
+    /**
+     * The meta object literal for the '<em><b>Table</b></em>' reference feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EReference INDEX__TABLE = eINSTANCE.getIndex_Table();
+
+    /**
+     * The meta object literal for the '<em><b>Method</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute INDEX__METHOD = eINSTANCE.getIndex_Method();
+
+    /**
+     * The meta object literal for the '<em><b>Parts</b></em>' containment reference list feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EReference INDEX__PARTS = eINSTANCE.getIndex_Parts();
+
+    /**
+     * The meta object literal for the '<em><b>Tail</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute INDEX__TAIL = eINSTANCE.getIndex_Tail();
+
+    /**
+     * The meta object literal for the '{@link io.shardml.sql.impl.IndexPartImpl <em>Index Part</em>}' class.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @see io.shardml.sql.impl.IndexPartImpl
+     * @see io.shardml.sql.impl.SqlPackageImpl#getIndexPart()
+     * @generated
+     */
+    EClass INDEX_PART = eINSTANCE.getIndexPart();
+
+    /**
+     * The meta object literal for the '<em><b>Column</b></em>' reference feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EReference INDEX_PART__COLUMN = eINSTANCE.getIndexPart_Column();
+
+    /**
+     * The meta object literal for the '<em><b>Expression</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute INDEX_PART__EXPRESSION = eINSTANCE.getIndexPart_Expression();
+
+    /**
+     * The meta object literal for the '<em><b>Options</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute INDEX_PART__OPTIONS = eINSTANCE.getIndexPart_Options();
+
+    /**
+     * The meta object literal for the '{@link io.shardml.sql.impl.SchemaDeclImpl <em>Schema Decl</em>}' class.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @see io.shardml.sql.impl.SchemaDeclImpl
+     * @see io.shardml.sql.impl.SqlPackageImpl#getSchemaDecl()
+     * @generated
+     */
+    EClass SCHEMA_DECL = eINSTANCE.getSchemaDecl();
+
+    /**
+     * The meta object literal for the '<em><b>If Not Exists</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute SCHEMA_DECL__IF_NOT_EXISTS = eINSTANCE.getSchemaDecl_IfNotExists();
+
+    /**
+     * The meta object literal for the '<em><b>Name</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute SCHEMA_DECL__NAME = eINSTANCE.getSchemaDecl_Name();
+
+    /**
+     * The meta object literal for the '{@link io.shardml.sql.impl.StatementImpl <em>Statement</em>}' class.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @see io.shardml.sql.impl.StatementImpl
+     * @see io.shardml.sql.impl.SqlPackageImpl#getStatement()
+     * @generated
+     */
+    EClass STATEMENT = eINSTANCE.getStatement();
+
+    /**
+     * The meta object literal for the '<em><b>Verb</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute STATEMENT__VERB = eINSTANCE.getStatement_Verb();
+
+    /**
+     * The meta object literal for the '<em><b>Body</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute STATEMENT__BODY = eINSTANCE.getStatement_Body();
+
+    /**
+     * The meta object literal for the '<em><b>Meta</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute STATEMENT__META = eINSTANCE.getStatement_Meta();
 
     /**
      * The meta object literal for the '{@link io.shardml.sql.impl.ColumnImpl <em>Column</em>}' class.
