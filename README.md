@@ -202,6 +202,8 @@ Any other statement is an error at its first word (SHML_061), which says what to
 
 `ALTER TABLE .. ADD` and `CREATE INDEX` name their table like `REFERENCES`: unknown tables are SHML_062 and unknown columns SHML_063. `bench/integration/pgdump/` deploys two pg_dump files of the corpus (`banking-pg_dump`, `pgbench`) through schema, distribution and foreign keys, and checks the keys in the catalog and that each foreign key is enforced.
 
+`bench/integration/test-sql-corpus.sh` (CI) checks that the generated schema loses nothing. For each clean corpus file (all but Pagila) it applies the original file to one fresh database and the generated schema and foreign keys to another, on plain PostgreSQL 17, and compares the catalogs fact by fact: columns (position, type, NOT NULL, default, identity, generated), constraints, indexes, table options, comments and privileges. Any difference not listed with its reason in `bench/integration/sql-corpus/allowlist.tsv` fails; today the list is empty, all five catalogs are equal.
+
 ### Table relationships vs. foreign keys
 
 The `has_many`, `has_one`, and `belongs_to` relationship declarations are **application-level semantic relationships**, not a mirror of SQL foreign key constraints (the schema's own foreign keys are checked separately, see above). The distinction is intentional: sharding decisions are driven by how the application queries data, not just by the schema's referential constraints. A foreign key tells you data is related; a relationship declaration in ShardML tells the validator which tables will be joined at the application layer, enabling colocation warnings when those tables land on different shards.

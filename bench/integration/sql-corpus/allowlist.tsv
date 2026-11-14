@@ -1,0 +1,11 @@
+# Differences between the catalog of an original corpus file and the catalog of the schema generated
+# from it, that bench/integration/test-sql-corpus.sh accepts. One per line, tab-separated:
+#   file (tpcc, pgbench, banking-pg_dump, chinook, northwind) <TAB> original-only | generated-only
+#   <TAB> the catalog fact, exactly as the script prints it <TAB> why it is not a loss
+# An entry that no longer occurs fails the script. A difference that is the generator losing something
+# (a default, an index option, a constraint, a column flag, a table option) is never listed here.
+#
+# Empty (Step 6b): the five catalogs are equal. What the generator leaves out of these files (comments,
+# DROP TABLE, SET, OWNER TO, statement order) leaves no trace in the facts compared: the files have no
+# COMMENT ON or GRANT, DROP TABLE IF EXISTS of a table that does not exist yet changes nothing, both
+# databases are owned by the same role, and columns keep their positions.

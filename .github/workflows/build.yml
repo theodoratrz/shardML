@@ -69,6 +69,11 @@ jobs:
       - name: Deploy examples and fixtures to Citus
         run: bench/integration/test-examples.sh
 
+      # Each clean corpus file and the schema generated from it, in two plain databases: the
+      # catalogs must be equal but for bench/integration/sql-corpus/allowlist.tsv
+      - name: Corpus catalogs, original vs generated
+        run: bench/integration/test-sql-corpus.sh
+
       # Applies generated placement scripts and compares the live shard map with
       # `shardml placement`; every psql run is bounded by timeout(1).
       - name: Shard placement on Citus
