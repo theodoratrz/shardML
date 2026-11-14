@@ -3,7 +3,6 @@
  */
 package io.shardml.sql;
 
-import org.eclipse.emf.ecore.EObject;
 
 /**
  * <!-- begin-user-doc -->
@@ -15,6 +14,6 @@ import org.eclipse.emf.ecore.EObject;
  * @model
  * @generated
  */
-public interface Constraint extends EObject
+public interface Constraint extends NamedConstraint
 {
 } // Constraint

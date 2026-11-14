@@ -7,13 +7,17 @@ import com.google.inject.Inject;
 import io.shardml.services.SQLGrammarAccess;
 import io.shardml.sql.Char;
 import io.shardml.sql.Column;
+import io.shardml.sql.ForeignKey;
 import io.shardml.sql.NotNull;
+import io.shardml.sql.Nullable;
 import io.shardml.sql.Numeric;
 import io.shardml.sql.PrimaryAnnotation;
 import io.shardml.sql.PrimaryKey;
+import io.shardml.sql.RawSql;
 import io.shardml.sql.Schema;
 import io.shardml.sql.SqlPackage;
 import io.shardml.sql.Table;
+import io.shardml.sql.TableCheck;
 import io.shardml.sql.UniqueAnnotation;
 import io.shardml.sql.UniqueKey;
 import io.shardml.sql.Varchar;
@@ -24,7 +28,9 @@ import org.eclipse.xtext.Action;
 import org.eclipse.xtext.Parameter;
 import org.eclipse.xtext.ParserRule;
 import org.eclipse.xtext.serializer.ISerializationContext;
+import org.eclipse.xtext.serializer.acceptor.SequenceFeeder;
 import org.eclipse.xtext.serializer.sequencer.AbstractDelegatingSemanticSequencer;
+import org.eclipse.xtext.serializer.sequencer.ITransientValueService.ValueTransient;
 
 @SuppressWarnings("all")
 public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
@@ -46,29 +52,67 @@ public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
 			case SqlPackage.COLUMN:
 				sequence_Column(context, (Column) semanticObject); 
 				return; 
+			case SqlPackage.FOREIGN_KEY:
+				if (rule == grammarAccess.getNamedConstraintRule()) {
+					sequence_ConstraintName_KeyColumns_OnDelete_OnUpdate_References(context, (ForeignKey) semanticObject); 
+					return; 
+				}
+				else if (rule == grammarAccess.getTableConstraintRule()
+						|| rule == grammarAccess.getForeignKeyRule()) {
+					sequence_ConstraintName_KeyColumns_OnDelete_OnUpdate_References(context, (ForeignKey) semanticObject); 
+					return; 
+				}
+				else if (rule == grammarAccess.getConstraintRule()
+						|| rule == grammarAccess.getColumnReferencesRule()) {
+					sequence_ConstraintName_OnDelete_OnUpdate_References(context, (ForeignKey) semanticObject); 
+					return; 
+				}
+				else break;
 			case SqlPackage.NOT_NULL:
-				sequence_NotNull(context, (NotNull) semanticObject); 
+				sequence_ConstraintName_NotNull(context, (NotNull) semanticObject); 
+				return; 
+			case SqlPackage.NULLABLE:
+				sequence_ConstraintName_Nullable(context, (Nullable) semanticObject); 
 				return; 
 			case SqlPackage.NUMERIC:
 				sequence_Numeric(context, (Numeric) semanticObject); 
 				return; 
 			case SqlPackage.PRIMARY_ANNOTATION:
-				sequence_PrimaryAnnotation(context, (PrimaryAnnotation) semanticObject); 
+				sequence_ConstraintName_PrimaryAnnotation(context, (PrimaryAnnotation) semanticObject); 
 				return; 
 			case SqlPackage.PRIMARY_KEY:
-				sequence_PrimaryKey(context, (PrimaryKey) semanticObject); 
+				sequence_ConstraintName_KeyColumns(context, (PrimaryKey) semanticObject); 
 				return; 
+			case SqlPackage.RAW_SQL:
+				if (rule == grammarAccess.getCheckClauseRule()) {
+					sequence_CheckClause(context, (RawSql) semanticObject); 
+					return; 
+				}
+				else if (rule == grammarAccess.getNamedConstraintRule()
+						|| rule == grammarAccess.getConstraintRule()
+						|| rule == grammarAccess.getColumnRawRule()) {
+					sequence_ColumnRaw_ConstraintName(context, (RawSql) semanticObject); 
+					return; 
+				}
+				else if (rule == grammarAccess.getTableOptionsRule()) {
+					sequence_TableOptions(context, (RawSql) semanticObject); 
+					return; 
+				}
+				else break;
 			case SqlPackage.SCHEMA:
 				sequence_Schema(context, (Schema) semanticObject); 
 				return; 
 			case SqlPackage.TABLE:
 				sequence_Table(context, (Table) semanticObject); 
 				return; 
+			case SqlPackage.TABLE_CHECK:
+				sequence_ConstraintName_TableCheck(context, (TableCheck) semanticObject); 
+				return; 
 			case SqlPackage.UNIQUE_ANNOTATION:
-				sequence_UniqueAnnotation(context, (UniqueAnnotation) semanticObject); 
+				sequence_ConstraintName_UniqueAnnotation(context, (UniqueAnnotation) semanticObject); 
 				return; 
 			case SqlPackage.UNIQUE_KEY:
-				sequence_UniqueKey(context, (UniqueKey) semanticObject); 
+				sequence_ConstraintName_KeyColumns(context, (UniqueKey) semanticObject); 
 				return; 
 			case SqlPackage.VARCHAR:
 				sequence_Varchar(context, (Varchar) semanticObject); 
@@ -88,6 +132,45 @@ public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
 	 * </pre>
 	 */
 	protected void sequence_Char(ISerializationContext context, Char semanticObject) {
+		genericSequencer.createSequence(context, semanticObject);
+	}
+	
+	
+	/**
+	 * <pre>
+	 * Contexts:
+	 *     CheckClause returns RawSql
+	 *
+	 * Constraint:
+	 *     (kind=CheckKind text=Parenthesized)
+	 * </pre>
+	 */
+	protected void sequence_CheckClause(ISerializationContext context, RawSql semanticObject) {
+		if (errorAcceptor != null) {
+			if (transientValues.isValueTransient(semanticObject, SqlPackage.Literals.RAW_SQL__KIND) == ValueTransient.YES)
+				errorAcceptor.accept(diagnosticProvider.createFeatureValueMissing(semanticObject, SqlPackage.Literals.RAW_SQL__KIND));
+			if (transientValues.isValueTransient(semanticObject, SqlPackage.Literals.RAW_SQL__TEXT) == ValueTransient.YES)
+				errorAcceptor.accept(diagnosticProvider.createFeatureValueMissing(semanticObject, SqlPackage.Literals.RAW_SQL__TEXT));
+		}
+		SequenceFeeder feeder = createSequencerFeeder(context, semanticObject);
+		feeder.accept(grammarAccess.getCheckClauseAccess().getKindCheckKindEnumRuleCall_0_0(), semanticObject.getKind());
+		feeder.accept(grammarAccess.getCheckClauseAccess().getTextParenthesizedParserRuleCall_1_0(), semanticObject.getText());
+		feeder.finish();
+	}
+	
+	
+	/**
+	 * <pre>
+	 * Contexts:
+	 *     NamedConstraint returns RawSql
+	 *     Constraint returns RawSql
+	 *     ColumnRaw returns RawSql
+	 *
+	 * Constraint:
+	 *     (name=Name? ((kind=DefaultKind text=DefaultExpr) | (kind=CheckKind text=Parenthesized) | (kind=GeneratedKind text=GeneratedTail)))
+	 * </pre>
+	 */
+	protected void sequence_ColumnRaw_ConstraintName(ISerializationContext context, RawSql semanticObject) {
 		genericSequencer.createSequence(context, semanticObject);
 	}
 	
@@ -121,14 +204,195 @@ public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
 	/**
 	 * <pre>
 	 * Contexts:
+	 *     NamedConstraint returns ForeignKey
+	 *
+	 * Constraint:
+	 *     (
+	 *         name=Name? 
+	 *         (columns+=[Column|Name] columns+=[Column|Name]*)? 
+	 *         refSchema=Name? 
+	 *         refTable=[Table|Name] 
+	 *         (refColumns+=[Column|Name] refColumns+=[Column|Name]*)? 
+	 *         match=MatchKind? 
+	 *         (onUpdate=RefAction | onUpdate=NoAction | onUpdate=SetAction)? 
+	 *         (
+	 *             (onDelete=RefAction | onDelete=NoAction | onDelete=SetAction) 
+	 *             ((onUpdate=RefAction | onUpdate=NoAction | onUpdate=SetAction)? (onDelete=RefAction | onDelete=NoAction | onDelete=SetAction))* 
+	 *             (onUpdate=RefAction | onUpdate=NoAction | onUpdate=SetAction)?
+	 *         )? 
+	 *         deferrable=Deferrability?
+	 *     )
+	 * </pre>
+	 */
+	protected void sequence_ConstraintName_KeyColumns_OnDelete_OnUpdate_References(ISerializationContext context, ForeignKey semanticObject) {
+		genericSequencer.createSequence(context, semanticObject);
+	}
+	
+	
+	// This method is commented out because it has the same signature as another method in this class.
+	// This is probably a bug in Xtext's serializer, please report it here: 
+	// https://bugs.eclipse.org/bugs/enter_bug.cgi?product=TMF
+	//
+	// Contexts:
+	//     TableConstraint returns ForeignKey
+	//     ForeignKey returns ForeignKey
+	//
+	// Constraint:
+	//     (
+	//         name=Name? 
+	//         columns+=[Column|Name] 
+	//         columns+=[Column|Name]* 
+	//         refSchema=Name? 
+	//         refTable=[Table|Name] 
+	//         (refColumns+=[Column|Name] refColumns+=[Column|Name]*)? 
+	//         match=MatchKind? 
+	//         (onUpdate=RefAction | onUpdate=NoAction | onUpdate=SetAction)? 
+	//         (
+	//             (onDelete=RefAction | onDelete=NoAction | onDelete=SetAction) 
+	//             ((onUpdate=RefAction | onUpdate=NoAction | onUpdate=SetAction)? (onDelete=RefAction | onDelete=NoAction | onDelete=SetAction))* 
+	//             (onUpdate=RefAction | onUpdate=NoAction | onUpdate=SetAction)?
+	//         )? 
+	//         deferrable=Deferrability?
+	//     )
+	//
+	// protected void sequence_ConstraintName_KeyColumns_OnDelete_OnUpdate_References(ISerializationContext context, ForeignKey semanticObject) { }
+	
+	/**
+	 * <pre>
+	 * Contexts:
+	 *     NamedConstraint returns PrimaryKey
+	 *     TableConstraint returns PrimaryKey
+	 *     PrimaryKey returns PrimaryKey
+	 *
+	 * Constraint:
+	 *     (name=Name? columns+=[Column|Name] columns+=[Column|Name]*)
+	 * </pre>
+	 */
+	protected void sequence_ConstraintName_KeyColumns(ISerializationContext context, PrimaryKey semanticObject) {
+		genericSequencer.createSequence(context, semanticObject);
+	}
+	
+	
+	/**
+	 * <pre>
+	 * Contexts:
+	 *     NamedConstraint returns UniqueKey
+	 *     TableConstraint returns UniqueKey
+	 *     UniqueKey returns UniqueKey
+	 *
+	 * Constraint:
+	 *     (name=Name? columns+=[Column|Name] columns+=[Column|Name]*)
+	 * </pre>
+	 */
+	protected void sequence_ConstraintName_KeyColumns(ISerializationContext context, UniqueKey semanticObject) {
+		genericSequencer.createSequence(context, semanticObject);
+	}
+	
+	
+	/**
+	 * <pre>
+	 * Contexts:
+	 *     NamedConstraint returns NotNull
 	 *     Constraint returns NotNull
 	 *     NotNull returns NotNull
 	 *
 	 * Constraint:
-	 *     {NotNull}
+	 *     name=Name?
 	 * </pre>
 	 */
-	protected void sequence_NotNull(ISerializationContext context, NotNull semanticObject) {
+	protected void sequence_ConstraintName_NotNull(ISerializationContext context, NotNull semanticObject) {
+		genericSequencer.createSequence(context, semanticObject);
+	}
+	
+	
+	/**
+	 * <pre>
+	 * Contexts:
+	 *     NamedConstraint returns Nullable
+	 *     Constraint returns Nullable
+	 *     Nullable returns Nullable
+	 *
+	 * Constraint:
+	 *     name=Name?
+	 * </pre>
+	 */
+	protected void sequence_ConstraintName_Nullable(ISerializationContext context, Nullable semanticObject) {
+		genericSequencer.createSequence(context, semanticObject);
+	}
+	
+	
+	/**
+	 * <pre>
+	 * Contexts:
+	 *     Constraint returns ForeignKey
+	 *     ColumnReferences returns ForeignKey
+	 *
+	 * Constraint:
+	 *     (
+	 *         name=Name? 
+	 *         refSchema=Name? 
+	 *         refTable=[Table|Name] 
+	 *         (refColumns+=[Column|Name] refColumns+=[Column|Name]*)? 
+	 *         match=MatchKind? 
+	 *         (onUpdate=RefAction | onUpdate=NoAction | onUpdate=SetAction)? 
+	 *         (
+	 *             (onDelete=RefAction | onDelete=NoAction | onDelete=SetAction) 
+	 *             ((onUpdate=RefAction | onUpdate=NoAction | onUpdate=SetAction)? (onDelete=RefAction | onDelete=NoAction | onDelete=SetAction))* 
+	 *             (onUpdate=RefAction | onUpdate=NoAction | onUpdate=SetAction)?
+	 *         )? 
+	 *         deferrable=Deferrability?
+	 *     )
+	 * </pre>
+	 */
+	protected void sequence_ConstraintName_OnDelete_OnUpdate_References(ISerializationContext context, ForeignKey semanticObject) {
+		genericSequencer.createSequence(context, semanticObject);
+	}
+	
+	
+	/**
+	 * <pre>
+	 * Contexts:
+	 *     NamedConstraint returns PrimaryAnnotation
+	 *     Constraint returns PrimaryAnnotation
+	 *     PrimaryAnnotation returns PrimaryAnnotation
+	 *
+	 * Constraint:
+	 *     name=Name?
+	 * </pre>
+	 */
+	protected void sequence_ConstraintName_PrimaryAnnotation(ISerializationContext context, PrimaryAnnotation semanticObject) {
+		genericSequencer.createSequence(context, semanticObject);
+	}
+	
+	
+	/**
+	 * <pre>
+	 * Contexts:
+	 *     NamedConstraint returns TableCheck
+	 *     TableConstraint returns TableCheck
+	 *     TableCheck returns TableCheck
+	 *
+	 * Constraint:
+	 *     (name=Name? check=CheckClause)
+	 * </pre>
+	 */
+	protected void sequence_ConstraintName_TableCheck(ISerializationContext context, TableCheck semanticObject) {
+		genericSequencer.createSequence(context, semanticObject);
+	}
+	
+	
+	/**
+	 * <pre>
+	 * Contexts:
+	 *     NamedConstraint returns UniqueAnnotation
+	 *     Constraint returns UniqueAnnotation
+	 *     UniqueAnnotation returns UniqueAnnotation
+	 *
+	 * Constraint:
+	 *     name=Name?
+	 * </pre>
+	 */
+	protected void sequence_ConstraintName_UniqueAnnotation(ISerializationContext context, UniqueAnnotation semanticObject) {
 		genericSequencer.createSequence(context, semanticObject);
 	}
 	
@@ -150,36 +414,6 @@ public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
 	/**
 	 * <pre>
 	 * Contexts:
-	 *     Constraint returns PrimaryAnnotation
-	 *     PrimaryAnnotation returns PrimaryAnnotation
-	 *
-	 * Constraint:
-	 *     {PrimaryAnnotation}
-	 * </pre>
-	 */
-	protected void sequence_PrimaryAnnotation(ISerializationContext context, PrimaryAnnotation semanticObject) {
-		genericSequencer.createSequence(context, semanticObject);
-	}
-	
-	
-	/**
-	 * <pre>
-	 * Contexts:
-	 *     TableConstraint returns PrimaryKey
-	 *     PrimaryKey returns PrimaryKey
-	 *
-	 * Constraint:
-	 *     (columns+=[Column|Name] columns+=[Column|Name]*)
-	 * </pre>
-	 */
-	protected void sequence_PrimaryKey(ISerializationContext context, PrimaryKey semanticObject) {
-		genericSequencer.createSequence(context, semanticObject);
-	}
-	
-	
-	/**
-	 * <pre>
-	 * Contexts:
 	 *     Schema returns Schema
 	 *
 	 * Constraint:
@@ -188,6 +422,29 @@ public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
 	 */
 	protected void sequence_Schema(ISerializationContext context, Schema semanticObject) {
 		genericSequencer.createSequence(context, semanticObject);
+	}
+	
+	
+	/**
+	 * <pre>
+	 * Contexts:
+	 *     TableOptions returns RawSql
+	 *
+	 * Constraint:
+	 *     (kind=WithKind text=Parenthesized)
+	 * </pre>
+	 */
+	protected void sequence_TableOptions(ISerializationContext context, RawSql semanticObject) {
+		if (errorAcceptor != null) {
+			if (transientValues.isValueTransient(semanticObject, SqlPackage.Literals.RAW_SQL__KIND) == ValueTransient.YES)
+				errorAcceptor.accept(diagnosticProvider.createFeatureValueMissing(semanticObject, SqlPackage.Literals.RAW_SQL__KIND));
+			if (transientValues.isValueTransient(semanticObject, SqlPackage.Literals.RAW_SQL__TEXT) == ValueTransient.YES)
+				errorAcceptor.accept(diagnosticProvider.createFeatureValueMissing(semanticObject, SqlPackage.Literals.RAW_SQL__TEXT));
+		}
+		SequenceFeeder feeder = createSequencerFeeder(context, semanticObject);
+		feeder.accept(grammarAccess.getTableOptionsAccess().getKindWithKindEnumRuleCall_0_0(), semanticObject.getKind());
+		feeder.accept(grammarAccess.getTableOptionsAccess().getTextParenthesizedParserRuleCall_1_0(), semanticObject.getText());
+		feeder.finish();
 	}
 	
 	
@@ -203,41 +460,12 @@ public class SQLSemanticSequencer extends AbstractDelegatingSemanticSequencer {
 	 *         name=Name 
 	 *         (columns+=Column | constraints+=TableConstraint) 
 	 *         columns+=Column? 
-	 *         (constraints+=TableConstraint? columns+=Column?)*
+	 *         (constraints+=TableConstraint? columns+=Column?)* 
+	 *         options=TableOptions?
 	 *     )
 	 * </pre>
 	 */
 	protected void sequence_Table(ISerializationContext context, Table semanticObject) {
-		genericSequencer.createSequence(context, semanticObject);
-	}
-	
-	
-	/**
-	 * <pre>
-	 * Contexts:
-	 *     Constraint returns UniqueAnnotation
-	 *     UniqueAnnotation returns UniqueAnnotation
-	 *
-	 * Constraint:
-	 *     {UniqueAnnotation}
-	 * </pre>
-	 */
-	protected void sequence_UniqueAnnotation(ISerializationContext context, UniqueAnnotation semanticObject) {
-		genericSequencer.createSequence(context, semanticObject);
-	}
-	
-	
-	/**
-	 * <pre>
-	 * Contexts:
-	 *     TableConstraint returns UniqueKey
-	 *     UniqueKey returns UniqueKey
-	 *
-	 * Constraint:
-	 *     (columns+=[Column|Name] columns+=[Column|Name]*)
-	 * </pre>
-	 */
-	protected void sequence_UniqueKey(ISerializationContext context, UniqueKey semanticObject) {
 		genericSequencer.createSequence(context, semanticObject);
 	}
 	

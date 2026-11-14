@@ -142,13 +142,124 @@ public interface SqlPackage extends EPackage
   int TABLE__CONSTRAINTS = 4;
 
   /**
+   * The feature id for the '<em><b>Options</b></em>' containment reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int TABLE__OPTIONS = 5;
+
+  /**
    * The number of structural features of the '<em>Table</em>' class.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
    * @generated
    * @ordered
    */
-  int TABLE_FEATURE_COUNT = 5;
+  int TABLE_FEATURE_COUNT = 6;
+
+  /**
+   * The meta object id for the '{@link io.shardml.sql.impl.NamedConstraintImpl <em>Named Constraint</em>}' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see io.shardml.sql.impl.NamedConstraintImpl
+   * @see io.shardml.sql.impl.SqlPackageImpl#getNamedConstraint()
+   * @generated
+   */
+  int NAMED_CONSTRAINT = 7;
+
+  /**
+   * The feature id for the '<em><b>Name</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int NAMED_CONSTRAINT__NAME = 0;
+
+  /**
+   * The number of structural features of the '<em>Named Constraint</em>' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int NAMED_CONSTRAINT_FEATURE_COUNT = 1;
+
+  /**
+   * The meta object id for the '{@link io.shardml.sql.impl.ConstraintImpl <em>Constraint</em>}' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see io.shardml.sql.impl.ConstraintImpl
+   * @see io.shardml.sql.impl.SqlPackageImpl#getConstraint()
+   * @generated
+   */
+  int CONSTRAINT = 8;
+
+  /**
+   * The feature id for the '<em><b>Name</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int CONSTRAINT__NAME = NAMED_CONSTRAINT__NAME;
+
+  /**
+   * The number of structural features of the '<em>Constraint</em>' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int CONSTRAINT_FEATURE_COUNT = NAMED_CONSTRAINT_FEATURE_COUNT + 0;
+
+  /**
+   * The meta object id for the '{@link io.shardml.sql.impl.RawSqlImpl <em>Raw Sql</em>}' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see io.shardml.sql.impl.RawSqlImpl
+   * @see io.shardml.sql.impl.SqlPackageImpl#getRawSql()
+   * @generated
+   */
+  int RAW_SQL = 2;
+
+  /**
+   * The feature id for the '<em><b>Name</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int RAW_SQL__NAME = CONSTRAINT__NAME;
+
+  /**
+   * The feature id for the '<em><b>Kind</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int RAW_SQL__KIND = CONSTRAINT_FEATURE_COUNT + 0;
+
+  /**
+   * The feature id for the '<em><b>Text</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int RAW_SQL__TEXT = CONSTRAINT_FEATURE_COUNT + 1;
+
+  /**
+   * The number of structural features of the '<em>Raw Sql</em>' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int RAW_SQL_FEATURE_COUNT = CONSTRAINT_FEATURE_COUNT + 2;
 
   /**
    * The meta object id for the '{@link io.shardml.sql.impl.ColumnImpl <em>Column</em>}' class.
@@ -158,7 +269,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getColumn()
    * @generated
    */
-  int COLUMN = 2;
+  int COLUMN = 3;
 
   /**
    * The feature id for the '<em><b>Name</b></em>' attribute.
@@ -231,7 +342,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getVarchar()
    * @generated
    */
-  int VARCHAR = 3;
+  int VARCHAR = 4;
 
   /**
    * The feature id for the '<em><b>Varying</b></em>' attribute.
@@ -268,7 +379,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getNumeric()
    * @generated
    */
-  int NUMERIC = 4;
+  int NUMERIC = 5;
 
   /**
    * The feature id for the '<em><b>Decimal</b></em>' attribute.
@@ -314,7 +425,7 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getChar()
    * @generated
    */
-  int CHAR = 5;
+  int CHAR = 6;
 
   /**
    * The feature id for the '<em><b>Character</b></em>' attribute.
@@ -344,25 +455,6 @@ public interface SqlPackage extends EPackage
   int CHAR_FEATURE_COUNT = 2;
 
   /**
-   * The meta object id for the '{@link io.shardml.sql.impl.ConstraintImpl <em>Constraint</em>}' class.
-   * <!-- begin-user-doc -->
-   * <!-- end-user-doc -->
-   * @see io.shardml.sql.impl.ConstraintImpl
-   * @see io.shardml.sql.impl.SqlPackageImpl#getConstraint()
-   * @generated
-   */
-  int CONSTRAINT = 6;
-
-  /**
-   * The number of structural features of the '<em>Constraint</em>' class.
-   * <!-- begin-user-doc -->
-   * <!-- end-user-doc -->
-   * @generated
-   * @ordered
-   */
-  int CONSTRAINT_FEATURE_COUNT = 0;
-
-  /**
    * The meta object id for the '{@link io.shardml.sql.impl.PrimaryAnnotationImpl <em>Primary Annotation</em>}' class.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
@@ -370,7 +462,16 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getPrimaryAnnotation()
    * @generated
    */
-  int PRIMARY_ANNOTATION = 7;
+  int PRIMARY_ANNOTATION = 9;
+
+  /**
+   * The feature id for the '<em><b>Name</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int PRIMARY_ANNOTATION__NAME = CONSTRAINT__NAME;
 
   /**
    * The number of structural features of the '<em>Primary Annotation</em>' class.
@@ -389,7 +490,16 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getUniqueAnnotation()
    * @generated
    */
-  int UNIQUE_ANNOTATION = 8;
+  int UNIQUE_ANNOTATION = 10;
+
+  /**
+   * The feature id for the '<em><b>Name</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int UNIQUE_ANNOTATION__NAME = CONSTRAINT__NAME;
 
   /**
    * The number of structural features of the '<em>Unique Annotation</em>' class.
@@ -408,7 +518,16 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getNotNull()
    * @generated
    */
-  int NOT_NULL = 9;
+  int NOT_NULL = 11;
+
+  /**
+   * The feature id for the '<em><b>Name</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int NOT_NULL__NAME = CONSTRAINT__NAME;
 
   /**
    * The number of structural features of the '<em>Not Null</em>' class.
@@ -420,14 +539,51 @@ public interface SqlPackage extends EPackage
   int NOT_NULL_FEATURE_COUNT = CONSTRAINT_FEATURE_COUNT + 0;
 
   /**
-   * The meta object id for the '{@link io.shardml.sql.impl.TableConstraintImpl <em>Table Constraint</em>}' class.
+   * The meta object id for the '{@link io.shardml.sql.impl.NullableImpl <em>Nullable</em>}' class.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
-   * @see io.shardml.sql.impl.TableConstraintImpl
-   * @see io.shardml.sql.impl.SqlPackageImpl#getTableConstraint()
+   * @see io.shardml.sql.impl.NullableImpl
+   * @see io.shardml.sql.impl.SqlPackageImpl#getNullable()
    * @generated
    */
-  int TABLE_CONSTRAINT = 10;
+  int NULLABLE = 12;
+
+  /**
+   * The feature id for the '<em><b>Name</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int NULLABLE__NAME = CONSTRAINT__NAME;
+
+  /**
+   * The number of structural features of the '<em>Nullable</em>' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int NULLABLE_FEATURE_COUNT = CONSTRAINT_FEATURE_COUNT + 0;
+
+  /**
+   * The meta object id for the '{@link io.shardml.sql.impl.ForeignKeyImpl <em>Foreign Key</em>}' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see io.shardml.sql.impl.ForeignKeyImpl
+   * @see io.shardml.sql.impl.SqlPackageImpl#getForeignKey()
+   * @generated
+   */
+  int FOREIGN_KEY = 13;
+
+  /**
+   * The feature id for the '<em><b>Name</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int FOREIGN_KEY__NAME = CONSTRAINT__NAME;
 
   /**
    * The feature id for the '<em><b>Columns</b></em>' reference list.
@@ -436,7 +592,107 @@ public interface SqlPackage extends EPackage
    * @generated
    * @ordered
    */
-  int TABLE_CONSTRAINT__COLUMNS = 0;
+  int FOREIGN_KEY__COLUMNS = CONSTRAINT_FEATURE_COUNT + 0;
+
+  /**
+   * The feature id for the '<em><b>Ref Schema</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int FOREIGN_KEY__REF_SCHEMA = CONSTRAINT_FEATURE_COUNT + 1;
+
+  /**
+   * The feature id for the '<em><b>Ref Table</b></em>' reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int FOREIGN_KEY__REF_TABLE = CONSTRAINT_FEATURE_COUNT + 2;
+
+  /**
+   * The feature id for the '<em><b>Ref Columns</b></em>' reference list.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int FOREIGN_KEY__REF_COLUMNS = CONSTRAINT_FEATURE_COUNT + 3;
+
+  /**
+   * The feature id for the '<em><b>Match</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int FOREIGN_KEY__MATCH = CONSTRAINT_FEATURE_COUNT + 4;
+
+  /**
+   * The feature id for the '<em><b>Deferrable</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int FOREIGN_KEY__DEFERRABLE = CONSTRAINT_FEATURE_COUNT + 5;
+
+  /**
+   * The feature id for the '<em><b>On Delete</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int FOREIGN_KEY__ON_DELETE = CONSTRAINT_FEATURE_COUNT + 6;
+
+  /**
+   * The feature id for the '<em><b>On Update</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int FOREIGN_KEY__ON_UPDATE = CONSTRAINT_FEATURE_COUNT + 7;
+
+  /**
+   * The number of structural features of the '<em>Foreign Key</em>' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int FOREIGN_KEY_FEATURE_COUNT = CONSTRAINT_FEATURE_COUNT + 8;
+
+  /**
+   * The meta object id for the '{@link io.shardml.sql.impl.TableConstraintImpl <em>Table Constraint</em>}' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see io.shardml.sql.impl.TableConstraintImpl
+   * @see io.shardml.sql.impl.SqlPackageImpl#getTableConstraint()
+   * @generated
+   */
+  int TABLE_CONSTRAINT = 14;
+
+  /**
+   * The feature id for the '<em><b>Name</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int TABLE_CONSTRAINT__NAME = NAMED_CONSTRAINT__NAME;
+
+  /**
+   * The feature id for the '<em><b>Columns</b></em>' reference list.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int TABLE_CONSTRAINT__COLUMNS = NAMED_CONSTRAINT_FEATURE_COUNT + 0;
 
   /**
    * The number of structural features of the '<em>Table Constraint</em>' class.
@@ -445,7 +701,7 @@ public interface SqlPackage extends EPackage
    * @generated
    * @ordered
    */
-  int TABLE_CONSTRAINT_FEATURE_COUNT = 1;
+  int TABLE_CONSTRAINT_FEATURE_COUNT = NAMED_CONSTRAINT_FEATURE_COUNT + 1;
 
   /**
    * The meta object id for the '{@link io.shardml.sql.impl.PrimaryKeyImpl <em>Primary Key</em>}' class.
@@ -455,7 +711,16 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getPrimaryKey()
    * @generated
    */
-  int PRIMARY_KEY = 11;
+  int PRIMARY_KEY = 15;
+
+  /**
+   * The feature id for the '<em><b>Name</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int PRIMARY_KEY__NAME = TABLE_CONSTRAINT__NAME;
 
   /**
    * The feature id for the '<em><b>Columns</b></em>' reference list.
@@ -483,7 +748,16 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getUniqueKey()
    * @generated
    */
-  int UNIQUE_KEY = 12;
+  int UNIQUE_KEY = 16;
+
+  /**
+   * The feature id for the '<em><b>Name</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int UNIQUE_KEY__NAME = TABLE_CONSTRAINT__NAME;
 
   /**
    * The feature id for the '<em><b>Columns</b></em>' reference list.
@@ -504,6 +778,52 @@ public interface SqlPackage extends EPackage
   int UNIQUE_KEY_FEATURE_COUNT = TABLE_CONSTRAINT_FEATURE_COUNT + 0;
 
   /**
+   * The meta object id for the '{@link io.shardml.sql.impl.TableCheckImpl <em>Table Check</em>}' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see io.shardml.sql.impl.TableCheckImpl
+   * @see io.shardml.sql.impl.SqlPackageImpl#getTableCheck()
+   * @generated
+   */
+  int TABLE_CHECK = 17;
+
+  /**
+   * The feature id for the '<em><b>Name</b></em>' attribute.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int TABLE_CHECK__NAME = TABLE_CONSTRAINT__NAME;
+
+  /**
+   * The feature id for the '<em><b>Columns</b></em>' reference list.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int TABLE_CHECK__COLUMNS = TABLE_CONSTRAINT__COLUMNS;
+
+  /**
+   * The feature id for the '<em><b>Check</b></em>' containment reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int TABLE_CHECK__CHECK = TABLE_CONSTRAINT_FEATURE_COUNT + 0;
+
+  /**
+   * The number of structural features of the '<em>Table Check</em>' class.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   * @ordered
+   */
+  int TABLE_CHECK_FEATURE_COUNT = TABLE_CONSTRAINT_FEATURE_COUNT + 1;
+
+  /**
    * The meta object id for the '{@link io.shardml.sql.AllTypes <em>All Types</em>}' enum.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
@@ -511,7 +831,37 @@ public interface SqlPackage extends EPackage
    * @see io.shardml.sql.impl.SqlPackageImpl#getAllTypes()
    * @generated
    */
-  int ALL_TYPES = 13;
+  int ALL_TYPES = 18;
+
+  /**
+   * The meta object id for the '{@link io.shardml.sql.RefAction <em>Ref Action</em>}' enum.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see io.shardml.sql.RefAction
+   * @see io.shardml.sql.impl.SqlPackageImpl#getRefAction()
+   * @generated
+   */
+  int REF_ACTION = 19;
+
+  /**
+   * The meta object id for the '{@link io.shardml.sql.MatchKind <em>Match Kind</em>}' enum.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see io.shardml.sql.MatchKind
+   * @see io.shardml.sql.impl.SqlPackageImpl#getMatchKind()
+   * @generated
+   */
+  int MATCH_KIND = 20;
+
+  /**
+   * The meta object id for the '{@link io.shardml.sql.RawKind <em>Raw Kind</em>}' enum.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see io.shardml.sql.RawKind
+   * @see io.shardml.sql.impl.SqlPackageImpl#getRawKind()
+   * @generated
+   */
+  int RAW_KIND = 21;
 
 
   /**
@@ -599,6 +949,49 @@ public interface SqlPackage extends EPackage
    * @generated
    */
   EReference getTable_Constraints();
+
+  /**
+   * Returns the meta object for the containment reference '{@link io.shardml.sql.Table#getOptions <em>Options</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the containment reference '<em>Options</em>'.
+   * @see io.shardml.sql.Table#getOptions()
+   * @see #getTable()
+   * @generated
+   */
+  EReference getTable_Options();
+
+  /**
+   * Returns the meta object for class '{@link io.shardml.sql.RawSql <em>Raw Sql</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for class '<em>Raw Sql</em>'.
+   * @see io.shardml.sql.RawSql
+   * @generated
+   */
+  EClass getRawSql();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.RawSql#getKind <em>Kind</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Kind</em>'.
+   * @see io.shardml.sql.RawSql#getKind()
+   * @see #getRawSql()
+   * @generated
+   */
+  EAttribute getRawSql_Kind();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.RawSql#getText <em>Text</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Text</em>'.
+   * @see io.shardml.sql.RawSql#getText()
+   * @see #getRawSql()
+   * @generated
+   */
+  EAttribute getRawSql_Text();
 
   /**
    * Returns the meta object for class '{@link io.shardml.sql.Column <em>Column</em>}'.
@@ -784,6 +1177,27 @@ public interface SqlPackage extends EPackage
   EAttribute getChar_Size();
 
   /**
+   * Returns the meta object for class '{@link io.shardml.sql.NamedConstraint <em>Named Constraint</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for class '<em>Named Constraint</em>'.
+   * @see io.shardml.sql.NamedConstraint
+   * @generated
+   */
+  EClass getNamedConstraint();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.NamedConstraint#getName <em>Name</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Name</em>'.
+   * @see io.shardml.sql.NamedConstraint#getName()
+   * @see #getNamedConstraint()
+   * @generated
+   */
+  EAttribute getNamedConstraint_Name();
+
+  /**
    * Returns the meta object for class '{@link io.shardml.sql.Constraint <em>Constraint</em>}'.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
@@ -822,6 +1236,103 @@ public interface SqlPackage extends EPackage
    * @generated
    */
   EClass getNotNull();
+
+  /**
+   * Returns the meta object for class '{@link io.shardml.sql.Nullable <em>Nullable</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for class '<em>Nullable</em>'.
+   * @see io.shardml.sql.Nullable
+   * @generated
+   */
+  EClass getNullable();
+
+  /**
+   * Returns the meta object for class '{@link io.shardml.sql.ForeignKey <em>Foreign Key</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for class '<em>Foreign Key</em>'.
+   * @see io.shardml.sql.ForeignKey
+   * @generated
+   */
+  EClass getForeignKey();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.ForeignKey#getRefSchema <em>Ref Schema</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Ref Schema</em>'.
+   * @see io.shardml.sql.ForeignKey#getRefSchema()
+   * @see #getForeignKey()
+   * @generated
+   */
+  EAttribute getForeignKey_RefSchema();
+
+  /**
+   * Returns the meta object for the reference '{@link io.shardml.sql.ForeignKey#getRefTable <em>Ref Table</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the reference '<em>Ref Table</em>'.
+   * @see io.shardml.sql.ForeignKey#getRefTable()
+   * @see #getForeignKey()
+   * @generated
+   */
+  EReference getForeignKey_RefTable();
+
+  /**
+   * Returns the meta object for the reference list '{@link io.shardml.sql.ForeignKey#getRefColumns <em>Ref Columns</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the reference list '<em>Ref Columns</em>'.
+   * @see io.shardml.sql.ForeignKey#getRefColumns()
+   * @see #getForeignKey()
+   * @generated
+   */
+  EReference getForeignKey_RefColumns();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.ForeignKey#getMatch <em>Match</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Match</em>'.
+   * @see io.shardml.sql.ForeignKey#getMatch()
+   * @see #getForeignKey()
+   * @generated
+   */
+  EAttribute getForeignKey_Match();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.ForeignKey#getDeferrable <em>Deferrable</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>Deferrable</em>'.
+   * @see io.shardml.sql.ForeignKey#getDeferrable()
+   * @see #getForeignKey()
+   * @generated
+   */
+  EAttribute getForeignKey_Deferrable();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.ForeignKey#getOnDelete <em>On Delete</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>On Delete</em>'.
+   * @see io.shardml.sql.ForeignKey#getOnDelete()
+   * @see #getForeignKey()
+   * @generated
+   */
+  EAttribute getForeignKey_OnDelete();
+
+  /**
+   * Returns the meta object for the attribute '{@link io.shardml.sql.ForeignKey#getOnUpdate <em>On Update</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the attribute '<em>On Update</em>'.
+   * @see io.shardml.sql.ForeignKey#getOnUpdate()
+   * @see #getForeignKey()
+   * @generated
+   */
+  EAttribute getForeignKey_OnUpdate();
 
   /**
    * Returns the meta object for class '{@link io.shardml.sql.TableConstraint <em>Table Constraint</em>}'.
@@ -865,6 +1376,27 @@ public interface SqlPackage extends EPackage
   EClass getUniqueKey();
 
   /**
+   * Returns the meta object for class '{@link io.shardml.sql.TableCheck <em>Table Check</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for class '<em>Table Check</em>'.
+   * @see io.shardml.sql.TableCheck
+   * @generated
+   */
+  EClass getTableCheck();
+
+  /**
+   * Returns the meta object for the containment reference '{@link io.shardml.sql.TableCheck#getCheck <em>Check</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for the containment reference '<em>Check</em>'.
+   * @see io.shardml.sql.TableCheck#getCheck()
+   * @see #getTableCheck()
+   * @generated
+   */
+  EReference getTableCheck_Check();
+
+  /**
    * Returns the meta object for enum '{@link io.shardml.sql.AllTypes <em>All Types</em>}'.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
@@ -873,6 +1405,36 @@ public interface SqlPackage extends EPackage
    * @generated
    */
   EEnum getAllTypes();
+
+  /**
+   * Returns the meta object for enum '{@link io.shardml.sql.RefAction <em>Ref Action</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for enum '<em>Ref Action</em>'.
+   * @see io.shardml.sql.RefAction
+   * @generated
+   */
+  EEnum getRefAction();
+
+  /**
+   * Returns the meta object for enum '{@link io.shardml.sql.MatchKind <em>Match Kind</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for enum '<em>Match Kind</em>'.
+   * @see io.shardml.sql.MatchKind
+   * @generated
+   */
+  EEnum getMatchKind();
+
+  /**
+   * Returns the meta object for enum '{@link io.shardml.sql.RawKind <em>Raw Kind</em>}'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the meta object for enum '<em>Raw Kind</em>'.
+   * @see io.shardml.sql.RawKind
+   * @generated
+   */
+  EEnum getRawKind();
 
   /**
    * Returns the factory that creates the instances of the model.
@@ -964,6 +1526,40 @@ public interface SqlPackage extends EPackage
      * @generated
      */
     EReference TABLE__CONSTRAINTS = eINSTANCE.getTable_Constraints();
+
+    /**
+     * The meta object literal for the '<em><b>Options</b></em>' containment reference feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EReference TABLE__OPTIONS = eINSTANCE.getTable_Options();
+
+    /**
+     * The meta object literal for the '{@link io.shardml.sql.impl.RawSqlImpl <em>Raw Sql</em>}' class.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @see io.shardml.sql.impl.RawSqlImpl
+     * @see io.shardml.sql.impl.SqlPackageImpl#getRawSql()
+     * @generated
+     */
+    EClass RAW_SQL = eINSTANCE.getRawSql();
+
+    /**
+     * The meta object literal for the '<em><b>Kind</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute RAW_SQL__KIND = eINSTANCE.getRawSql_Kind();
+
+    /**
+     * The meta object literal for the '<em><b>Text</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute RAW_SQL__TEXT = eINSTANCE.getRawSql_Text();
 
     /**
      * The meta object literal for the '{@link io.shardml.sql.impl.ColumnImpl <em>Column</em>}' class.
@@ -1110,6 +1706,24 @@ public interface SqlPackage extends EPackage
     EAttribute CHAR__SIZE = eINSTANCE.getChar_Size();
 
     /**
+     * The meta object literal for the '{@link io.shardml.sql.impl.NamedConstraintImpl <em>Named Constraint</em>}' class.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @see io.shardml.sql.impl.NamedConstraintImpl
+     * @see io.shardml.sql.impl.SqlPackageImpl#getNamedConstraint()
+     * @generated
+     */
+    EClass NAMED_CONSTRAINT = eINSTANCE.getNamedConstraint();
+
+    /**
+     * The meta object literal for the '<em><b>Name</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute NAMED_CONSTRAINT__NAME = eINSTANCE.getNamedConstraint_Name();
+
+    /**
      * The meta object literal for the '{@link io.shardml.sql.impl.ConstraintImpl <em>Constraint</em>}' class.
      * <!-- begin-user-doc -->
      * <!-- end-user-doc -->
@@ -1150,6 +1764,82 @@ public interface SqlPackage extends EPackage
     EClass NOT_NULL = eINSTANCE.getNotNull();
 
     /**
+     * The meta object literal for the '{@link io.shardml.sql.impl.NullableImpl <em>Nullable</em>}' class.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @see io.shardml.sql.impl.NullableImpl
+     * @see io.shardml.sql.impl.SqlPackageImpl#getNullable()
+     * @generated
+     */
+    EClass NULLABLE = eINSTANCE.getNullable();
+
+    /**
+     * The meta object literal for the '{@link io.shardml.sql.impl.ForeignKeyImpl <em>Foreign Key</em>}' class.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @see io.shardml.sql.impl.ForeignKeyImpl
+     * @see io.shardml.sql.impl.SqlPackageImpl#getForeignKey()
+     * @generated
+     */
+    EClass FOREIGN_KEY = eINSTANCE.getForeignKey();
+
+    /**
+     * The meta object literal for the '<em><b>Ref Schema</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute FOREIGN_KEY__REF_SCHEMA = eINSTANCE.getForeignKey_RefSchema();
+
+    /**
+     * The meta object literal for the '<em><b>Ref Table</b></em>' reference feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EReference FOREIGN_KEY__REF_TABLE = eINSTANCE.getForeignKey_RefTable();
+
+    /**
+     * The meta object literal for the '<em><b>Ref Columns</b></em>' reference list feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EReference FOREIGN_KEY__REF_COLUMNS = eINSTANCE.getForeignKey_RefColumns();
+
+    /**
+     * The meta object literal for the '<em><b>Match</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute FOREIGN_KEY__MATCH = eINSTANCE.getForeignKey_Match();
+
+    /**
+     * The meta object literal for the '<em><b>Deferrable</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute FOREIGN_KEY__DEFERRABLE = eINSTANCE.getForeignKey_Deferrable();
+
+    /**
+     * The meta object literal for the '<em><b>On Delete</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute FOREIGN_KEY__ON_DELETE = eINSTANCE.getForeignKey_OnDelete();
+
+    /**
+     * The meta object literal for the '<em><b>On Update</b></em>' attribute feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EAttribute FOREIGN_KEY__ON_UPDATE = eINSTANCE.getForeignKey_OnUpdate();
+
+    /**
      * The meta object literal for the '{@link io.shardml.sql.impl.TableConstraintImpl <em>Table Constraint</em>}' class.
      * <!-- begin-user-doc -->
      * <!-- end-user-doc -->
@@ -1188,6 +1878,24 @@ public interface SqlPackage extends EPackage
     EClass UNIQUE_KEY = eINSTANCE.getUniqueKey();
 
     /**
+     * The meta object literal for the '{@link io.shardml.sql.impl.TableCheckImpl <em>Table Check</em>}' class.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @see io.shardml.sql.impl.TableCheckImpl
+     * @see io.shardml.sql.impl.SqlPackageImpl#getTableCheck()
+     * @generated
+     */
+    EClass TABLE_CHECK = eINSTANCE.getTableCheck();
+
+    /**
+     * The meta object literal for the '<em><b>Check</b></em>' containment reference feature.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @generated
+     */
+    EReference TABLE_CHECK__CHECK = eINSTANCE.getTableCheck_Check();
+
+    /**
      * The meta object literal for the '{@link io.shardml.sql.AllTypes <em>All Types</em>}' enum.
      * <!-- begin-user-doc -->
      * <!-- end-user-doc -->
@@ -1196,6 +1904,36 @@ public interface SqlPackage extends EPackage
      * @generated
      */
     EEnum ALL_TYPES = eINSTANCE.getAllTypes();
+
+    /**
+     * The meta object literal for the '{@link io.shardml.sql.RefAction <em>Ref Action</em>}' enum.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @see io.shardml.sql.RefAction
+     * @see io.shardml.sql.impl.SqlPackageImpl#getRefAction()
+     * @generated
+     */
+    EEnum REF_ACTION = eINSTANCE.getRefAction();
+
+    /**
+     * The meta object literal for the '{@link io.shardml.sql.MatchKind <em>Match Kind</em>}' enum.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @see io.shardml.sql.MatchKind
+     * @see io.shardml.sql.impl.SqlPackageImpl#getMatchKind()
+     * @generated
+     */
+    EEnum MATCH_KIND = eINSTANCE.getMatchKind();
+
+    /**
+     * The meta object literal for the '{@link io.shardml.sql.RawKind <em>Raw Kind</em>}' enum.
+     * <!-- begin-user-doc -->
+     * <!-- end-user-doc -->
+     * @see io.shardml.sql.RawKind
+     * @see io.shardml.sql.impl.SqlPackageImpl#getRawKind()
+     * @generated
+     */
+    EEnum RAW_KIND = eINSTANCE.getRawKind();
 
   }
 

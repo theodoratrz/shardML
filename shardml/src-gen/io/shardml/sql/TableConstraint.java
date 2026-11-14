@@ -5,8 +5,6 @@ package io.shardml.sql;
 
 import org.eclipse.emf.common.util.EList;
 
-import org.eclipse.emf.ecore.EObject;
-
 /**
  * <!-- begin-user-doc -->
  * A representation of the model object '<em><b>Table Constraint</b></em>'.
@@ -23,7 +21,7 @@ import org.eclipse.emf.ecore.EObject;
  * @model
  * @generated
  */
-public interface TableConstraint extends EObject
+public interface TableConstraint extends NamedConstraint
 {
   /**
    * Returns the value of the '<em><b>Columns</b></em>' reference list.

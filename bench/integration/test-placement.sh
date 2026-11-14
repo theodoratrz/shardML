@@ -165,7 +165,9 @@ generate "$ROOT/examples/banking.shardml" "$WORK/banking"
 [[ -f "$WORK/banking/banking-placement.sql" ]] || fail "no banking-placement.sql: the example must declare nodes"
 psql_coord -c "DROP SCHEMA IF EXISTS $SCHEMA CASCADE;" -c "CREATE SCHEMA $SCHEMA;" >/dev/null 2>&1 \
 	|| fail "reset schema $SCHEMA"
-{ echo "SET search_path TO $SCHEMA;"; cat "$WORK/banking/banking-schema.sql" "$WORK/banking/banking-distribution.sql"; } \
+# foreign keys after the distribution, as test-examples.sh applies them (banking has none today)
+{ echo "SET search_path TO $SCHEMA;"; cat "$WORK/banking/banking-schema.sql" "$WORK/banking/banking-distribution.sql";
+	if [[ -f "$WORK/banking/banking-foreign-keys.sql" ]]; then cat "$WORK/banking/banking-foreign-keys.sql"; fi; } \
 	| psql_coord >/dev/null || fail "deploy banking schema and distribution"
 ok "schema and distribution"
 expected "$ROOT/examples/banking.shardml" >"$WORK/banking.map"

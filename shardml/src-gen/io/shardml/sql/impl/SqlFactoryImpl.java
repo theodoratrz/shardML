@@ -68,17 +68,22 @@ public class SqlFactoryImpl extends EFactoryImpl implements SqlFactory
     {
       case SqlPackage.SCHEMA: return createSchema();
       case SqlPackage.TABLE: return createTable();
+      case SqlPackage.RAW_SQL: return createRawSql();
       case SqlPackage.COLUMN: return createColumn();
       case SqlPackage.VARCHAR: return createVarchar();
       case SqlPackage.NUMERIC: return createNumeric();
       case SqlPackage.CHAR: return createChar();
+      case SqlPackage.NAMED_CONSTRAINT: return createNamedConstraint();
       case SqlPackage.CONSTRAINT: return createConstraint();
       case SqlPackage.PRIMARY_ANNOTATION: return createPrimaryAnnotation();
       case SqlPackage.UNIQUE_ANNOTATION: return createUniqueAnnotation();
       case SqlPackage.NOT_NULL: return createNotNull();
+      case SqlPackage.NULLABLE: return createNullable();
+      case SqlPackage.FOREIGN_KEY: return createForeignKey();
       case SqlPackage.TABLE_CONSTRAINT: return createTableConstraint();
       case SqlPackage.PRIMARY_KEY: return createPrimaryKey();
       case SqlPackage.UNIQUE_KEY: return createUniqueKey();
+      case SqlPackage.TABLE_CHECK: return createTableCheck();
       default:
         throw new IllegalArgumentException("The class '" + eClass.getName() + "' is not a valid classifier");
     }
@@ -96,6 +101,12 @@ public class SqlFactoryImpl extends EFactoryImpl implements SqlFactory
     {
       case SqlPackage.ALL_TYPES:
         return createAllTypesFromString(eDataType, initialValue);
+      case SqlPackage.REF_ACTION:
+        return createRefActionFromString(eDataType, initialValue);
+      case SqlPackage.MATCH_KIND:
+        return createMatchKindFromString(eDataType, initialValue);
+      case SqlPackage.RAW_KIND:
+        return createRawKindFromString(eDataType, initialValue);
       default:
         throw new IllegalArgumentException("The datatype '" + eDataType.getName() + "' is not a valid classifier");
     }
@@ -113,6 +124,12 @@ public class SqlFactoryImpl extends EFactoryImpl implements SqlFactory
     {
       case SqlPackage.ALL_TYPES:
         return convertAllTypesToString(eDataType, instanceValue);
+      case SqlPackage.REF_ACTION:
+        return convertRefActionToString(eDataType, instanceValue);
+      case SqlPackage.MATCH_KIND:
+        return convertMatchKindToString(eDataType, instanceValue);
+      case SqlPackage.RAW_KIND:
+        return convertRawKindToString(eDataType, instanceValue);
       default:
         throw new IllegalArgumentException("The datatype '" + eDataType.getName() + "' is not a valid classifier");
     }
@@ -140,6 +157,18 @@ public class SqlFactoryImpl extends EFactoryImpl implements SqlFactory
   {
     TableImpl table = new TableImpl();
     return table;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public RawSql createRawSql()
+  {
+    RawSqlImpl rawSql = new RawSqlImpl();
+    return rawSql;
   }
 
   /**
@@ -196,6 +225,18 @@ public class SqlFactoryImpl extends EFactoryImpl implements SqlFactory
    * @generated
    */
   @Override
+  public NamedConstraint createNamedConstraint()
+  {
+    NamedConstraintImpl namedConstraint = new NamedConstraintImpl();
+    return namedConstraint;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
   public Constraint createConstraint()
   {
     ConstraintImpl constraint = new ConstraintImpl();
@@ -244,6 +285,30 @@ public class SqlFactoryImpl extends EFactoryImpl implements SqlFactory
    * @generated
    */
   @Override
+  public Nullable createNullable()
+  {
+    NullableImpl nullable = new NullableImpl();
+    return nullable;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public ForeignKey createForeignKey()
+  {
+    ForeignKeyImpl foreignKey = new ForeignKeyImpl();
+    return foreignKey;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
   public TableConstraint createTableConstraint()
   {
     TableConstraintImpl tableConstraint = new TableConstraintImpl();
@@ -279,6 +344,18 @@ public class SqlFactoryImpl extends EFactoryImpl implements SqlFactory
    * <!-- end-user-doc -->
    * @generated
    */
+  @Override
+  public TableCheck createTableCheck()
+  {
+    TableCheckImpl tableCheck = new TableCheckImpl();
+    return tableCheck;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
   public AllTypes createAllTypesFromString(EDataType eDataType, String initialValue)
   {
     AllTypes result = AllTypes.get(initialValue);
@@ -292,6 +369,72 @@ public class SqlFactoryImpl extends EFactoryImpl implements SqlFactory
    * @generated
    */
   public String convertAllTypesToString(EDataType eDataType, Object instanceValue)
+  {
+    return instanceValue == null ? null : instanceValue.toString();
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  public RefAction createRefActionFromString(EDataType eDataType, String initialValue)
+  {
+    RefAction result = RefAction.get(initialValue);
+    if (result == null) throw new IllegalArgumentException("The value '" + initialValue + "' is not a valid enumerator of '" + eDataType.getName() + "'");
+    return result;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  public String convertRefActionToString(EDataType eDataType, Object instanceValue)
+  {
+    return instanceValue == null ? null : instanceValue.toString();
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  public MatchKind createMatchKindFromString(EDataType eDataType, String initialValue)
+  {
+    MatchKind result = MatchKind.get(initialValue);
+    if (result == null) throw new IllegalArgumentException("The value '" + initialValue + "' is not a valid enumerator of '" + eDataType.getName() + "'");
+    return result;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  public String convertMatchKindToString(EDataType eDataType, Object instanceValue)
+  {
+    return instanceValue == null ? null : instanceValue.toString();
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  public RawKind createRawKindFromString(EDataType eDataType, String initialValue)
+  {
+    RawKind result = RawKind.get(initialValue);
+    if (result == null) throw new IllegalArgumentException("The value '" + initialValue + "' is not a valid enumerator of '" + eDataType.getName() + "'");
+    return result;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  public String convertRawKindToString(EDataType eDataType, Object instanceValue)
   {
     return instanceValue == null ? null : instanceValue.toString();
   }

@@ -8,8 +8,6 @@ import io.shardml.sql.SqlPackage;
 
 import org.eclipse.emf.ecore.EClass;
 
-import org.eclipse.emf.ecore.impl.MinimalEObjectImpl;
-
 /**
  * <!-- begin-user-doc -->
  * An implementation of the model object '<em><b>Constraint</b></em>'.
@@ -17,7 +15,7 @@ import org.eclipse.emf.ecore.impl.MinimalEObjectImpl;
  *
  * @generated
  */
-public class ConstraintImpl extends MinimalEObjectImpl.Container implements Constraint
+public class ConstraintImpl extends NamedConstraintImpl implements Constraint
 {
   /**
    * <!-- begin-user-doc -->

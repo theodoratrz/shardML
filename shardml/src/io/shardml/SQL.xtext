@@ -30,7 +30,12 @@ Table:
 	'CREATE' 'TABLE' (ifNotExists ?= 'IF' 'NOT' 'EXISTS')? (schemaName=Name '.')? name=Name '('
 		(columns += Column | constraints += TableConstraint)
 		(',' (columns += Column | constraints += TableConstraint))*
-	')'
+	')' (options=TableOptions)?
+;
+
+// WITH (storage_parameter = value, ...) after a table, kept verbatim (pgbench: fillfactor)
+TableOptions returns RawSql:
+	kind=WithKind text=Parenthesized
 ;
 
 // supports zero or more constraints (primary key, unique, not null)
@@ -78,36 +83,159 @@ enum DoublePrecision returns AllTypes: DOUBLE_PRECISION='PRECISION';
 enum ZoneNoTz returns AllTypes: TIMESTAMP='ZONE';
 enum ZoneTz returns AllTypes: TIMESTAMPTZ='ZONE';
 
-// we use Xtext's forced type instantiation {Type} here
-// this is necessary because each constraint has no feature assignments
+// Constraints (Plan-sql 4.5, step 4). Every column and table constraint may be named
+// (CONSTRAINT name ...): the name is a feature of NamedConstraint, the common supertype of Constraint
+// and TableConstraint. That rule is never called; it only declares the supertype, so that ForeignKey,
+// which is both a Constraint (column-level REFERENCES) and a TableConstraint (FOREIGN KEY), inherits
+// one name, not two.
+NamedConstraint:
+	Constraint | TableConstraint
+;
+
+fragment ConstraintName returns NamedConstraint:
+	('CONSTRAINT' name=Name)?
+;
+
+// column level. Forced type instantiation {Type} where a constraint has no other assignment.
 Constraint:
-    PrimaryAnnotation | UniqueAnnotation | NotNull
+	PrimaryAnnotation | UniqueAnnotation | NotNull | Nullable | ColumnReferences | ColumnRaw
 ;
 
 PrimaryAnnotation:
-	{PrimaryAnnotation} 'PRIMARY''KEY'
+	{PrimaryAnnotation} ConstraintName 'PRIMARY' 'KEY'
 ;
 
 UniqueAnnotation:
-	{UniqueAnnotation} 'UNIQUE'
+	{UniqueAnnotation} ConstraintName 'UNIQUE'
 ;
 
 NotNull:
-	{NotNull} 'NOT''NULL'
+	{NotNull} ConstraintName 'NOT' 'NULL'
 ;
 
-// table-level constraints over one or more columns of the same table,
-// e.g. PRIMARY KEY (customer_id, id)
+// the explicit NULL constraint (the default; written back as given)
+Nullable:
+	{Nullable} ConstraintName 'NULL'
+;
+
+// column-level REFERENCES: a ForeignKey whose own columns list is empty; SchemaFacts fills in
+// the column it is declared on
+ColumnReferences returns ForeignKey:
+	ConstraintName 'REFERENCES' References
+;
+
+// DEFAULT, CHECK and GENERATED, kept as written (RawSql, the one class holding original text)
+ColumnRaw returns RawSql:
+	ConstraintName
+	( kind=DefaultKind text=DefaultExpr
+	| kind=CheckKind text=Parenthesized
+	| kind=GeneratedKind text=GeneratedTail
+	)
+;
+
+// table level. The key columns resolve to columns of the same table (SQLScopeProvider)
 TableConstraint:
-	PrimaryKey | UniqueKey
+	PrimaryKey | UniqueKey | ForeignKey | TableCheck
+;
+
+// columns is declared on TableConstraint itself, not lifted from its subclasses, so that TableCheck,
+// which has no columns, leaves it where it was
+fragment KeyColumns returns TableConstraint:
+	'(' columns += [Column|Name] (',' columns += [Column|Name])* ')'
 ;
 
 PrimaryKey:
-	'PRIMARY' 'KEY' '(' columns += [Column|Name] (',' columns += [Column|Name])* ')'
+	ConstraintName 'PRIMARY' 'KEY' KeyColumns
 ;
 
 UniqueKey:
-	'UNIQUE' '(' columns += [Column|Name] (',' columns += [Column|Name])* ')'
+	ConstraintName 'UNIQUE' KeyColumns
+;
+
+ForeignKey:
+	ConstraintName 'FOREIGN' 'KEY' KeyColumns 'REFERENCES' References
+;
+
+TableCheck:
+	ConstraintName check=CheckClause
+;
+
+CheckClause returns RawSql:
+	kind=CheckKind text=Parenthesized
+;
+
+// what follows REFERENCES. The referenced table is named without its schema (refSchema holds the
+// qualifier, if written); no column list means the referenced table's primary key. Each action
+// at most once, in either order, as in PostgreSQL. ON DELETE SET NULL (columns) is not supported.
+fragment References returns ForeignKey:
+	(refSchema=Name '.')? refTable=[Table|Name]
+	('(' refColumns += [Column|Name] (',' refColumns += [Column|Name])* ')')?
+	('MATCH' match=MatchKind)?
+	(OnDelete OnUpdate? | OnUpdate OnDelete?)?
+	(deferrable=Deferrability)?
+;
+
+fragment OnDelete returns ForeignKey:
+	'ON' 'DELETE' (onDelete=RefAction | 'NO' onDelete=NoAction | 'SET' onDelete=SetAction)
+;
+
+fragment OnUpdate returns ForeignKey:
+	'ON' 'UPDATE' (onUpdate=RefAction | 'NO' onUpdate=NoAction | 'SET' onUpdate=SetAction)
+;
+
+// the actions; NO ACTION and SET NULL / SET DEFAULT are spelled out, their last keyword carries the
+// literal. ForeignKey.onDelete / onUpdate / match are unsettable (SqlEcorePostProcessor): unset
+// means not written
+enum RefAction: CASCADE='CASCADE' | RESTRICT='RESTRICT';
+enum NoAction returns RefAction: NO_ACTION='ACTION';
+enum SetAction returns RefAction: SET_NULL='NULL' | SET_DEFAULT='DEFAULT';
+
+enum MatchKind: SIMPLE='SIMPLE' | FULL='FULL';
+
+// the keyword of each kind of verbatim text
+enum DefaultKind returns RawKind: DEFAULT='DEFAULT';
+enum CheckKind returns RawKind: CHECK='CHECK';
+enum GeneratedKind returns RawKind: GENERATED='GENERATED';
+enum WithKind returns RawKind: WITH='WITH';
+
+// Verbatim text. These rules only delimit it: the value is the source text of the rule's tokens,
+// with comments dropped and whitespace between tokens collapsed to one space (SQLValueConverters).
+// Parentheses are balanced and there is no top-level ';', so the text never runs into the next
+// clause or statement.
+
+// [NOT] DEFERRABLE [INITIALLY DEFERRED | IMMEDIATE], in PostgreSQL's two orders
+Deferrability:
+	'NOT'? 'DEFERRABLE' ('INITIALLY' ('DEFERRED' | 'IMMEDIATE'))?
+	| 'INITIALLY' ('DEFERRED' | 'IMMEDIATE') ('NOT'? 'DEFERRABLE')?
+;
+
+// ALWAYS | BY DEFAULT AS IDENTITY [( sequence options )], or ALWAYS AS ( expression ) STORED.
+// PostgreSQL 18's VIRTUAL is a syntax error: the bench cluster runs PostgreSQL 17.
+GeneratedTail:
+	('ALWAYS' | 'BY' 'DEFAULT') 'AS' ('IDENTITY' Parenthesized? | Parenthesized 'STORED')
+;
+
+// DEFAULT's expression (PostgreSQL's b_expr): tokens and parenthesized groups up to the next
+// column constraint or the end of the column. NULL may only come first (DEFAULT NULL); later
+// it starts the NULL constraint, as do the other constraint keywords, none of which is an
+// ExprToken
+DefaultExpr:
+	(ExprToken | 'NULL') ExprToken*
+;
+
+ExprToken:
+	ExprName | STRING | INT | ANY_OTHER | '.' | 'WITH' | Parenthesized
+;
+
+Parenthesized:
+	'(' InnerToken* ')'
+;
+
+// inside parentheses: any token but ';' and unbalanced parentheses
+InnerToken:
+	Name | STRING | INT | ANY_OTHER | '.' | ',' | Parenthesized
+	| 'CREATE' | 'TABLE' | 'NOT' | 'NULL' | 'PRIMARY' | 'UNIQUE' | 'WITH' | 'CONSTRAINT' | 'FOREIGN'
+	| 'REFERENCES' | 'ON' | 'DEFAULT' | 'FULL' | 'DEFERRABLE' | 'INITIALLY' | 'CHECK' | 'AS'
 ;
 
 // A table or column name: an identifier, a "quoted identifier", or a keyword of this grammar
@@ -118,6 +246,11 @@ UniqueKey:
 // against the PostgreSQL 17 keyword golden. Every word that starts a constraint is reserved,
 // so a column and a constraint are told apart by their first token.
 Name:
+	ExprName | 'GENERATED'                                                         // U
+;
+
+// every Name but GENERATED, which starts a column constraint and so cannot continue a DEFAULT
+ExprName:
 	ID | QUOTED_ID
 	| 'KEY' | 'TEXT' | 'IF' | 'EXISTS'                                                   // U, U, U, C
 	| 'INT' | 'BIGINT' | 'DECIMAL' | 'TIMESTAMP' | 'BOOLEAN' | 'VARCHAR'                 // C
@@ -125,6 +258,8 @@ Name:
 	| 'CHAR' | 'CHARACTER' | 'TIME'                                                      // C
 	| 'DOUBLE' | 'VARYING' | 'WITHOUT' | 'ZONE'                                          // U
 	| 'UUID' | 'DATE' | 'SERIAL' | 'BIGSERIAL' | 'TIMESTAMPTZ' | 'JSONB' | 'BYTEA'       // not PostgreSQL keywords
+	| 'DELETE' | 'UPDATE' | 'CASCADE' | 'RESTRICT' | 'NO' | 'ACTION' | 'SET' | 'MATCH'    // U
+	| 'SIMPLE' | 'DEFERRED' | 'IMMEDIATE' | 'ALWAYS' | 'BY' | 'IDENTITY' | 'STORED'       // U
 ;
 
 // PostgreSQL's identifier characters (ASCII); no ^ escape, a keyword is quoted instead

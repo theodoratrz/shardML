@@ -2,7 +2,6 @@ package io.shardml.tests;
 
 import java.util.List;
 
-import org.eclipse.xtext.diagnostics.Diagnostic;
 import org.eclipse.xtext.testing.InjectWith;
 import org.eclipse.xtext.testing.extensions.InjectionExtension;
 import org.eclipse.xtext.testing.util.ParseHelper;
@@ -94,6 +93,7 @@ public class SQLParsingTest {
 				    UNIQUE (email)
 				)
 				""");
-		validationTestHelper.assertError(schema, SqlPackage.Literals.UNIQUE_KEY, Diagnostic.LINKING_DIAGNOSTIC, "email");
+		// step 4: an unknown column is SHML_063, no longer Xtext's generic linking code
+		validationTestHelper.assertError(schema, SqlPackage.Literals.UNIQUE_KEY, "SHML_063", "Unknown column email in table accounts.");
 	}
 }

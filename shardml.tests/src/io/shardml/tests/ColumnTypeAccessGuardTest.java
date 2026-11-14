@@ -22,6 +22,12 @@ import org.junit.jupiter.api.Test;
 //    is written to output in one of two forms: quoted where needed (SqlNames.table/column/qualified)
 //    or as stored in the catalog (SqlNames.stored). Code that reads getName() for output or quotes
 //    and folds names itself gets one of the two wrong for some name, e.g. "Order" or "order".
+//  - Constraints (step 4). What a constraint means depends on its class and on where it is declared:
+//    a FOREIGN KEY is a TableConstraint but no UNIQUE, a column-level REFERENCES has no columns of its
+//    own, an omitted referenced column list means the primary key. Only SchemaFacts reads them;
+//    validators and the cost model read its facts. SqlDdl is the one writer (it needs the syntax:
+//    quoting, verbatim text, order), and the SQL scope provider and linking messages resolve the
+//    references themselves.
 // The scans cover the hand-written sources (not src-gen). Comment lines are skipped.
 public class ColumnTypeAccessGuardTest {
 
@@ -30,10 +36,21 @@ public class ColumnTypeAccessGuardTest {
 	private static final List<Path> SOURCES = List.of(CORE, CLI);
 	// the code paths that write names into generated files
 	private static final List<Path> OUTPUT_PATHS = List.of(CORE.resolve("io/shardml/generator"),
-			CORE.resolve("io/shardml/placement"));
+			CORE.resolve("io/shardml/placement"), CORE.resolve("io/shardml/schema/SqlDdl.java"));
 
 	private static final Set<String> TYPE_ALLOWED = Set.of("SqlTypes.java", "SchemaFacts.java");
 	private static final Set<String> NAME_ALLOWED = Set.of("SqlNames.java", "SchemaFacts.java");
+	private static final Set<String> CONSTRAINT_ALLOWED = Set.of("SchemaFacts.java", "SqlDdl.java", "SQLScopeProvider.java",
+			"SQLLinkingDiagnosticMessageProvider.java");
+
+	// a constraint feature through its getter, setter, isSet / unset, or a test or literal of a
+	// constraint class. A TableConstraint's getColumns() reads like Table's and is not matched; it is
+	// reached only through one of the classes, which is
+	private static final Pattern CONSTRAINT_ACCESS = Pattern.compile(
+			"\\b(get|set|isSet|unset)(Constraint|Constraints|RefTable|RefColumns|RefSchema|OnDelete|OnUpdate|Match|Deferrable"
+					+ "|Check|Options|Kind|Text)\\s*\\(|\\b(instanceof\\s+(PrimaryAnnotation|UniqueAnnotation|NotNull|Nullable|ForeignKey"
+					+ "|RawSql|PrimaryKey|UniqueKey|TableCheck)\\b|(PrimaryAnnotation|UniqueAnnotation|NotNull|Nullable|ForeignKey|RawSql"
+					+ "|PrimaryKey|UniqueKey|TableCheck)\\.class\\b)");
 
 	// any of a column's four type features, through its getter, setter, isSet / unset, or literal
 	private static final Pattern DIRECT_ACCESS = Pattern.compile(
@@ -55,7 +72,8 @@ public class ColumnTypeAccessGuardTest {
 	private static final List<Allowed> NAME_READ_ALLOWED = List.of(
 			new Allowed("ShardMLGenerator.java", "database.getName()", "the ShardML database name, used for file names"),
 			new Allowed("ShardMLGenerator.java", "db.getName()", "the ShardML database name in the JSON"),
-			new Allowed("ShardMLGenerator.java", "eClass().getName()", "an EMF class name in an exception"),
+			new Allowed("SqlDdl.java", "eClass().getName()", "an EMF class name in an exception"),
+			new Allowed("SqlDdl.java", "key.getMatch().getName()", "an enum literal (SIMPLE, FULL), not a SQL identifier"),
 			new Allowed("PlacementResolver.java", "node.getName()", "a ShardML node name, not a SQL identifier"));
 
 	private static final List<Allowed> QUOTE_OR_FOLD_ALLOWED = List.of(
@@ -75,6 +93,18 @@ public class ColumnTypeAccessGuardTest {
 		Assertions.assertEquals(List.of(), offenders,
 				"Read column types through io.shardml.schema.SqlTypes.of(column), not the Column's type features: "
 						+ "an unparsed type reads as INT through getSimpleType()");
+	}
+
+	private static final List<Allowed> CONSTRAINT_ACCESS_ALLOWED = List.of(
+			new Allowed("SqlTypes.java", "\")\".equals(last.getText())", "a parse node's text, not RawSql.getText"));
+
+	@Test
+	public void testOnlySchemaFactsReadsConstraints() throws IOException {
+		List<String> offenders = scan(SOURCES, CONSTRAINT_ALLOWED, CONSTRAINT_ACCESS, CONSTRAINT_ACCESS_ALLOWED, 20);
+		Assertions.assertEquals(List.of(), offenders,
+				"Read keys, foreign keys and the other constraints through io.shardml.schema.SchemaFacts "
+						+ "(TableFacts.primaryKey / uniqueKeys / foreignKeys, or SchemaFacts.foreignKey(key) in a check): "
+						+ "read off the model, a FOREIGN KEY looks like a UNIQUE to code that expects only keys");
 	}
 
 	@Test
@@ -104,7 +134,8 @@ public class ColumnTypeAccessGuardTest {
 		Set<Allowed> used = new HashSet<>();
 		int scanned = 0;
 		for (Path root : roots) {
-			Assertions.assertTrue(Files.isDirectory(root), root + " is not a directory; the scan would find nothing");
+			Assertions.assertTrue(Files.isDirectory(root) || Files.isRegularFile(root),
+					root + " is neither a directory nor a file; the scan would find nothing");
 			try (Stream<Path> files = Files.walk(root)) {
 				for (Path file : files.filter(f -> f.toString().endsWith(".java") || f.toString().endsWith(".xtend"))
 						.toList()) {
@@ -168,6 +199,18 @@ public class ColumnTypeAccessGuardTest {
 		// JSON keys and SQL string literals are not names
 		Assertions.assertFalse(QUOTE_OR_FOLD.matcher("out.append(\"    \\\"database\\\": \\\"\").append(x).append(\"\\\",\\n\");").find());
 		Assertions.assertFalse(QUOTE_OR_FOLD.matcher("return \"'\" + value.replace(\"'\", \"''\") + \"'\";").find());
+
+		Assertions.assertTrue(CONSTRAINT_ACCESS.matcher("for (Constraint c : column.getConstraint()) {").find());
+		Assertions.assertTrue(CONSTRAINT_ACCESS.matcher("for (TableConstraint c : table.getConstraints())").find());
+		Assertions.assertTrue(CONSTRAINT_ACCESS.matcher("if (constraint instanceof PrimaryKey)").find());
+		Assertions.assertTrue(CONSTRAINT_ACCESS.matcher("label = c instanceof UniqueKey u ? \"UNIQUE\" : \"PK\";").find());
+		Assertions.assertTrue(CONSTRAINT_ACCESS.matcher("anyMatch(NotNull.class::isInstance)").find());
+		Assertions.assertTrue(CONSTRAINT_ACCESS.matcher("Table parent = fk.getRefTable();").find());
+		Assertions.assertTrue(CONSTRAINT_ACCESS.matcher("String d = raw.getText();").find());
+		Assertions.assertFalse(CONSTRAINT_ACCESS.matcher("ForeignKeyFacts fk = SchemaFacts.foreignKey(key);").find());
+		Assertions.assertFalse(CONSTRAINT_ACCESS.matcher("public void checkForeignKey(ForeignKey key) {").find());
+		Assertions.assertFalse(CONSTRAINT_ACCESS.matcher("String t = NodeModelUtils.getTokenText(node);").find());
+		Assertions.assertFalse(CONSTRAINT_ACCESS.matcher("for (Column c : table.getColumns())").find());
 
 		Assertions.assertTrue(isComment("// return greeting.getName();"));
 		Assertions.assertFalse(isComment("out.append(x); // trailing"));

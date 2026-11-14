@@ -7,14 +7,22 @@ import io.shardml.sql.AllTypes;
 import io.shardml.sql.Char;
 import io.shardml.sql.Column;
 import io.shardml.sql.Constraint;
+import io.shardml.sql.ForeignKey;
+import io.shardml.sql.MatchKind;
+import io.shardml.sql.NamedConstraint;
 import io.shardml.sql.NotNull;
+import io.shardml.sql.Nullable;
 import io.shardml.sql.Numeric;
 import io.shardml.sql.PrimaryAnnotation;
 import io.shardml.sql.PrimaryKey;
+import io.shardml.sql.RawKind;
+import io.shardml.sql.RawSql;
+import io.shardml.sql.RefAction;
 import io.shardml.sql.Schema;
 import io.shardml.sql.SqlFactory;
 import io.shardml.sql.SqlPackage;
 import io.shardml.sql.Table;
+import io.shardml.sql.TableCheck;
 import io.shardml.sql.TableConstraint;
 import io.shardml.sql.UniqueAnnotation;
 import io.shardml.sql.UniqueKey;
@@ -55,6 +63,13 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
    * <!-- end-user-doc -->
    * @generated
    */
+  private EClass rawSqlEClass = null;
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
   private EClass columnEClass = null;
 
   /**
@@ -77,6 +92,13 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
    * @generated
    */
   private EClass charEClass = null;
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  private EClass namedConstraintEClass = null;
 
   /**
    * <!-- begin-user-doc -->
@@ -111,6 +133,20 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
    * <!-- end-user-doc -->
    * @generated
    */
+  private EClass nullableEClass = null;
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  private EClass foreignKeyEClass = null;
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
   private EClass tableConstraintEClass = null;
 
   /**
@@ -132,7 +168,35 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
    * <!-- end-user-doc -->
    * @generated
    */
+  private EClass tableCheckEClass = null;
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
   private EEnum allTypesEEnum = null;
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  private EEnum refActionEEnum = null;
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  private EEnum matchKindEEnum = null;
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  private EEnum rawKindEEnum = null;
 
   /**
    * Creates an instance of the model <b>Package</b>, registered with
@@ -282,6 +346,50 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
   public EReference getTable_Constraints()
   {
     return (EReference)tableEClass.getEStructuralFeatures().get(4);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EReference getTable_Options()
+  {
+    return (EReference)tableEClass.getEStructuralFeatures().get(5);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EClass getRawSql()
+  {
+    return rawSqlEClass;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getRawSql_Kind()
+  {
+    return (EAttribute)rawSqlEClass.getEStructuralFeatures().get(0);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getRawSql_Text()
+  {
+    return (EAttribute)rawSqlEClass.getEStructuralFeatures().get(1);
   }
 
   /**
@@ -477,6 +585,28 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
    * @generated
    */
   @Override
+  public EClass getNamedConstraint()
+  {
+    return namedConstraintEClass;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getNamedConstraint_Name()
+  {
+    return (EAttribute)namedConstraintEClass.getEStructuralFeatures().get(0);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
   public EClass getConstraint()
   {
     return constraintEClass;
@@ -513,6 +643,105 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
   public EClass getNotNull()
   {
     return notNullEClass;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EClass getNullable()
+  {
+    return nullableEClass;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EClass getForeignKey()
+  {
+    return foreignKeyEClass;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getForeignKey_RefSchema()
+  {
+    return (EAttribute)foreignKeyEClass.getEStructuralFeatures().get(0);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EReference getForeignKey_RefTable()
+  {
+    return (EReference)foreignKeyEClass.getEStructuralFeatures().get(1);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EReference getForeignKey_RefColumns()
+  {
+    return (EReference)foreignKeyEClass.getEStructuralFeatures().get(2);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getForeignKey_Match()
+  {
+    return (EAttribute)foreignKeyEClass.getEStructuralFeatures().get(3);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getForeignKey_Deferrable()
+  {
+    return (EAttribute)foreignKeyEClass.getEStructuralFeatures().get(4);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getForeignKey_OnDelete()
+  {
+    return (EAttribute)foreignKeyEClass.getEStructuralFeatures().get(5);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EAttribute getForeignKey_OnUpdate()
+  {
+    return (EAttribute)foreignKeyEClass.getEStructuralFeatures().get(6);
   }
 
   /**
@@ -565,9 +794,64 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
    * @generated
    */
   @Override
+  public EClass getTableCheck()
+  {
+    return tableCheckEClass;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EReference getTableCheck_Check()
+  {
+    return (EReference)tableCheckEClass.getEStructuralFeatures().get(0);
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
   public EEnum getAllTypes()
   {
     return allTypesEEnum;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EEnum getRefAction()
+  {
+    return refActionEEnum;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EEnum getMatchKind()
+  {
+    return matchKindEEnum;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public EEnum getRawKind()
+  {
+    return rawKindEEnum;
   }
 
   /**
@@ -610,6 +894,11 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
     createEAttribute(tableEClass, TABLE__NAME);
     createEReference(tableEClass, TABLE__COLUMNS);
     createEReference(tableEClass, TABLE__CONSTRAINTS);
+    createEReference(tableEClass, TABLE__OPTIONS);
+
+    rawSqlEClass = createEClass(RAW_SQL);
+    createEAttribute(rawSqlEClass, RAW_SQL__KIND);
+    createEAttribute(rawSqlEClass, RAW_SQL__TEXT);
 
     columnEClass = createEClass(COLUMN);
     createEAttribute(columnEClass, COLUMN__NAME);
@@ -632,6 +921,9 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
     createEAttribute(charEClass, CHAR__CHARACTER);
     createEAttribute(charEClass, CHAR__SIZE);
 
+    namedConstraintEClass = createEClass(NAMED_CONSTRAINT);
+    createEAttribute(namedConstraintEClass, NAMED_CONSTRAINT__NAME);
+
     constraintEClass = createEClass(CONSTRAINT);
 
     primaryAnnotationEClass = createEClass(PRIMARY_ANNOTATION);
@@ -640,6 +932,17 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
 
     notNullEClass = createEClass(NOT_NULL);
 
+    nullableEClass = createEClass(NULLABLE);
+
+    foreignKeyEClass = createEClass(FOREIGN_KEY);
+    createEAttribute(foreignKeyEClass, FOREIGN_KEY__REF_SCHEMA);
+    createEReference(foreignKeyEClass, FOREIGN_KEY__REF_TABLE);
+    createEReference(foreignKeyEClass, FOREIGN_KEY__REF_COLUMNS);
+    createEAttribute(foreignKeyEClass, FOREIGN_KEY__MATCH);
+    createEAttribute(foreignKeyEClass, FOREIGN_KEY__DEFERRABLE);
+    createEAttribute(foreignKeyEClass, FOREIGN_KEY__ON_DELETE);
+    createEAttribute(foreignKeyEClass, FOREIGN_KEY__ON_UPDATE);
+
     tableConstraintEClass = createEClass(TABLE_CONSTRAINT);
     createEReference(tableConstraintEClass, TABLE_CONSTRAINT__COLUMNS);
 
@@ -647,8 +950,14 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
 
     uniqueKeyEClass = createEClass(UNIQUE_KEY);
 
+    tableCheckEClass = createEClass(TABLE_CHECK);
+    createEReference(tableCheckEClass, TABLE_CHECK__CHECK);
+
     // Create enums
     allTypesEEnum = createEEnum(ALL_TYPES);
+    refActionEEnum = createEEnum(REF_ACTION);
+    matchKindEEnum = createEEnum(MATCH_KIND);
+    rawKindEEnum = createEEnum(RAW_KIND);
   }
 
   /**
@@ -680,11 +989,18 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
     // Set bounds for type parameters
 
     // Add supertypes to classes
+    rawSqlEClass.getESuperTypes().add(this.getConstraint());
+    constraintEClass.getESuperTypes().add(this.getNamedConstraint());
     primaryAnnotationEClass.getESuperTypes().add(this.getConstraint());
     uniqueAnnotationEClass.getESuperTypes().add(this.getConstraint());
     notNullEClass.getESuperTypes().add(this.getConstraint());
+    nullableEClass.getESuperTypes().add(this.getConstraint());
+    foreignKeyEClass.getESuperTypes().add(this.getConstraint());
+    foreignKeyEClass.getESuperTypes().add(this.getTableConstraint());
+    tableConstraintEClass.getESuperTypes().add(this.getNamedConstraint());
     primaryKeyEClass.getESuperTypes().add(this.getTableConstraint());
     uniqueKeyEClass.getESuperTypes().add(this.getTableConstraint());
+    tableCheckEClass.getESuperTypes().add(this.getTableConstraint());
 
     // Initialize classes and features; add operations and parameters
     initEClass(schemaEClass, Schema.class, "Schema", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
@@ -696,6 +1012,11 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
     initEAttribute(getTable_Name(), ecorePackage.getEString(), "name", null, 0, 1, Table.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
     initEReference(getTable_Columns(), this.getColumn(), null, "columns", null, 0, -1, Table.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
     initEReference(getTable_Constraints(), this.getTableConstraint(), null, "constraints", null, 0, -1, Table.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEReference(getTable_Options(), this.getRawSql(), null, "options", null, 0, 1, Table.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+
+    initEClass(rawSqlEClass, RawSql.class, "RawSql", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
+    initEAttribute(getRawSql_Kind(), this.getRawKind(), "kind", null, 0, 1, RawSql.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getRawSql_Text(), ecorePackage.getEString(), "text", null, 0, 1, RawSql.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
     initEClass(columnEClass, Column.class, "Column", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
     initEAttribute(getColumn_Name(), ecorePackage.getEString(), "name", null, 0, 1, Column.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
@@ -718,6 +1039,9 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
     initEAttribute(getChar_Character(), ecorePackage.getEBoolean(), "character", null, 0, 1, Char.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
     initEAttribute(getChar_Size(), ecorePackage.getEInt(), "size", null, 0, 1, Char.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
+    initEClass(namedConstraintEClass, NamedConstraint.class, "NamedConstraint", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
+    initEAttribute(getNamedConstraint_Name(), ecorePackage.getEString(), "name", null, 0, 1, NamedConstraint.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+
     initEClass(constraintEClass, Constraint.class, "Constraint", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
 
     initEClass(primaryAnnotationEClass, PrimaryAnnotation.class, "PrimaryAnnotation", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
@@ -726,12 +1050,26 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
 
     initEClass(notNullEClass, NotNull.class, "NotNull", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
 
+    initEClass(nullableEClass, Nullable.class, "Nullable", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
+
+    initEClass(foreignKeyEClass, ForeignKey.class, "ForeignKey", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
+    initEAttribute(getForeignKey_RefSchema(), ecorePackage.getEString(), "refSchema", null, 0, 1, ForeignKey.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEReference(getForeignKey_RefTable(), this.getTable(), null, "refTable", null, 0, 1, ForeignKey.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_COMPOSITE, IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEReference(getForeignKey_RefColumns(), this.getColumn(), null, "refColumns", null, 0, -1, ForeignKey.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_COMPOSITE, IS_RESOLVE_PROXIES, !IS_UNSETTABLE, !IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getForeignKey_Match(), this.getMatchKind(), "match", null, 0, 1, ForeignKey.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getForeignKey_Deferrable(), ecorePackage.getEString(), "deferrable", null, 0, 1, ForeignKey.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getForeignKey_OnDelete(), this.getRefAction(), "onDelete", null, 0, 1, ForeignKey.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+    initEAttribute(getForeignKey_OnUpdate(), this.getRefAction(), "onUpdate", null, 0, 1, ForeignKey.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_UNSETTABLE, !IS_ID, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
+
     initEClass(tableConstraintEClass, TableConstraint.class, "TableConstraint", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
     initEReference(getTableConstraint_Columns(), this.getColumn(), null, "columns", null, 0, -1, TableConstraint.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, !IS_COMPOSITE, IS_RESOLVE_PROXIES, !IS_UNSETTABLE, !IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
     initEClass(primaryKeyEClass, PrimaryKey.class, "PrimaryKey", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
 
     initEClass(uniqueKeyEClass, UniqueKey.class, "UniqueKey", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
+
+    initEClass(tableCheckEClass, TableCheck.class, "TableCheck", !IS_ABSTRACT, !IS_INTERFACE, IS_GENERATED_INSTANCE_CLASS);
+    initEReference(getTableCheck_Check(), this.getRawSql(), null, "check", null, 0, 1, TableCheck.class, !IS_TRANSIENT, !IS_VOLATILE, IS_CHANGEABLE, IS_COMPOSITE, !IS_RESOLVE_PROXIES, !IS_UNSETTABLE, IS_UNIQUE, !IS_DERIVED, IS_ORDERED);
 
     // Initialize enums and add enum literals
     initEEnum(allTypesEEnum, AllTypes.class, "AllTypes");
@@ -754,6 +1092,23 @@ public class SqlPackageImpl extends EPackageImpl implements SqlPackage
     addEEnumLiteral(allTypesEEnum, AllTypes.JSONB);
     addEEnumLiteral(allTypesEEnum, AllTypes.BYTEA);
     addEEnumLiteral(allTypesEEnum, AllTypes.DOUBLE_PRECISION);
+
+    initEEnum(refActionEEnum, RefAction.class, "RefAction");
+    addEEnumLiteral(refActionEEnum, RefAction.CASCADE);
+    addEEnumLiteral(refActionEEnum, RefAction.RESTRICT);
+    addEEnumLiteral(refActionEEnum, RefAction.NO_ACTION);
+    addEEnumLiteral(refActionEEnum, RefAction.SET_NULL);
+    addEEnumLiteral(refActionEEnum, RefAction.SET_DEFAULT);
+
+    initEEnum(matchKindEEnum, MatchKind.class, "MatchKind");
+    addEEnumLiteral(matchKindEEnum, MatchKind.SIMPLE);
+    addEEnumLiteral(matchKindEEnum, MatchKind.FULL);
+
+    initEEnum(rawKindEEnum, RawKind.class, "RawKind");
+    addEEnumLiteral(rawKindEEnum, RawKind.DEFAULT);
+    addEEnumLiteral(rawKindEEnum, RawKind.CHECK);
+    addEEnumLiteral(rawKindEEnum, RawKind.GENERATED);
+    addEEnumLiteral(rawKindEEnum, RawKind.WITH);
 
     // Create resource
     createResource(eNS_URI);

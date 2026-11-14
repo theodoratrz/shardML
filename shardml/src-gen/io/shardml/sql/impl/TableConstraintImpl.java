@@ -13,8 +13,6 @@ import org.eclipse.emf.common.util.EList;
 
 import org.eclipse.emf.ecore.EClass;
 
-import org.eclipse.emf.ecore.impl.MinimalEObjectImpl;
-
 import org.eclipse.emf.ecore.util.EObjectResolvingEList;
 
 /**
@@ -30,7 +28,7 @@ import org.eclipse.emf.ecore.util.EObjectResolvingEList;
  *
  * @generated
  */
-public class TableConstraintImpl extends MinimalEObjectImpl.Container implements TableConstraint
+public class TableConstraintImpl extends NamedConstraintImpl implements TableConstraint
 {
   /**
    * The cached value of the '{@link #getColumns() <em>Columns</em>}' reference list.

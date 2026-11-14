@@ -3,28 +3,60 @@
  */
 package io.shardml.scoping;
 
+import java.util.List;
+import java.util.Objects;
+
 import org.eclipse.emf.ecore.EObject;
 import org.eclipse.emf.ecore.EReference;
 import org.eclipse.xtext.EcoreUtil2;
+import org.eclipse.xtext.naming.IQualifiedNameConverter;
 import org.eclipse.xtext.scoping.IScope;
 import org.eclipse.xtext.scoping.Scopes;
 
+import com.google.inject.Inject;
+
+import io.shardml.sql.Column;
+import io.shardml.sql.ForeignKey;
+import io.shardml.sql.Schema;
 import io.shardml.sql.SqlPackage;
 import io.shardml.sql.Table;
 
-/* resolves column references inside the .msql schema. */
+/* Resolves the references inside a .msql schema, all within the same file:
+ *  - the columns of a PRIMARY KEY, UNIQUE or FOREIGN KEY: columns of the table that declares it;
+ *  - a foreign key's referenced table: a table of this file by its name, and of the schema named
+ *    before it if there is one (REFERENCES public.t);
+ *  - its referenced columns: columns of the referenced table.
+ * The scope's names go through the linker's own name converter, which splits a reference's text
+ * at '.', so a quoted name with a dot in it ("a.b") links like any other. */
 public class SQLScopeProvider extends AbstractSQLScopeProvider {
 
-	// columns of a table-level PRIMARY KEY / UNIQUE resolve to the columns of
-	// that same table only, so a shared name like `id` never links elsewhere
+	@Inject
+	private IQualifiedNameConverter names;
+
 	@Override
 	public IScope getScope(EObject context, EReference reference) {
 		if (reference == SqlPackage.Literals.TABLE_CONSTRAINT__COLUMNS) {
 			Table table = EcoreUtil2.getContainerOfType(context, Table.class);
-			if (table == null)
+			return table == null ? IScope.NULLSCOPE : columns(table.getColumns());
+		}
+		if (reference == SqlPackage.Literals.FOREIGN_KEY__REF_TABLE && context instanceof ForeignKey key) {
+			Schema schema = EcoreUtil2.getContainerOfType(context, Schema.class);
+			if (schema == null)
 				return IScope.NULLSCOPE;
-			return Scopes.scopeFor(table.getColumns());
+			List<Table> tables = schema.getTables().stream().filter(t -> t.getName() != null)
+					.filter(t -> key.getRefSchema() == null || Objects.equals(key.getRefSchema(), t.getSchemaName()))
+					.toList();
+			return Scopes.scopeFor(tables, t -> names.toQualifiedName(t.getName()), IScope.NULLSCOPE);
+		}
+		if (reference == SqlPackage.Literals.FOREIGN_KEY__REF_COLUMNS && context instanceof ForeignKey key) {
+			Table table = key.getRefTable();
+			return table == null || table.eIsProxy() ? IScope.NULLSCOPE : columns(table.getColumns());
 		}
 		return super.getScope(context, reference);
+	}
+
+	private IScope columns(List<Column> columns) {
+		return Scopes.scopeFor(columns.stream().filter(c -> c.getName() != null).toList(),
+				c -> names.toQualifiedName(c.getName()), IScope.NULLSCOPE);
 	}
 }

@@ -4,23 +4,29 @@
 #
 #   bench/integration/test-examples.sh [model.shardml ...]
 #
-# Defaults to every examples/*.shardml and bench/integration/types/*.shardml
-# (every column type of the .msql grammar on one distributed table). Needs the
-# CLI jar (mvn install) and Docker; starts the cluster with bench/up.sh if it
-# is not running.
+# Defaults to every examples/*.shardml, bench/integration/types/*.shardml
+# (every column type of the .msql grammar on one distributed table) and
+# bench/integration/fk/*.shardml (foreign keys and verbatim constraints). Needs
+# the CLI jar (mvn install) and Docker; starts the cluster with bench/up.sh if
+# it is not running.
 #
 # Per model, in a fresh schema named after the database:
 #   1. <db>-schema.sql        every statement must succeed
 #   2. <db>-distribution.sql  every statement must succeed
-#   3. <model>.probe.sql      optional, next to the model: queries the
+#   3. <db>-foreign-keys.sql  if generated (the schema has foreign keys): every
+#                             statement must succeed. After the distribution:
+#                             Citus rejects a foreign key to a table that is
+#                             not distributed yet
+#   4. <model>.probe.sql      optional, next to the model: queries the
 #                             application relies on, typically the joins
 #                             behind each relationship. Citus refuses joins
 #                             between distributed tables that are not on their
 #                             distribution columns, so a probe fails when
 #                             colocation is declared but the keys do not match.
-#                             Not run if step 2 had a failure: the tables would
-#                             still be local, so every join would succeed. The
-#                             probe file then counts as one failure.
+#                             Not run if step 2 or 3 had a failure: the tables
+#                             would still be local, so every join would
+#                             succeed. The probe file then counts as one
+#                             failure.
 #
 # Every statement runs on its own, so one failure does not hide the next.
 set -uo pipefail
@@ -45,7 +51,7 @@ echo "test-examples: using $JAR"
 
 models=("$@")
 if [[ ${#models[@]} -eq 0 ]]; then
-	models=("$ROOT"/examples/*.shardml "$ROOT"/bench/integration/types/*.shardml)
+	models=("$ROOT"/examples/*.shardml "$ROOT"/bench/integration/types/*.shardml "$ROOT"/bench/integration/fk/*.shardml)
 fi
 
 if ! up_log=$("$BENCH/up.sh" 2>&1); then
@@ -124,11 +130,16 @@ for model in "${models[@]}"; do
 
 	apply_file "$db" "${schema_sql[0]}"
 	apply_file "$db" "$out_dir/$db-distribution.sql"
+	deploy_failures=$file_failures
+	if [[ -f "$out_dir/$db-foreign-keys.sql" ]]; then
+		apply_file "$db" "$out_dir/$db-foreign-keys.sql"
+		deploy_failures=$((deploy_failures + file_failures))
+	fi
 	probe="${model%.shardml}.probe.sql"
-	if [[ -f "$probe" && $file_failures -gt 0 ]]; then
+	if [[ -f "$probe" && $deploy_failures -gt 0 ]]; then
 		failures=$((failures + 1))
 		echo "  $(basename "$probe")"
-		echo "    FAIL  not run: $file_failures distribution statement(s) failed, so the joins would run on local tables"
+		echo "    FAIL  not run: $deploy_failures distribution or foreign key statement(s) failed, so the probe would run on local tables"
 	elif [[ -f "$probe" ]]; then
 		apply_file "$db" "$probe"
 	fi

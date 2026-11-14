@@ -27,6 +27,23 @@
       <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//AllTypes/BYTEA"/>
       <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//AllTypes/DOUBLE_PRECISION"/>
     </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="SQL.ecore#//RefAction">
+      <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//RefAction/CASCADE"/>
+      <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//RefAction/RESTRICT"/>
+      <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//RefAction/NO_ACTION"/>
+      <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//RefAction/SET_NULL"/>
+      <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//RefAction/SET_DEFAULT"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="SQL.ecore#//MatchKind">
+      <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//MatchKind/SIMPLE"/>
+      <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//MatchKind/FULL"/>
+    </genEnums>
+    <genEnums typeSafeEnumCompatible="false" ecoreEnum="SQL.ecore#//RawKind">
+      <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//RawKind/DEFAULT"/>
+      <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//RawKind/CHECK"/>
+      <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//RawKind/GENERATED"/>
+      <genEnumLiterals ecoreEnumLiteral="SQL.ecore#//RawKind/WITH"/>
+    </genEnums>
     <genClasses ecoreClass="SQL.ecore#//Schema">
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference SQL.ecore#//Schema/tables"/>
     </genClasses>
@@ -36,6 +53,11 @@
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Table/name"/>
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference SQL.ecore#//Table/columns"/>
       <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference SQL.ecore#//Table/constraints"/>
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference SQL.ecore#//Table/options"/>
+    </genClasses>
+    <genClasses ecoreClass="SQL.ecore#//RawSql">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//RawSql/kind"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//RawSql/text"/>
     </genClasses>
     <genClasses ecoreClass="SQL.ecore#//Column">
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Column/name"/>
@@ -58,14 +80,30 @@
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Char/character"/>
       <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//Char/size"/>
     </genClasses>
+    <genClasses ecoreClass="SQL.ecore#//NamedConstraint">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//NamedConstraint/name"/>
+    </genClasses>
     <genClasses ecoreClass="SQL.ecore#//Constraint"/>
     <genClasses ecoreClass="SQL.ecore#//PrimaryAnnotation"/>
     <genClasses ecoreClass="SQL.ecore#//UniqueAnnotation"/>
     <genClasses ecoreClass="SQL.ecore#//NotNull"/>
+    <genClasses ecoreClass="SQL.ecore#//Nullable"/>
+    <genClasses ecoreClass="SQL.ecore#//ForeignKey">
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//ForeignKey/refSchema"/>
+      <genFeatures notify="false" createChild="false" propertySortChoices="true" ecoreFeature="ecore:EReference SQL.ecore#//ForeignKey/refTable"/>
+      <genFeatures notify="false" createChild="false" propertySortChoices="true" ecoreFeature="ecore:EReference SQL.ecore#//ForeignKey/refColumns"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//ForeignKey/match"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//ForeignKey/deferrable"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//ForeignKey/onDelete"/>
+      <genFeatures createChild="false" ecoreFeature="ecore:EAttribute SQL.ecore#//ForeignKey/onUpdate"/>
+    </genClasses>
     <genClasses ecoreClass="SQL.ecore#//TableConstraint">
       <genFeatures notify="false" createChild="false" propertySortChoices="true" ecoreFeature="ecore:EReference SQL.ecore#//TableConstraint/columns"/>
     </genClasses>
     <genClasses ecoreClass="SQL.ecore#//PrimaryKey"/>
     <genClasses ecoreClass="SQL.ecore#//UniqueKey"/>
+    <genClasses ecoreClass="SQL.ecore#//TableCheck">
+      <genFeatures property="None" children="true" createChild="true" ecoreFeature="ecore:EReference SQL.ecore#//TableCheck/check"/>
+    </genClasses>
   </genPackages>
 </genmodel:GenModel>

@@ -87,6 +87,15 @@ public class SqlSwitch<T> extends Switch<T>
         if (result == null) result = defaultCase(theEObject);
         return result;
       }
+      case SqlPackage.RAW_SQL:
+      {
+        RawSql rawSql = (RawSql)theEObject;
+        T result = caseRawSql(rawSql);
+        if (result == null) result = caseConstraint(rawSql);
+        if (result == null) result = caseNamedConstraint(rawSql);
+        if (result == null) result = defaultCase(theEObject);
+        return result;
+      }
       case SqlPackage.COLUMN:
       {
         Column column = (Column)theEObject;
@@ -115,10 +124,18 @@ public class SqlSwitch<T> extends Switch<T>
         if (result == null) result = defaultCase(theEObject);
         return result;
       }
+      case SqlPackage.NAMED_CONSTRAINT:
+      {
+        NamedConstraint namedConstraint = (NamedConstraint)theEObject;
+        T result = caseNamedConstraint(namedConstraint);
+        if (result == null) result = defaultCase(theEObject);
+        return result;
+      }
       case SqlPackage.CONSTRAINT:
       {
         Constraint constraint = (Constraint)theEObject;
         T result = caseConstraint(constraint);
+        if (result == null) result = caseNamedConstraint(constraint);
         if (result == null) result = defaultCase(theEObject);
         return result;
       }
@@ -127,6 +144,7 @@ public class SqlSwitch<T> extends Switch<T>
         PrimaryAnnotation primaryAnnotation = (PrimaryAnnotation)theEObject;
         T result = casePrimaryAnnotation(primaryAnnotation);
         if (result == null) result = caseConstraint(primaryAnnotation);
+        if (result == null) result = caseNamedConstraint(primaryAnnotation);
         if (result == null) result = defaultCase(theEObject);
         return result;
       }
@@ -135,6 +153,7 @@ public class SqlSwitch<T> extends Switch<T>
         UniqueAnnotation uniqueAnnotation = (UniqueAnnotation)theEObject;
         T result = caseUniqueAnnotation(uniqueAnnotation);
         if (result == null) result = caseConstraint(uniqueAnnotation);
+        if (result == null) result = caseNamedConstraint(uniqueAnnotation);
         if (result == null) result = defaultCase(theEObject);
         return result;
       }
@@ -143,6 +162,26 @@ public class SqlSwitch<T> extends Switch<T>
         NotNull notNull = (NotNull)theEObject;
         T result = caseNotNull(notNull);
         if (result == null) result = caseConstraint(notNull);
+        if (result == null) result = caseNamedConstraint(notNull);
+        if (result == null) result = defaultCase(theEObject);
+        return result;
+      }
+      case SqlPackage.NULLABLE:
+      {
+        Nullable nullable = (Nullable)theEObject;
+        T result = caseNullable(nullable);
+        if (result == null) result = caseConstraint(nullable);
+        if (result == null) result = caseNamedConstraint(nullable);
+        if (result == null) result = defaultCase(theEObject);
+        return result;
+      }
+      case SqlPackage.FOREIGN_KEY:
+      {
+        ForeignKey foreignKey = (ForeignKey)theEObject;
+        T result = caseForeignKey(foreignKey);
+        if (result == null) result = caseConstraint(foreignKey);
+        if (result == null) result = caseTableConstraint(foreignKey);
+        if (result == null) result = caseNamedConstraint(foreignKey);
         if (result == null) result = defaultCase(theEObject);
         return result;
       }
@@ -150,6 +189,7 @@ public class SqlSwitch<T> extends Switch<T>
       {
         TableConstraint tableConstraint = (TableConstraint)theEObject;
         T result = caseTableConstraint(tableConstraint);
+        if (result == null) result = caseNamedConstraint(tableConstraint);
         if (result == null) result = defaultCase(theEObject);
         return result;
       }
@@ -158,6 +198,7 @@ public class SqlSwitch<T> extends Switch<T>
         PrimaryKey primaryKey = (PrimaryKey)theEObject;
         T result = casePrimaryKey(primaryKey);
         if (result == null) result = caseTableConstraint(primaryKey);
+        if (result == null) result = caseNamedConstraint(primaryKey);
         if (result == null) result = defaultCase(theEObject);
         return result;
       }
@@ -166,6 +207,16 @@ public class SqlSwitch<T> extends Switch<T>
         UniqueKey uniqueKey = (UniqueKey)theEObject;
         T result = caseUniqueKey(uniqueKey);
         if (result == null) result = caseTableConstraint(uniqueKey);
+        if (result == null) result = caseNamedConstraint(uniqueKey);
+        if (result == null) result = defaultCase(theEObject);
+        return result;
+      }
+      case SqlPackage.TABLE_CHECK:
+      {
+        TableCheck tableCheck = (TableCheck)theEObject;
+        T result = caseTableCheck(tableCheck);
+        if (result == null) result = caseTableConstraint(tableCheck);
+        if (result == null) result = caseNamedConstraint(tableCheck);
         if (result == null) result = defaultCase(theEObject);
         return result;
       }
@@ -201,6 +252,22 @@ public class SqlSwitch<T> extends Switch<T>
    * @generated
    */
   public T caseTable(Table object)
+  {
+    return null;
+  }
+
+  /**
+   * Returns the result of interpreting the object as an instance of '<em>Raw Sql</em>'.
+   * <!-- begin-user-doc -->
+   * This implementation returns null;
+   * returning a non-null result will terminate the switch.
+   * <!-- end-user-doc -->
+   * @param object the target of the switch.
+   * @return the result of interpreting the object as an instance of '<em>Raw Sql</em>'.
+   * @see #doSwitch(org.eclipse.emf.ecore.EObject) doSwitch(EObject)
+   * @generated
+   */
+  public T caseRawSql(RawSql object)
   {
     return null;
   }
@@ -270,6 +337,22 @@ public class SqlSwitch<T> extends Switch<T>
   }
 
   /**
+   * Returns the result of interpreting the object as an instance of '<em>Named Constraint</em>'.
+   * <!-- begin-user-doc -->
+   * This implementation returns null;
+   * returning a non-null result will terminate the switch.
+   * <!-- end-user-doc -->
+   * @param object the target of the switch.
+   * @return the result of interpreting the object as an instance of '<em>Named Constraint</em>'.
+   * @see #doSwitch(org.eclipse.emf.ecore.EObject) doSwitch(EObject)
+   * @generated
+   */
+  public T caseNamedConstraint(NamedConstraint object)
+  {
+    return null;
+  }
+
+  /**
    * Returns the result of interpreting the object as an instance of '<em>Constraint</em>'.
    * <!-- begin-user-doc -->
    * This implementation returns null;
@@ -334,6 +417,38 @@ public class SqlSwitch<T> extends Switch<T>
   }
 
   /**
+   * Returns the result of interpreting the object as an instance of '<em>Nullable</em>'.
+   * <!-- begin-user-doc -->
+   * This implementation returns null;
+   * returning a non-null result will terminate the switch.
+   * <!-- end-user-doc -->
+   * @param object the target of the switch.
+   * @return the result of interpreting the object as an instance of '<em>Nullable</em>'.
+   * @see #doSwitch(org.eclipse.emf.ecore.EObject) doSwitch(EObject)
+   * @generated
+   */
+  public T caseNullable(Nullable object)
+  {
+    return null;
+  }
+
+  /**
+   * Returns the result of interpreting the object as an instance of '<em>Foreign Key</em>'.
+   * <!-- begin-user-doc -->
+   * This implementation returns null;
+   * returning a non-null result will terminate the switch.
+   * <!-- end-user-doc -->
+   * @param object the target of the switch.
+   * @return the result of interpreting the object as an instance of '<em>Foreign Key</em>'.
+   * @see #doSwitch(org.eclipse.emf.ecore.EObject) doSwitch(EObject)
+   * @generated
+   */
+  public T caseForeignKey(ForeignKey object)
+  {
+    return null;
+  }
+
+  /**
    * Returns the result of interpreting the object as an instance of '<em>Table Constraint</em>'.
    * <!-- begin-user-doc -->
    * This implementation returns null;
@@ -377,6 +492,22 @@ public class SqlSwitch<T> extends Switch<T>
    * @generated
    */
   public T caseUniqueKey(UniqueKey object)
+  {
+    return null;
+  }
+
+  /**
+   * Returns the result of interpreting the object as an instance of '<em>Table Check</em>'.
+   * <!-- begin-user-doc -->
+   * This implementation returns null;
+   * returning a non-null result will terminate the switch.
+   * <!-- end-user-doc -->
+   * @param object the target of the switch.
+   * @return the result of interpreting the object as an instance of '<em>Table Check</em>'.
+   * @see #doSwitch(org.eclipse.emf.ecore.EObject) doSwitch(EObject)
+   * @generated
+   */
+  public T caseTableCheck(TableCheck object)
   {
     return null;
   }

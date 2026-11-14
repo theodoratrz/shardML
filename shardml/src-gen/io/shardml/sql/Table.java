@@ -21,6 +21,7 @@ import org.eclipse.emf.ecore.EObject;
  *   <li>{@link io.shardml.sql.Table#getName <em>Name</em>}</li>
  *   <li>{@link io.shardml.sql.Table#getColumns <em>Columns</em>}</li>
  *   <li>{@link io.shardml.sql.Table#getConstraints <em>Constraints</em>}</li>
+ *   <li>{@link io.shardml.sql.Table#getOptions <em>Options</em>}</li>
  * </ul>
  *
  * @see io.shardml.sql.SqlPackage#getTable()
@@ -118,5 +119,27 @@ public interface Table extends EObject
    * @generated
    */
   EList<TableConstraint> getConstraints();
+
+  /**
+   * Returns the value of the '<em><b>Options</b></em>' containment reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return the value of the '<em>Options</em>' containment reference.
+   * @see #setOptions(RawSql)
+   * @see io.shardml.sql.SqlPackage#getTable_Options()
+   * @model containment="true"
+   * @generated
+   */
+  RawSql getOptions();
+
+  /**
+   * Sets the value of the '{@link io.shardml.sql.Table#getOptions <em>Options</em>}' containment reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @param value the new value of the '<em>Options</em>' containment reference.
+   * @see #getOptions()
+   * @generated
+   */
+  void setOptions(RawSql value);
 
 } // Table

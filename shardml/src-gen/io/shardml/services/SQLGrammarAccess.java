@@ -80,6 +80,8 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 		private final Assignment cConstraintsAssignment_7_1_1 = (Assignment)cAlternatives_7_1.eContents().get(1);
 		private final RuleCall cConstraintsTableConstraintParserRuleCall_7_1_1_0 = (RuleCall)cConstraintsAssignment_7_1_1.eContents().get(0);
 		private final Keyword cRightParenthesisKeyword_8 = (Keyword)cGroup.eContents().get(8);
+		private final Assignment cOptionsAssignment_9 = (Assignment)cGroup.eContents().get(9);
+		private final RuleCall cOptionsTableOptionsParserRuleCall_9_0 = (RuleCall)cOptionsAssignment_9.eContents().get(0);
 		
 		//// maps to database table
 		//// columns and table constraints are comma separated (classic SQL syntax)
@@ -87,14 +89,14 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 		//    'CREATE' 'TABLE' (ifNotExists ?= 'IF' 'NOT' 'EXISTS')? (schemaName=Name '.')? name=Name '('
 		//        (columns += Column | constraints += TableConstraint)
 		//        (',' (columns += Column | constraints += TableConstraint))*
-		//    ')'
+		//    ')' (options=TableOptions)?
 		//;
 		@Override public ParserRule getRule() { return rule; }
 		
 		//'CREATE' 'TABLE' (ifNotExists ?= 'IF' 'NOT' 'EXISTS')? (schemaName=Name '.')? name=Name '('
 		//    (columns += Column | constraints += TableConstraint)
 		//    (',' (columns += Column | constraints += TableConstraint))*
-		//')'
+		//')' (options=TableOptions)?
 		public Group getGroup() { return cGroup; }
 		
 		//'CREATE'
@@ -177,6 +179,41 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 		
 		//')'
 		public Keyword getRightParenthesisKeyword_8() { return cRightParenthesisKeyword_8; }
+		
+		//(options=TableOptions)?
+		public Assignment getOptionsAssignment_9() { return cOptionsAssignment_9; }
+		
+		//TableOptions
+		public RuleCall getOptionsTableOptionsParserRuleCall_9_0() { return cOptionsTableOptionsParserRuleCall_9_0; }
+	}
+	public class TableOptionsElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.TableOptions");
+		private final Group cGroup = (Group)rule.eContents().get(1);
+		private final Assignment cKindAssignment_0 = (Assignment)cGroup.eContents().get(0);
+		private final RuleCall cKindWithKindEnumRuleCall_0_0 = (RuleCall)cKindAssignment_0.eContents().get(0);
+		private final Assignment cTextAssignment_1 = (Assignment)cGroup.eContents().get(1);
+		private final RuleCall cTextParenthesizedParserRuleCall_1_0 = (RuleCall)cTextAssignment_1.eContents().get(0);
+		
+		//// WITH (storage_parameter = value, ...) after a table, kept verbatim (pgbench: fillfactor)
+		//TableOptions returns RawSql:
+		//    kind=WithKind text=Parenthesized
+		//;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//kind=WithKind text=Parenthesized
+		public Group getGroup() { return cGroup; }
+		
+		//kind=WithKind
+		public Assignment getKindAssignment_0() { return cKindAssignment_0; }
+		
+		//WithKind
+		public RuleCall getKindWithKindEnumRuleCall_0_0() { return cKindWithKindEnumRuleCall_0_0; }
+		
+		//text=Parenthesized
+		public Assignment getTextAssignment_1() { return cTextAssignment_1; }
+		
+		//Parenthesized
+		public RuleCall getTextParenthesizedParserRuleCall_1_0() { return cTextParenthesizedParserRuleCall_1_0; }
 	}
 	public class ColumnElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.Column");
@@ -493,21 +530,72 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 		//')'
 		public Keyword getRightParenthesisKeyword_3() { return cRightParenthesisKeyword_3; }
 	}
+	public class NamedConstraintElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.NamedConstraint");
+		private final Alternatives cAlternatives = (Alternatives)rule.eContents().get(1);
+		private final RuleCall cConstraintParserRuleCall_0 = (RuleCall)cAlternatives.eContents().get(0);
+		private final RuleCall cTableConstraintParserRuleCall_1 = (RuleCall)cAlternatives.eContents().get(1);
+		
+		//// Constraints (Plan-sql 4.5, step 4). Every column and table constraint may be named
+		//// (CONSTRAINT name ...): the name is a feature of NamedConstraint, the common supertype of Constraint
+		//// and TableConstraint. That rule is never called; it only declares the supertype, so that ForeignKey,
+		//// which is both a Constraint (column-level REFERENCES) and a TableConstraint (FOREIGN KEY), inherits
+		//// one name, not two.
+		//NamedConstraint:
+		//    Constraint | TableConstraint
+		//;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//Constraint | TableConstraint
+		public Alternatives getAlternatives() { return cAlternatives; }
+		
+		//Constraint
+		public RuleCall getConstraintParserRuleCall_0() { return cConstraintParserRuleCall_0; }
+		
+		//TableConstraint
+		public RuleCall getTableConstraintParserRuleCall_1() { return cTableConstraintParserRuleCall_1; }
+	}
+	public class ConstraintNameElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.ConstraintName");
+		private final Group cGroup = (Group)rule.eContents().get(1);
+		private final Keyword cCONSTRAINTKeyword_0 = (Keyword)cGroup.eContents().get(0);
+		private final Assignment cNameAssignment_1 = (Assignment)cGroup.eContents().get(1);
+		private final RuleCall cNameNameParserRuleCall_1_0 = (RuleCall)cNameAssignment_1.eContents().get(0);
+		
+		//fragment ConstraintName returns NamedConstraint:
+		//    ('CONSTRAINT' name=Name)?
+		//;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//('CONSTRAINT' name=Name)?
+		public Group getGroup() { return cGroup; }
+		
+		//'CONSTRAINT'
+		public Keyword getCONSTRAINTKeyword_0() { return cCONSTRAINTKeyword_0; }
+		
+		//name=Name
+		public Assignment getNameAssignment_1() { return cNameAssignment_1; }
+		
+		//Name
+		public RuleCall getNameNameParserRuleCall_1_0() { return cNameNameParserRuleCall_1_0; }
+	}
 	public class ConstraintElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.Constraint");
 		private final Alternatives cAlternatives = (Alternatives)rule.eContents().get(1);
 		private final RuleCall cPrimaryAnnotationParserRuleCall_0 = (RuleCall)cAlternatives.eContents().get(0);
 		private final RuleCall cUniqueAnnotationParserRuleCall_1 = (RuleCall)cAlternatives.eContents().get(1);
 		private final RuleCall cNotNullParserRuleCall_2 = (RuleCall)cAlternatives.eContents().get(2);
+		private final RuleCall cNullableParserRuleCall_3 = (RuleCall)cAlternatives.eContents().get(3);
+		private final RuleCall cColumnReferencesParserRuleCall_4 = (RuleCall)cAlternatives.eContents().get(4);
+		private final RuleCall cColumnRawParserRuleCall_5 = (RuleCall)cAlternatives.eContents().get(5);
 		
-		//// we use Xtext's forced type instantiation {Type} here
-		//// this is necessary because each constraint has no feature assignments
+		//// column level. Forced type instantiation {Type} where a constraint has no other assignment.
 		//Constraint:
-		//    PrimaryAnnotation | UniqueAnnotation | NotNull
+		//    PrimaryAnnotation | UniqueAnnotation | NotNull | Nullable | ColumnReferences | ColumnRaw
 		//;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//PrimaryAnnotation | UniqueAnnotation | NotNull
+		//PrimaryAnnotation | UniqueAnnotation | NotNull | Nullable | ColumnReferences | ColumnRaw
 		public Alternatives getAlternatives() { return cAlternatives; }
 		
 		//PrimaryAnnotation
@@ -518,89 +606,254 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 		
 		//NotNull
 		public RuleCall getNotNullParserRuleCall_2() { return cNotNullParserRuleCall_2; }
+		
+		//Nullable
+		public RuleCall getNullableParserRuleCall_3() { return cNullableParserRuleCall_3; }
+		
+		//ColumnReferences
+		public RuleCall getColumnReferencesParserRuleCall_4() { return cColumnReferencesParserRuleCall_4; }
+		
+		//ColumnRaw
+		public RuleCall getColumnRawParserRuleCall_5() { return cColumnRawParserRuleCall_5; }
 	}
 	public class PrimaryAnnotationElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.PrimaryAnnotation");
 		private final Group cGroup = (Group)rule.eContents().get(1);
 		private final Action cPrimaryAnnotationAction_0 = (Action)cGroup.eContents().get(0);
-		private final Keyword cPRIMARYKeyword_1 = (Keyword)cGroup.eContents().get(1);
-		private final Keyword cKEYKeyword_2 = (Keyword)cGroup.eContents().get(2);
+		private final RuleCall cConstraintNameParserRuleCall_1 = (RuleCall)cGroup.eContents().get(1);
+		private final Keyword cPRIMARYKeyword_2 = (Keyword)cGroup.eContents().get(2);
+		private final Keyword cKEYKeyword_3 = (Keyword)cGroup.eContents().get(3);
 		
 		//PrimaryAnnotation:
-		//    {PrimaryAnnotation} 'PRIMARY''KEY'
+		//    {PrimaryAnnotation} ConstraintName 'PRIMARY' 'KEY'
 		//;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//{PrimaryAnnotation} 'PRIMARY''KEY'
+		//{PrimaryAnnotation} ConstraintName 'PRIMARY' 'KEY'
 		public Group getGroup() { return cGroup; }
 		
 		//{PrimaryAnnotation}
 		public Action getPrimaryAnnotationAction_0() { return cPrimaryAnnotationAction_0; }
 		
+		//ConstraintName
+		public RuleCall getConstraintNameParserRuleCall_1() { return cConstraintNameParserRuleCall_1; }
+		
 		//'PRIMARY'
-		public Keyword getPRIMARYKeyword_1() { return cPRIMARYKeyword_1; }
+		public Keyword getPRIMARYKeyword_2() { return cPRIMARYKeyword_2; }
 		
 		//'KEY'
-		public Keyword getKEYKeyword_2() { return cKEYKeyword_2; }
+		public Keyword getKEYKeyword_3() { return cKEYKeyword_3; }
 	}
 	public class UniqueAnnotationElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.UniqueAnnotation");
 		private final Group cGroup = (Group)rule.eContents().get(1);
 		private final Action cUniqueAnnotationAction_0 = (Action)cGroup.eContents().get(0);
-		private final Keyword cUNIQUEKeyword_1 = (Keyword)cGroup.eContents().get(1);
+		private final RuleCall cConstraintNameParserRuleCall_1 = (RuleCall)cGroup.eContents().get(1);
+		private final Keyword cUNIQUEKeyword_2 = (Keyword)cGroup.eContents().get(2);
 		
 		//UniqueAnnotation:
-		//    {UniqueAnnotation} 'UNIQUE'
+		//    {UniqueAnnotation} ConstraintName 'UNIQUE'
 		//;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//{UniqueAnnotation} 'UNIQUE'
+		//{UniqueAnnotation} ConstraintName 'UNIQUE'
 		public Group getGroup() { return cGroup; }
 		
 		//{UniqueAnnotation}
 		public Action getUniqueAnnotationAction_0() { return cUniqueAnnotationAction_0; }
 		
+		//ConstraintName
+		public RuleCall getConstraintNameParserRuleCall_1() { return cConstraintNameParserRuleCall_1; }
+		
 		//'UNIQUE'
-		public Keyword getUNIQUEKeyword_1() { return cUNIQUEKeyword_1; }
+		public Keyword getUNIQUEKeyword_2() { return cUNIQUEKeyword_2; }
 	}
 	public class NotNullElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.NotNull");
 		private final Group cGroup = (Group)rule.eContents().get(1);
 		private final Action cNotNullAction_0 = (Action)cGroup.eContents().get(0);
-		private final Keyword cNOTKeyword_1 = (Keyword)cGroup.eContents().get(1);
-		private final Keyword cNULLKeyword_2 = (Keyword)cGroup.eContents().get(2);
+		private final RuleCall cConstraintNameParserRuleCall_1 = (RuleCall)cGroup.eContents().get(1);
+		private final Keyword cNOTKeyword_2 = (Keyword)cGroup.eContents().get(2);
+		private final Keyword cNULLKeyword_3 = (Keyword)cGroup.eContents().get(3);
 		
 		//NotNull:
-		//    {NotNull} 'NOT''NULL'
+		//    {NotNull} ConstraintName 'NOT' 'NULL'
 		//;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//{NotNull} 'NOT''NULL'
+		//{NotNull} ConstraintName 'NOT' 'NULL'
 		public Group getGroup() { return cGroup; }
 		
 		//{NotNull}
 		public Action getNotNullAction_0() { return cNotNullAction_0; }
 		
+		//ConstraintName
+		public RuleCall getConstraintNameParserRuleCall_1() { return cConstraintNameParserRuleCall_1; }
+		
 		//'NOT'
-		public Keyword getNOTKeyword_1() { return cNOTKeyword_1; }
+		public Keyword getNOTKeyword_2() { return cNOTKeyword_2; }
+		
+		//'NULL'
+		public Keyword getNULLKeyword_3() { return cNULLKeyword_3; }
+	}
+	public class NullableElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.Nullable");
+		private final Group cGroup = (Group)rule.eContents().get(1);
+		private final Action cNullableAction_0 = (Action)cGroup.eContents().get(0);
+		private final RuleCall cConstraintNameParserRuleCall_1 = (RuleCall)cGroup.eContents().get(1);
+		private final Keyword cNULLKeyword_2 = (Keyword)cGroup.eContents().get(2);
+		
+		//// the explicit NULL constraint (the default; written back as given)
+		//Nullable:
+		//    {Nullable} ConstraintName 'NULL'
+		//;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//{Nullable} ConstraintName 'NULL'
+		public Group getGroup() { return cGroup; }
+		
+		//{Nullable}
+		public Action getNullableAction_0() { return cNullableAction_0; }
+		
+		//ConstraintName
+		public RuleCall getConstraintNameParserRuleCall_1() { return cConstraintNameParserRuleCall_1; }
 		
 		//'NULL'
 		public Keyword getNULLKeyword_2() { return cNULLKeyword_2; }
+	}
+	public class ColumnReferencesElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.ColumnReferences");
+		private final Group cGroup = (Group)rule.eContents().get(1);
+		private final RuleCall cConstraintNameParserRuleCall_0 = (RuleCall)cGroup.eContents().get(0);
+		private final Keyword cREFERENCESKeyword_1 = (Keyword)cGroup.eContents().get(1);
+		private final RuleCall cReferencesParserRuleCall_2 = (RuleCall)cGroup.eContents().get(2);
+		
+		//// column-level REFERENCES: a ForeignKey whose own columns list is empty; SchemaFacts fills in
+		//// the column it is declared on
+		//ColumnReferences returns ForeignKey:
+		//    ConstraintName 'REFERENCES' References
+		//;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//ConstraintName 'REFERENCES' References
+		public Group getGroup() { return cGroup; }
+		
+		//ConstraintName
+		public RuleCall getConstraintNameParserRuleCall_0() { return cConstraintNameParserRuleCall_0; }
+		
+		//'REFERENCES'
+		public Keyword getREFERENCESKeyword_1() { return cREFERENCESKeyword_1; }
+		
+		//References
+		public RuleCall getReferencesParserRuleCall_2() { return cReferencesParserRuleCall_2; }
+	}
+	public class ColumnRawElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.ColumnRaw");
+		private final Group cGroup = (Group)rule.eContents().get(1);
+		private final RuleCall cConstraintNameParserRuleCall_0 = (RuleCall)cGroup.eContents().get(0);
+		private final Alternatives cAlternatives_1 = (Alternatives)cGroup.eContents().get(1);
+		private final Group cGroup_1_0 = (Group)cAlternatives_1.eContents().get(0);
+		private final Assignment cKindAssignment_1_0_0 = (Assignment)cGroup_1_0.eContents().get(0);
+		private final RuleCall cKindDefaultKindEnumRuleCall_1_0_0_0 = (RuleCall)cKindAssignment_1_0_0.eContents().get(0);
+		private final Assignment cTextAssignment_1_0_1 = (Assignment)cGroup_1_0.eContents().get(1);
+		private final RuleCall cTextDefaultExprParserRuleCall_1_0_1_0 = (RuleCall)cTextAssignment_1_0_1.eContents().get(0);
+		private final Group cGroup_1_1 = (Group)cAlternatives_1.eContents().get(1);
+		private final Assignment cKindAssignment_1_1_0 = (Assignment)cGroup_1_1.eContents().get(0);
+		private final RuleCall cKindCheckKindEnumRuleCall_1_1_0_0 = (RuleCall)cKindAssignment_1_1_0.eContents().get(0);
+		private final Assignment cTextAssignment_1_1_1 = (Assignment)cGroup_1_1.eContents().get(1);
+		private final RuleCall cTextParenthesizedParserRuleCall_1_1_1_0 = (RuleCall)cTextAssignment_1_1_1.eContents().get(0);
+		private final Group cGroup_1_2 = (Group)cAlternatives_1.eContents().get(2);
+		private final Assignment cKindAssignment_1_2_0 = (Assignment)cGroup_1_2.eContents().get(0);
+		private final RuleCall cKindGeneratedKindEnumRuleCall_1_2_0_0 = (RuleCall)cKindAssignment_1_2_0.eContents().get(0);
+		private final Assignment cTextAssignment_1_2_1 = (Assignment)cGroup_1_2.eContents().get(1);
+		private final RuleCall cTextGeneratedTailParserRuleCall_1_2_1_0 = (RuleCall)cTextAssignment_1_2_1.eContents().get(0);
+		
+		//// DEFAULT, CHECK and GENERATED, kept as written (RawSql, the one class holding original text)
+		//ColumnRaw returns RawSql:
+		//    ConstraintName
+		//    ( kind=DefaultKind text=DefaultExpr
+		//    | kind=CheckKind text=Parenthesized
+		//    | kind=GeneratedKind text=GeneratedTail
+		//    )
+		//;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//ConstraintName
+		//( kind=DefaultKind text=DefaultExpr
+		//| kind=CheckKind text=Parenthesized
+		//| kind=GeneratedKind text=GeneratedTail
+		//)
+		public Group getGroup() { return cGroup; }
+		
+		//ConstraintName
+		public RuleCall getConstraintNameParserRuleCall_0() { return cConstraintNameParserRuleCall_0; }
+		
+		//( kind=DefaultKind text=DefaultExpr
+		//| kind=CheckKind text=Parenthesized
+		//| kind=GeneratedKind text=GeneratedTail
+		//)
+		public Alternatives getAlternatives_1() { return cAlternatives_1; }
+		
+		//kind=DefaultKind text=DefaultExpr
+		public Group getGroup_1_0() { return cGroup_1_0; }
+		
+		//kind=DefaultKind
+		public Assignment getKindAssignment_1_0_0() { return cKindAssignment_1_0_0; }
+		
+		//DefaultKind
+		public RuleCall getKindDefaultKindEnumRuleCall_1_0_0_0() { return cKindDefaultKindEnumRuleCall_1_0_0_0; }
+		
+		//text=DefaultExpr
+		public Assignment getTextAssignment_1_0_1() { return cTextAssignment_1_0_1; }
+		
+		//DefaultExpr
+		public RuleCall getTextDefaultExprParserRuleCall_1_0_1_0() { return cTextDefaultExprParserRuleCall_1_0_1_0; }
+		
+		//kind=CheckKind text=Parenthesized
+		public Group getGroup_1_1() { return cGroup_1_1; }
+		
+		//kind=CheckKind
+		public Assignment getKindAssignment_1_1_0() { return cKindAssignment_1_1_0; }
+		
+		//CheckKind
+		public RuleCall getKindCheckKindEnumRuleCall_1_1_0_0() { return cKindCheckKindEnumRuleCall_1_1_0_0; }
+		
+		//text=Parenthesized
+		public Assignment getTextAssignment_1_1_1() { return cTextAssignment_1_1_1; }
+		
+		//Parenthesized
+		public RuleCall getTextParenthesizedParserRuleCall_1_1_1_0() { return cTextParenthesizedParserRuleCall_1_1_1_0; }
+		
+		//kind=GeneratedKind text=GeneratedTail
+		public Group getGroup_1_2() { return cGroup_1_2; }
+		
+		//kind=GeneratedKind
+		public Assignment getKindAssignment_1_2_0() { return cKindAssignment_1_2_0; }
+		
+		//GeneratedKind
+		public RuleCall getKindGeneratedKindEnumRuleCall_1_2_0_0() { return cKindGeneratedKindEnumRuleCall_1_2_0_0; }
+		
+		//text=GeneratedTail
+		public Assignment getTextAssignment_1_2_1() { return cTextAssignment_1_2_1; }
+		
+		//GeneratedTail
+		public RuleCall getTextGeneratedTailParserRuleCall_1_2_1_0() { return cTextGeneratedTailParserRuleCall_1_2_1_0; }
 	}
 	public class TableConstraintElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.TableConstraint");
 		private final Alternatives cAlternatives = (Alternatives)rule.eContents().get(1);
 		private final RuleCall cPrimaryKeyParserRuleCall_0 = (RuleCall)cAlternatives.eContents().get(0);
 		private final RuleCall cUniqueKeyParserRuleCall_1 = (RuleCall)cAlternatives.eContents().get(1);
+		private final RuleCall cForeignKeyParserRuleCall_2 = (RuleCall)cAlternatives.eContents().get(2);
+		private final RuleCall cTableCheckParserRuleCall_3 = (RuleCall)cAlternatives.eContents().get(3);
 		
-		//// table-level constraints over one or more columns of the same table,
-		//// e.g. PRIMARY KEY (customer_id, id)
+		//// table level. The key columns resolve to columns of the same table (SQLScopeProvider)
 		//TableConstraint:
-		//    PrimaryKey | UniqueKey
+		//    PrimaryKey | UniqueKey | ForeignKey | TableCheck
 		//;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//PrimaryKey | UniqueKey
+		//PrimaryKey | UniqueKey | ForeignKey | TableCheck
 		public Alternatives getAlternatives() { return cAlternatives; }
 		
 		//PrimaryKey
@@ -608,125 +861,869 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 		
 		//UniqueKey
 		public RuleCall getUniqueKeyParserRuleCall_1() { return cUniqueKeyParserRuleCall_1; }
+		
+		//ForeignKey
+		public RuleCall getForeignKeyParserRuleCall_2() { return cForeignKeyParserRuleCall_2; }
+		
+		//TableCheck
+		public RuleCall getTableCheckParserRuleCall_3() { return cTableCheckParserRuleCall_3; }
+	}
+	public class KeyColumnsElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.KeyColumns");
+		private final Group cGroup = (Group)rule.eContents().get(1);
+		private final Keyword cLeftParenthesisKeyword_0 = (Keyword)cGroup.eContents().get(0);
+		private final Assignment cColumnsAssignment_1 = (Assignment)cGroup.eContents().get(1);
+		private final CrossReference cColumnsColumnCrossReference_1_0 = (CrossReference)cColumnsAssignment_1.eContents().get(0);
+		private final RuleCall cColumnsColumnNameParserRuleCall_1_0_1 = (RuleCall)cColumnsColumnCrossReference_1_0.eContents().get(1);
+		private final Group cGroup_2 = (Group)cGroup.eContents().get(2);
+		private final Keyword cCommaKeyword_2_0 = (Keyword)cGroup_2.eContents().get(0);
+		private final Assignment cColumnsAssignment_2_1 = (Assignment)cGroup_2.eContents().get(1);
+		private final CrossReference cColumnsColumnCrossReference_2_1_0 = (CrossReference)cColumnsAssignment_2_1.eContents().get(0);
+		private final RuleCall cColumnsColumnNameParserRuleCall_2_1_0_1 = (RuleCall)cColumnsColumnCrossReference_2_1_0.eContents().get(1);
+		private final Keyword cRightParenthesisKeyword_3 = (Keyword)cGroup.eContents().get(3);
+		
+		//// columns is declared on TableConstraint itself, not lifted from its subclasses, so that TableCheck,
+		//// which has no columns, leaves it where it was
+		//fragment KeyColumns returns TableConstraint:
+		//    '(' columns += [Column|Name] (',' columns += [Column|Name])* ')'
+		//;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//'(' columns += [Column|Name] (',' columns += [Column|Name])* ')'
+		public Group getGroup() { return cGroup; }
+		
+		//'('
+		public Keyword getLeftParenthesisKeyword_0() { return cLeftParenthesisKeyword_0; }
+		
+		//columns += [Column|Name]
+		public Assignment getColumnsAssignment_1() { return cColumnsAssignment_1; }
+		
+		//[Column|Name]
+		public CrossReference getColumnsColumnCrossReference_1_0() { return cColumnsColumnCrossReference_1_0; }
+		
+		//Name
+		public RuleCall getColumnsColumnNameParserRuleCall_1_0_1() { return cColumnsColumnNameParserRuleCall_1_0_1; }
+		
+		//(',' columns += [Column|Name])*
+		public Group getGroup_2() { return cGroup_2; }
+		
+		//','
+		public Keyword getCommaKeyword_2_0() { return cCommaKeyword_2_0; }
+		
+		//columns += [Column|Name]
+		public Assignment getColumnsAssignment_2_1() { return cColumnsAssignment_2_1; }
+		
+		//[Column|Name]
+		public CrossReference getColumnsColumnCrossReference_2_1_0() { return cColumnsColumnCrossReference_2_1_0; }
+		
+		//Name
+		public RuleCall getColumnsColumnNameParserRuleCall_2_1_0_1() { return cColumnsColumnNameParserRuleCall_2_1_0_1; }
+		
+		//')'
+		public Keyword getRightParenthesisKeyword_3() { return cRightParenthesisKeyword_3; }
 	}
 	public class PrimaryKeyElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.PrimaryKey");
 		private final Group cGroup = (Group)rule.eContents().get(1);
-		private final Keyword cPRIMARYKeyword_0 = (Keyword)cGroup.eContents().get(0);
-		private final Keyword cKEYKeyword_1 = (Keyword)cGroup.eContents().get(1);
-		private final Keyword cLeftParenthesisKeyword_2 = (Keyword)cGroup.eContents().get(2);
-		private final Assignment cColumnsAssignment_3 = (Assignment)cGroup.eContents().get(3);
-		private final CrossReference cColumnsColumnCrossReference_3_0 = (CrossReference)cColumnsAssignment_3.eContents().get(0);
-		private final RuleCall cColumnsColumnNameParserRuleCall_3_0_1 = (RuleCall)cColumnsColumnCrossReference_3_0.eContents().get(1);
-		private final Group cGroup_4 = (Group)cGroup.eContents().get(4);
-		private final Keyword cCommaKeyword_4_0 = (Keyword)cGroup_4.eContents().get(0);
-		private final Assignment cColumnsAssignment_4_1 = (Assignment)cGroup_4.eContents().get(1);
-		private final CrossReference cColumnsColumnCrossReference_4_1_0 = (CrossReference)cColumnsAssignment_4_1.eContents().get(0);
-		private final RuleCall cColumnsColumnNameParserRuleCall_4_1_0_1 = (RuleCall)cColumnsColumnCrossReference_4_1_0.eContents().get(1);
-		private final Keyword cRightParenthesisKeyword_5 = (Keyword)cGroup.eContents().get(5);
+		private final RuleCall cConstraintNameParserRuleCall_0 = (RuleCall)cGroup.eContents().get(0);
+		private final Keyword cPRIMARYKeyword_1 = (Keyword)cGroup.eContents().get(1);
+		private final Keyword cKEYKeyword_2 = (Keyword)cGroup.eContents().get(2);
+		private final RuleCall cKeyColumnsParserRuleCall_3 = (RuleCall)cGroup.eContents().get(3);
 		
 		//PrimaryKey:
-		//    'PRIMARY' 'KEY' '(' columns += [Column|Name] (',' columns += [Column|Name])* ')'
+		//    ConstraintName 'PRIMARY' 'KEY' KeyColumns
 		//;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//'PRIMARY' 'KEY' '(' columns += [Column|Name] (',' columns += [Column|Name])* ')'
+		//ConstraintName 'PRIMARY' 'KEY' KeyColumns
 		public Group getGroup() { return cGroup; }
 		
+		//ConstraintName
+		public RuleCall getConstraintNameParserRuleCall_0() { return cConstraintNameParserRuleCall_0; }
+		
 		//'PRIMARY'
-		public Keyword getPRIMARYKeyword_0() { return cPRIMARYKeyword_0; }
+		public Keyword getPRIMARYKeyword_1() { return cPRIMARYKeyword_1; }
 		
 		//'KEY'
-		public Keyword getKEYKeyword_1() { return cKEYKeyword_1; }
+		public Keyword getKEYKeyword_2() { return cKEYKeyword_2; }
 		
-		//'('
-		public Keyword getLeftParenthesisKeyword_2() { return cLeftParenthesisKeyword_2; }
-		
-		//columns += [Column|Name]
-		public Assignment getColumnsAssignment_3() { return cColumnsAssignment_3; }
-		
-		//[Column|Name]
-		public CrossReference getColumnsColumnCrossReference_3_0() { return cColumnsColumnCrossReference_3_0; }
-		
-		//Name
-		public RuleCall getColumnsColumnNameParserRuleCall_3_0_1() { return cColumnsColumnNameParserRuleCall_3_0_1; }
-		
-		//(',' columns += [Column|Name])*
-		public Group getGroup_4() { return cGroup_4; }
-		
-		//','
-		public Keyword getCommaKeyword_4_0() { return cCommaKeyword_4_0; }
-		
-		//columns += [Column|Name]
-		public Assignment getColumnsAssignment_4_1() { return cColumnsAssignment_4_1; }
-		
-		//[Column|Name]
-		public CrossReference getColumnsColumnCrossReference_4_1_0() { return cColumnsColumnCrossReference_4_1_0; }
-		
-		//Name
-		public RuleCall getColumnsColumnNameParserRuleCall_4_1_0_1() { return cColumnsColumnNameParserRuleCall_4_1_0_1; }
-		
-		//')'
-		public Keyword getRightParenthesisKeyword_5() { return cRightParenthesisKeyword_5; }
+		//KeyColumns
+		public RuleCall getKeyColumnsParserRuleCall_3() { return cKeyColumnsParserRuleCall_3; }
 	}
 	public class UniqueKeyElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.UniqueKey");
 		private final Group cGroup = (Group)rule.eContents().get(1);
-		private final Keyword cUNIQUEKeyword_0 = (Keyword)cGroup.eContents().get(0);
-		private final Keyword cLeftParenthesisKeyword_1 = (Keyword)cGroup.eContents().get(1);
-		private final Assignment cColumnsAssignment_2 = (Assignment)cGroup.eContents().get(2);
-		private final CrossReference cColumnsColumnCrossReference_2_0 = (CrossReference)cColumnsAssignment_2.eContents().get(0);
-		private final RuleCall cColumnsColumnNameParserRuleCall_2_0_1 = (RuleCall)cColumnsColumnCrossReference_2_0.eContents().get(1);
-		private final Group cGroup_3 = (Group)cGroup.eContents().get(3);
-		private final Keyword cCommaKeyword_3_0 = (Keyword)cGroup_3.eContents().get(0);
-		private final Assignment cColumnsAssignment_3_1 = (Assignment)cGroup_3.eContents().get(1);
-		private final CrossReference cColumnsColumnCrossReference_3_1_0 = (CrossReference)cColumnsAssignment_3_1.eContents().get(0);
-		private final RuleCall cColumnsColumnNameParserRuleCall_3_1_0_1 = (RuleCall)cColumnsColumnCrossReference_3_1_0.eContents().get(1);
-		private final Keyword cRightParenthesisKeyword_4 = (Keyword)cGroup.eContents().get(4);
+		private final RuleCall cConstraintNameParserRuleCall_0 = (RuleCall)cGroup.eContents().get(0);
+		private final Keyword cUNIQUEKeyword_1 = (Keyword)cGroup.eContents().get(1);
+		private final RuleCall cKeyColumnsParserRuleCall_2 = (RuleCall)cGroup.eContents().get(2);
 		
 		//UniqueKey:
-		//    'UNIQUE' '(' columns += [Column|Name] (',' columns += [Column|Name])* ')'
+		//    ConstraintName 'UNIQUE' KeyColumns
 		//;
 		@Override public ParserRule getRule() { return rule; }
 		
-		//'UNIQUE' '(' columns += [Column|Name] (',' columns += [Column|Name])* ')'
+		//ConstraintName 'UNIQUE' KeyColumns
 		public Group getGroup() { return cGroup; }
 		
+		//ConstraintName
+		public RuleCall getConstraintNameParserRuleCall_0() { return cConstraintNameParserRuleCall_0; }
+		
 		//'UNIQUE'
-		public Keyword getUNIQUEKeyword_0() { return cUNIQUEKeyword_0; }
+		public Keyword getUNIQUEKeyword_1() { return cUNIQUEKeyword_1; }
+		
+		//KeyColumns
+		public RuleCall getKeyColumnsParserRuleCall_2() { return cKeyColumnsParserRuleCall_2; }
+	}
+	public class ForeignKeyElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.ForeignKey");
+		private final Group cGroup = (Group)rule.eContents().get(1);
+		private final RuleCall cConstraintNameParserRuleCall_0 = (RuleCall)cGroup.eContents().get(0);
+		private final Keyword cFOREIGNKeyword_1 = (Keyword)cGroup.eContents().get(1);
+		private final Keyword cKEYKeyword_2 = (Keyword)cGroup.eContents().get(2);
+		private final RuleCall cKeyColumnsParserRuleCall_3 = (RuleCall)cGroup.eContents().get(3);
+		private final Keyword cREFERENCESKeyword_4 = (Keyword)cGroup.eContents().get(4);
+		private final RuleCall cReferencesParserRuleCall_5 = (RuleCall)cGroup.eContents().get(5);
+		
+		//ForeignKey:
+		//    ConstraintName 'FOREIGN' 'KEY' KeyColumns 'REFERENCES' References
+		//;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//ConstraintName 'FOREIGN' 'KEY' KeyColumns 'REFERENCES' References
+		public Group getGroup() { return cGroup; }
+		
+		//ConstraintName
+		public RuleCall getConstraintNameParserRuleCall_0() { return cConstraintNameParserRuleCall_0; }
+		
+		//'FOREIGN'
+		public Keyword getFOREIGNKeyword_1() { return cFOREIGNKeyword_1; }
+		
+		//'KEY'
+		public Keyword getKEYKeyword_2() { return cKEYKeyword_2; }
+		
+		//KeyColumns
+		public RuleCall getKeyColumnsParserRuleCall_3() { return cKeyColumnsParserRuleCall_3; }
+		
+		//'REFERENCES'
+		public Keyword getREFERENCESKeyword_4() { return cREFERENCESKeyword_4; }
+		
+		//References
+		public RuleCall getReferencesParserRuleCall_5() { return cReferencesParserRuleCall_5; }
+	}
+	public class TableCheckElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.TableCheck");
+		private final Group cGroup = (Group)rule.eContents().get(1);
+		private final RuleCall cConstraintNameParserRuleCall_0 = (RuleCall)cGroup.eContents().get(0);
+		private final Assignment cCheckAssignment_1 = (Assignment)cGroup.eContents().get(1);
+		private final RuleCall cCheckCheckClauseParserRuleCall_1_0 = (RuleCall)cCheckAssignment_1.eContents().get(0);
+		
+		//TableCheck:
+		//    ConstraintName check=CheckClause
+		//;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//ConstraintName check=CheckClause
+		public Group getGroup() { return cGroup; }
+		
+		//ConstraintName
+		public RuleCall getConstraintNameParserRuleCall_0() { return cConstraintNameParserRuleCall_0; }
+		
+		//check=CheckClause
+		public Assignment getCheckAssignment_1() { return cCheckAssignment_1; }
+		
+		//CheckClause
+		public RuleCall getCheckCheckClauseParserRuleCall_1_0() { return cCheckCheckClauseParserRuleCall_1_0; }
+	}
+	public class CheckClauseElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.CheckClause");
+		private final Group cGroup = (Group)rule.eContents().get(1);
+		private final Assignment cKindAssignment_0 = (Assignment)cGroup.eContents().get(0);
+		private final RuleCall cKindCheckKindEnumRuleCall_0_0 = (RuleCall)cKindAssignment_0.eContents().get(0);
+		private final Assignment cTextAssignment_1 = (Assignment)cGroup.eContents().get(1);
+		private final RuleCall cTextParenthesizedParserRuleCall_1_0 = (RuleCall)cTextAssignment_1.eContents().get(0);
+		
+		//CheckClause returns RawSql:
+		//    kind=CheckKind text=Parenthesized
+		//;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//kind=CheckKind text=Parenthesized
+		public Group getGroup() { return cGroup; }
+		
+		//kind=CheckKind
+		public Assignment getKindAssignment_0() { return cKindAssignment_0; }
+		
+		//CheckKind
+		public RuleCall getKindCheckKindEnumRuleCall_0_0() { return cKindCheckKindEnumRuleCall_0_0; }
+		
+		//text=Parenthesized
+		public Assignment getTextAssignment_1() { return cTextAssignment_1; }
+		
+		//Parenthesized
+		public RuleCall getTextParenthesizedParserRuleCall_1_0() { return cTextParenthesizedParserRuleCall_1_0; }
+	}
+	public class ReferencesElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.References");
+		private final Group cGroup = (Group)rule.eContents().get(1);
+		private final Group cGroup_0 = (Group)cGroup.eContents().get(0);
+		private final Assignment cRefSchemaAssignment_0_0 = (Assignment)cGroup_0.eContents().get(0);
+		private final RuleCall cRefSchemaNameParserRuleCall_0_0_0 = (RuleCall)cRefSchemaAssignment_0_0.eContents().get(0);
+		private final Keyword cFullStopKeyword_0_1 = (Keyword)cGroup_0.eContents().get(1);
+		private final Assignment cRefTableAssignment_1 = (Assignment)cGroup.eContents().get(1);
+		private final CrossReference cRefTableTableCrossReference_1_0 = (CrossReference)cRefTableAssignment_1.eContents().get(0);
+		private final RuleCall cRefTableTableNameParserRuleCall_1_0_1 = (RuleCall)cRefTableTableCrossReference_1_0.eContents().get(1);
+		private final Group cGroup_2 = (Group)cGroup.eContents().get(2);
+		private final Keyword cLeftParenthesisKeyword_2_0 = (Keyword)cGroup_2.eContents().get(0);
+		private final Assignment cRefColumnsAssignment_2_1 = (Assignment)cGroup_2.eContents().get(1);
+		private final CrossReference cRefColumnsColumnCrossReference_2_1_0 = (CrossReference)cRefColumnsAssignment_2_1.eContents().get(0);
+		private final RuleCall cRefColumnsColumnNameParserRuleCall_2_1_0_1 = (RuleCall)cRefColumnsColumnCrossReference_2_1_0.eContents().get(1);
+		private final Group cGroup_2_2 = (Group)cGroup_2.eContents().get(2);
+		private final Keyword cCommaKeyword_2_2_0 = (Keyword)cGroup_2_2.eContents().get(0);
+		private final Assignment cRefColumnsAssignment_2_2_1 = (Assignment)cGroup_2_2.eContents().get(1);
+		private final CrossReference cRefColumnsColumnCrossReference_2_2_1_0 = (CrossReference)cRefColumnsAssignment_2_2_1.eContents().get(0);
+		private final RuleCall cRefColumnsColumnNameParserRuleCall_2_2_1_0_1 = (RuleCall)cRefColumnsColumnCrossReference_2_2_1_0.eContents().get(1);
+		private final Keyword cRightParenthesisKeyword_2_3 = (Keyword)cGroup_2.eContents().get(3);
+		private final Group cGroup_3 = (Group)cGroup.eContents().get(3);
+		private final Keyword cMATCHKeyword_3_0 = (Keyword)cGroup_3.eContents().get(0);
+		private final Assignment cMatchAssignment_3_1 = (Assignment)cGroup_3.eContents().get(1);
+		private final RuleCall cMatchMatchKindEnumRuleCall_3_1_0 = (RuleCall)cMatchAssignment_3_1.eContents().get(0);
+		private final Alternatives cAlternatives_4 = (Alternatives)cGroup.eContents().get(4);
+		private final Group cGroup_4_0 = (Group)cAlternatives_4.eContents().get(0);
+		private final RuleCall cOnDeleteParserRuleCall_4_0_0 = (RuleCall)cGroup_4_0.eContents().get(0);
+		private final RuleCall cOnUpdateParserRuleCall_4_0_1 = (RuleCall)cGroup_4_0.eContents().get(1);
+		private final Group cGroup_4_1 = (Group)cAlternatives_4.eContents().get(1);
+		private final RuleCall cOnUpdateParserRuleCall_4_1_0 = (RuleCall)cGroup_4_1.eContents().get(0);
+		private final RuleCall cOnDeleteParserRuleCall_4_1_1 = (RuleCall)cGroup_4_1.eContents().get(1);
+		private final Assignment cDeferrableAssignment_5 = (Assignment)cGroup.eContents().get(5);
+		private final RuleCall cDeferrableDeferrabilityParserRuleCall_5_0 = (RuleCall)cDeferrableAssignment_5.eContents().get(0);
+		
+		//// what follows REFERENCES. The referenced table is named without its schema (refSchema holds the
+		//// qualifier, if written); no column list means the referenced table's primary key. Each action
+		//// at most once, in either order, as in PostgreSQL. ON DELETE SET NULL (columns) is not supported.
+		//fragment References returns ForeignKey:
+		//    (refSchema=Name '.')? refTable=[Table|Name]
+		//    ('(' refColumns += [Column|Name] (',' refColumns += [Column|Name])* ')')?
+		//    ('MATCH' match=MatchKind)?
+		//    (OnDelete OnUpdate? | OnUpdate OnDelete?)?
+		//    (deferrable=Deferrability)?
+		//;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//(refSchema=Name '.')? refTable=[Table|Name]
+		//('(' refColumns += [Column|Name] (',' refColumns += [Column|Name])* ')')?
+		//('MATCH' match=MatchKind)?
+		//(OnDelete OnUpdate? | OnUpdate OnDelete?)?
+		//(deferrable=Deferrability)?
+		public Group getGroup() { return cGroup; }
+		
+		//(refSchema=Name '.')?
+		public Group getGroup_0() { return cGroup_0; }
+		
+		//refSchema=Name
+		public Assignment getRefSchemaAssignment_0_0() { return cRefSchemaAssignment_0_0; }
+		
+		//Name
+		public RuleCall getRefSchemaNameParserRuleCall_0_0_0() { return cRefSchemaNameParserRuleCall_0_0_0; }
+		
+		//'.'
+		public Keyword getFullStopKeyword_0_1() { return cFullStopKeyword_0_1; }
+		
+		//refTable=[Table|Name]
+		public Assignment getRefTableAssignment_1() { return cRefTableAssignment_1; }
+		
+		//[Table|Name]
+		public CrossReference getRefTableTableCrossReference_1_0() { return cRefTableTableCrossReference_1_0; }
+		
+		//Name
+		public RuleCall getRefTableTableNameParserRuleCall_1_0_1() { return cRefTableTableNameParserRuleCall_1_0_1; }
+		
+		//('(' refColumns += [Column|Name] (',' refColumns += [Column|Name])* ')')?
+		public Group getGroup_2() { return cGroup_2; }
 		
 		//'('
-		public Keyword getLeftParenthesisKeyword_1() { return cLeftParenthesisKeyword_1; }
+		public Keyword getLeftParenthesisKeyword_2_0() { return cLeftParenthesisKeyword_2_0; }
 		
-		//columns += [Column|Name]
-		public Assignment getColumnsAssignment_2() { return cColumnsAssignment_2; }
+		//refColumns += [Column|Name]
+		public Assignment getRefColumnsAssignment_2_1() { return cRefColumnsAssignment_2_1; }
 		
 		//[Column|Name]
-		public CrossReference getColumnsColumnCrossReference_2_0() { return cColumnsColumnCrossReference_2_0; }
+		public CrossReference getRefColumnsColumnCrossReference_2_1_0() { return cRefColumnsColumnCrossReference_2_1_0; }
 		
 		//Name
-		public RuleCall getColumnsColumnNameParserRuleCall_2_0_1() { return cColumnsColumnNameParserRuleCall_2_0_1; }
+		public RuleCall getRefColumnsColumnNameParserRuleCall_2_1_0_1() { return cRefColumnsColumnNameParserRuleCall_2_1_0_1; }
 		
-		//(',' columns += [Column|Name])*
-		public Group getGroup_3() { return cGroup_3; }
+		//(',' refColumns += [Column|Name])*
+		public Group getGroup_2_2() { return cGroup_2_2; }
 		
 		//','
-		public Keyword getCommaKeyword_3_0() { return cCommaKeyword_3_0; }
+		public Keyword getCommaKeyword_2_2_0() { return cCommaKeyword_2_2_0; }
 		
-		//columns += [Column|Name]
-		public Assignment getColumnsAssignment_3_1() { return cColumnsAssignment_3_1; }
+		//refColumns += [Column|Name]
+		public Assignment getRefColumnsAssignment_2_2_1() { return cRefColumnsAssignment_2_2_1; }
 		
 		//[Column|Name]
-		public CrossReference getColumnsColumnCrossReference_3_1_0() { return cColumnsColumnCrossReference_3_1_0; }
+		public CrossReference getRefColumnsColumnCrossReference_2_2_1_0() { return cRefColumnsColumnCrossReference_2_2_1_0; }
 		
 		//Name
-		public RuleCall getColumnsColumnNameParserRuleCall_3_1_0_1() { return cColumnsColumnNameParserRuleCall_3_1_0_1; }
+		public RuleCall getRefColumnsColumnNameParserRuleCall_2_2_1_0_1() { return cRefColumnsColumnNameParserRuleCall_2_2_1_0_1; }
 		
 		//')'
-		public Keyword getRightParenthesisKeyword_4() { return cRightParenthesisKeyword_4; }
+		public Keyword getRightParenthesisKeyword_2_3() { return cRightParenthesisKeyword_2_3; }
+		
+		//('MATCH' match=MatchKind)?
+		public Group getGroup_3() { return cGroup_3; }
+		
+		//'MATCH'
+		public Keyword getMATCHKeyword_3_0() { return cMATCHKeyword_3_0; }
+		
+		//match=MatchKind
+		public Assignment getMatchAssignment_3_1() { return cMatchAssignment_3_1; }
+		
+		//MatchKind
+		public RuleCall getMatchMatchKindEnumRuleCall_3_1_0() { return cMatchMatchKindEnumRuleCall_3_1_0; }
+		
+		//(OnDelete OnUpdate? | OnUpdate OnDelete?)?
+		public Alternatives getAlternatives_4() { return cAlternatives_4; }
+		
+		//OnDelete OnUpdate?
+		public Group getGroup_4_0() { return cGroup_4_0; }
+		
+		//OnDelete
+		public RuleCall getOnDeleteParserRuleCall_4_0_0() { return cOnDeleteParserRuleCall_4_0_0; }
+		
+		//OnUpdate?
+		public RuleCall getOnUpdateParserRuleCall_4_0_1() { return cOnUpdateParserRuleCall_4_0_1; }
+		
+		//OnUpdate OnDelete?
+		public Group getGroup_4_1() { return cGroup_4_1; }
+		
+		//OnUpdate
+		public RuleCall getOnUpdateParserRuleCall_4_1_0() { return cOnUpdateParserRuleCall_4_1_0; }
+		
+		//OnDelete?
+		public RuleCall getOnDeleteParserRuleCall_4_1_1() { return cOnDeleteParserRuleCall_4_1_1; }
+		
+		//(deferrable=Deferrability)?
+		public Assignment getDeferrableAssignment_5() { return cDeferrableAssignment_5; }
+		
+		//Deferrability
+		public RuleCall getDeferrableDeferrabilityParserRuleCall_5_0() { return cDeferrableDeferrabilityParserRuleCall_5_0; }
+	}
+	public class OnDeleteElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.OnDelete");
+		private final Group cGroup = (Group)rule.eContents().get(1);
+		private final Keyword cONKeyword_0 = (Keyword)cGroup.eContents().get(0);
+		private final Keyword cDELETEKeyword_1 = (Keyword)cGroup.eContents().get(1);
+		private final Alternatives cAlternatives_2 = (Alternatives)cGroup.eContents().get(2);
+		private final Assignment cOnDeleteAssignment_2_0 = (Assignment)cAlternatives_2.eContents().get(0);
+		private final RuleCall cOnDeleteRefActionEnumRuleCall_2_0_0 = (RuleCall)cOnDeleteAssignment_2_0.eContents().get(0);
+		private final Group cGroup_2_1 = (Group)cAlternatives_2.eContents().get(1);
+		private final Keyword cNOKeyword_2_1_0 = (Keyword)cGroup_2_1.eContents().get(0);
+		private final Assignment cOnDeleteAssignment_2_1_1 = (Assignment)cGroup_2_1.eContents().get(1);
+		private final RuleCall cOnDeleteNoActionEnumRuleCall_2_1_1_0 = (RuleCall)cOnDeleteAssignment_2_1_1.eContents().get(0);
+		private final Group cGroup_2_2 = (Group)cAlternatives_2.eContents().get(2);
+		private final Keyword cSETKeyword_2_2_0 = (Keyword)cGroup_2_2.eContents().get(0);
+		private final Assignment cOnDeleteAssignment_2_2_1 = (Assignment)cGroup_2_2.eContents().get(1);
+		private final RuleCall cOnDeleteSetActionEnumRuleCall_2_2_1_0 = (RuleCall)cOnDeleteAssignment_2_2_1.eContents().get(0);
+		
+		//fragment OnDelete returns ForeignKey:
+		//    'ON' 'DELETE' (onDelete=RefAction | 'NO' onDelete=NoAction | 'SET' onDelete=SetAction)
+		//;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//'ON' 'DELETE' (onDelete=RefAction | 'NO' onDelete=NoAction | 'SET' onDelete=SetAction)
+		public Group getGroup() { return cGroup; }
+		
+		//'ON'
+		public Keyword getONKeyword_0() { return cONKeyword_0; }
+		
+		//'DELETE'
+		public Keyword getDELETEKeyword_1() { return cDELETEKeyword_1; }
+		
+		//(onDelete=RefAction | 'NO' onDelete=NoAction | 'SET' onDelete=SetAction)
+		public Alternatives getAlternatives_2() { return cAlternatives_2; }
+		
+		//onDelete=RefAction
+		public Assignment getOnDeleteAssignment_2_0() { return cOnDeleteAssignment_2_0; }
+		
+		//RefAction
+		public RuleCall getOnDeleteRefActionEnumRuleCall_2_0_0() { return cOnDeleteRefActionEnumRuleCall_2_0_0; }
+		
+		//'NO' onDelete=NoAction
+		public Group getGroup_2_1() { return cGroup_2_1; }
+		
+		//'NO'
+		public Keyword getNOKeyword_2_1_0() { return cNOKeyword_2_1_0; }
+		
+		//onDelete=NoAction
+		public Assignment getOnDeleteAssignment_2_1_1() { return cOnDeleteAssignment_2_1_1; }
+		
+		//NoAction
+		public RuleCall getOnDeleteNoActionEnumRuleCall_2_1_1_0() { return cOnDeleteNoActionEnumRuleCall_2_1_1_0; }
+		
+		//'SET' onDelete=SetAction
+		public Group getGroup_2_2() { return cGroup_2_2; }
+		
+		//'SET'
+		public Keyword getSETKeyword_2_2_0() { return cSETKeyword_2_2_0; }
+		
+		//onDelete=SetAction
+		public Assignment getOnDeleteAssignment_2_2_1() { return cOnDeleteAssignment_2_2_1; }
+		
+		//SetAction
+		public RuleCall getOnDeleteSetActionEnumRuleCall_2_2_1_0() { return cOnDeleteSetActionEnumRuleCall_2_2_1_0; }
+	}
+	public class OnUpdateElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.OnUpdate");
+		private final Group cGroup = (Group)rule.eContents().get(1);
+		private final Keyword cONKeyword_0 = (Keyword)cGroup.eContents().get(0);
+		private final Keyword cUPDATEKeyword_1 = (Keyword)cGroup.eContents().get(1);
+		private final Alternatives cAlternatives_2 = (Alternatives)cGroup.eContents().get(2);
+		private final Assignment cOnUpdateAssignment_2_0 = (Assignment)cAlternatives_2.eContents().get(0);
+		private final RuleCall cOnUpdateRefActionEnumRuleCall_2_0_0 = (RuleCall)cOnUpdateAssignment_2_0.eContents().get(0);
+		private final Group cGroup_2_1 = (Group)cAlternatives_2.eContents().get(1);
+		private final Keyword cNOKeyword_2_1_0 = (Keyword)cGroup_2_1.eContents().get(0);
+		private final Assignment cOnUpdateAssignment_2_1_1 = (Assignment)cGroup_2_1.eContents().get(1);
+		private final RuleCall cOnUpdateNoActionEnumRuleCall_2_1_1_0 = (RuleCall)cOnUpdateAssignment_2_1_1.eContents().get(0);
+		private final Group cGroup_2_2 = (Group)cAlternatives_2.eContents().get(2);
+		private final Keyword cSETKeyword_2_2_0 = (Keyword)cGroup_2_2.eContents().get(0);
+		private final Assignment cOnUpdateAssignment_2_2_1 = (Assignment)cGroup_2_2.eContents().get(1);
+		private final RuleCall cOnUpdateSetActionEnumRuleCall_2_2_1_0 = (RuleCall)cOnUpdateAssignment_2_2_1.eContents().get(0);
+		
+		//fragment OnUpdate returns ForeignKey:
+		//    'ON' 'UPDATE' (onUpdate=RefAction | 'NO' onUpdate=NoAction | 'SET' onUpdate=SetAction)
+		//;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//'ON' 'UPDATE' (onUpdate=RefAction | 'NO' onUpdate=NoAction | 'SET' onUpdate=SetAction)
+		public Group getGroup() { return cGroup; }
+		
+		//'ON'
+		public Keyword getONKeyword_0() { return cONKeyword_0; }
+		
+		//'UPDATE'
+		public Keyword getUPDATEKeyword_1() { return cUPDATEKeyword_1; }
+		
+		//(onUpdate=RefAction | 'NO' onUpdate=NoAction | 'SET' onUpdate=SetAction)
+		public Alternatives getAlternatives_2() { return cAlternatives_2; }
+		
+		//onUpdate=RefAction
+		public Assignment getOnUpdateAssignment_2_0() { return cOnUpdateAssignment_2_0; }
+		
+		//RefAction
+		public RuleCall getOnUpdateRefActionEnumRuleCall_2_0_0() { return cOnUpdateRefActionEnumRuleCall_2_0_0; }
+		
+		//'NO' onUpdate=NoAction
+		public Group getGroup_2_1() { return cGroup_2_1; }
+		
+		//'NO'
+		public Keyword getNOKeyword_2_1_0() { return cNOKeyword_2_1_0; }
+		
+		//onUpdate=NoAction
+		public Assignment getOnUpdateAssignment_2_1_1() { return cOnUpdateAssignment_2_1_1; }
+		
+		//NoAction
+		public RuleCall getOnUpdateNoActionEnumRuleCall_2_1_1_0() { return cOnUpdateNoActionEnumRuleCall_2_1_1_0; }
+		
+		//'SET' onUpdate=SetAction
+		public Group getGroup_2_2() { return cGroup_2_2; }
+		
+		//'SET'
+		public Keyword getSETKeyword_2_2_0() { return cSETKeyword_2_2_0; }
+		
+		//onUpdate=SetAction
+		public Assignment getOnUpdateAssignment_2_2_1() { return cOnUpdateAssignment_2_2_1; }
+		
+		//SetAction
+		public RuleCall getOnUpdateSetActionEnumRuleCall_2_2_1_0() { return cOnUpdateSetActionEnumRuleCall_2_2_1_0; }
+	}
+	public class DeferrabilityElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.Deferrability");
+		private final Alternatives cAlternatives = (Alternatives)rule.eContents().get(1);
+		private final Group cGroup_0 = (Group)cAlternatives.eContents().get(0);
+		private final Keyword cNOTKeyword_0_0 = (Keyword)cGroup_0.eContents().get(0);
+		private final Keyword cDEFERRABLEKeyword_0_1 = (Keyword)cGroup_0.eContents().get(1);
+		private final Group cGroup_0_2 = (Group)cGroup_0.eContents().get(2);
+		private final Keyword cINITIALLYKeyword_0_2_0 = (Keyword)cGroup_0_2.eContents().get(0);
+		private final Alternatives cAlternatives_0_2_1 = (Alternatives)cGroup_0_2.eContents().get(1);
+		private final Keyword cDEFERREDKeyword_0_2_1_0 = (Keyword)cAlternatives_0_2_1.eContents().get(0);
+		private final Keyword cIMMEDIATEKeyword_0_2_1_1 = (Keyword)cAlternatives_0_2_1.eContents().get(1);
+		private final Group cGroup_1 = (Group)cAlternatives.eContents().get(1);
+		private final Keyword cINITIALLYKeyword_1_0 = (Keyword)cGroup_1.eContents().get(0);
+		private final Alternatives cAlternatives_1_1 = (Alternatives)cGroup_1.eContents().get(1);
+		private final Keyword cDEFERREDKeyword_1_1_0 = (Keyword)cAlternatives_1_1.eContents().get(0);
+		private final Keyword cIMMEDIATEKeyword_1_1_1 = (Keyword)cAlternatives_1_1.eContents().get(1);
+		private final Group cGroup_1_2 = (Group)cGroup_1.eContents().get(2);
+		private final Keyword cNOTKeyword_1_2_0 = (Keyword)cGroup_1_2.eContents().get(0);
+		private final Keyword cDEFERRABLEKeyword_1_2_1 = (Keyword)cGroup_1_2.eContents().get(1);
+		
+		//// Verbatim text. These rules only delimit it: the value is the source text of the rule's tokens,
+		//// with comments dropped and whitespace between tokens collapsed to one space (SQLValueConverters).
+		//// Parentheses are balanced and there is no top-level ';', so the text never runs into the next
+		//// clause or statement.
+		//// [NOT] DEFERRABLE [INITIALLY DEFERRED | IMMEDIATE], in PostgreSQL's two orders
+		//Deferrability:
+		//    'NOT'? 'DEFERRABLE' ('INITIALLY' ('DEFERRED' | 'IMMEDIATE'))?
+		//    | 'INITIALLY' ('DEFERRED' | 'IMMEDIATE') ('NOT'? 'DEFERRABLE')?
+		//;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//'NOT'? 'DEFERRABLE' ('INITIALLY' ('DEFERRED' | 'IMMEDIATE'))?
+		//| 'INITIALLY' ('DEFERRED' | 'IMMEDIATE') ('NOT'? 'DEFERRABLE')?
+		public Alternatives getAlternatives() { return cAlternatives; }
+		
+		//'NOT'? 'DEFERRABLE' ('INITIALLY' ('DEFERRED' | 'IMMEDIATE'))?
+		public Group getGroup_0() { return cGroup_0; }
+		
+		//'NOT'?
+		public Keyword getNOTKeyword_0_0() { return cNOTKeyword_0_0; }
+		
+		//'DEFERRABLE'
+		public Keyword getDEFERRABLEKeyword_0_1() { return cDEFERRABLEKeyword_0_1; }
+		
+		//('INITIALLY' ('DEFERRED' | 'IMMEDIATE'))?
+		public Group getGroup_0_2() { return cGroup_0_2; }
+		
+		//'INITIALLY'
+		public Keyword getINITIALLYKeyword_0_2_0() { return cINITIALLYKeyword_0_2_0; }
+		
+		//('DEFERRED' | 'IMMEDIATE')
+		public Alternatives getAlternatives_0_2_1() { return cAlternatives_0_2_1; }
+		
+		//'DEFERRED'
+		public Keyword getDEFERREDKeyword_0_2_1_0() { return cDEFERREDKeyword_0_2_1_0; }
+		
+		//'IMMEDIATE'
+		public Keyword getIMMEDIATEKeyword_0_2_1_1() { return cIMMEDIATEKeyword_0_2_1_1; }
+		
+		//'INITIALLY' ('DEFERRED' | 'IMMEDIATE') ('NOT'? 'DEFERRABLE')?
+		public Group getGroup_1() { return cGroup_1; }
+		
+		//'INITIALLY'
+		public Keyword getINITIALLYKeyword_1_0() { return cINITIALLYKeyword_1_0; }
+		
+		//('DEFERRED' | 'IMMEDIATE')
+		public Alternatives getAlternatives_1_1() { return cAlternatives_1_1; }
+		
+		//'DEFERRED'
+		public Keyword getDEFERREDKeyword_1_1_0() { return cDEFERREDKeyword_1_1_0; }
+		
+		//'IMMEDIATE'
+		public Keyword getIMMEDIATEKeyword_1_1_1() { return cIMMEDIATEKeyword_1_1_1; }
+		
+		//('NOT'? 'DEFERRABLE')?
+		public Group getGroup_1_2() { return cGroup_1_2; }
+		
+		//'NOT'?
+		public Keyword getNOTKeyword_1_2_0() { return cNOTKeyword_1_2_0; }
+		
+		//'DEFERRABLE'
+		public Keyword getDEFERRABLEKeyword_1_2_1() { return cDEFERRABLEKeyword_1_2_1; }
+	}
+	public class GeneratedTailElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.GeneratedTail");
+		private final Group cGroup = (Group)rule.eContents().get(1);
+		private final Alternatives cAlternatives_0 = (Alternatives)cGroup.eContents().get(0);
+		private final Keyword cALWAYSKeyword_0_0 = (Keyword)cAlternatives_0.eContents().get(0);
+		private final Group cGroup_0_1 = (Group)cAlternatives_0.eContents().get(1);
+		private final Keyword cBYKeyword_0_1_0 = (Keyword)cGroup_0_1.eContents().get(0);
+		private final Keyword cDEFAULTKeyword_0_1_1 = (Keyword)cGroup_0_1.eContents().get(1);
+		private final Keyword cASKeyword_1 = (Keyword)cGroup.eContents().get(1);
+		private final Alternatives cAlternatives_2 = (Alternatives)cGroup.eContents().get(2);
+		private final Group cGroup_2_0 = (Group)cAlternatives_2.eContents().get(0);
+		private final Keyword cIDENTITYKeyword_2_0_0 = (Keyword)cGroup_2_0.eContents().get(0);
+		private final RuleCall cParenthesizedParserRuleCall_2_0_1 = (RuleCall)cGroup_2_0.eContents().get(1);
+		private final Group cGroup_2_1 = (Group)cAlternatives_2.eContents().get(1);
+		private final RuleCall cParenthesizedParserRuleCall_2_1_0 = (RuleCall)cGroup_2_1.eContents().get(0);
+		private final Keyword cSTOREDKeyword_2_1_1 = (Keyword)cGroup_2_1.eContents().get(1);
+		
+		//// ALWAYS | BY DEFAULT AS IDENTITY [( sequence options )], or ALWAYS AS ( expression ) STORED.
+		//// PostgreSQL 18's VIRTUAL is a syntax error: the bench cluster runs PostgreSQL 17.
+		//GeneratedTail:
+		//    ('ALWAYS' | 'BY' 'DEFAULT') 'AS' ('IDENTITY' Parenthesized? | Parenthesized 'STORED')
+		//;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//('ALWAYS' | 'BY' 'DEFAULT') 'AS' ('IDENTITY' Parenthesized? | Parenthesized 'STORED')
+		public Group getGroup() { return cGroup; }
+		
+		//('ALWAYS' | 'BY' 'DEFAULT')
+		public Alternatives getAlternatives_0() { return cAlternatives_0; }
+		
+		//'ALWAYS'
+		public Keyword getALWAYSKeyword_0_0() { return cALWAYSKeyword_0_0; }
+		
+		//'BY' 'DEFAULT'
+		public Group getGroup_0_1() { return cGroup_0_1; }
+		
+		//'BY'
+		public Keyword getBYKeyword_0_1_0() { return cBYKeyword_0_1_0; }
+		
+		//'DEFAULT'
+		public Keyword getDEFAULTKeyword_0_1_1() { return cDEFAULTKeyword_0_1_1; }
+		
+		//'AS'
+		public Keyword getASKeyword_1() { return cASKeyword_1; }
+		
+		//('IDENTITY' Parenthesized? | Parenthesized 'STORED')
+		public Alternatives getAlternatives_2() { return cAlternatives_2; }
+		
+		//'IDENTITY' Parenthesized?
+		public Group getGroup_2_0() { return cGroup_2_0; }
+		
+		//'IDENTITY'
+		public Keyword getIDENTITYKeyword_2_0_0() { return cIDENTITYKeyword_2_0_0; }
+		
+		//Parenthesized?
+		public RuleCall getParenthesizedParserRuleCall_2_0_1() { return cParenthesizedParserRuleCall_2_0_1; }
+		
+		//Parenthesized 'STORED'
+		public Group getGroup_2_1() { return cGroup_2_1; }
+		
+		//Parenthesized
+		public RuleCall getParenthesizedParserRuleCall_2_1_0() { return cParenthesizedParserRuleCall_2_1_0; }
+		
+		//'STORED'
+		public Keyword getSTOREDKeyword_2_1_1() { return cSTOREDKeyword_2_1_1; }
+	}
+	public class DefaultExprElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.DefaultExpr");
+		private final Group cGroup = (Group)rule.eContents().get(1);
+		private final Alternatives cAlternatives_0 = (Alternatives)cGroup.eContents().get(0);
+		private final RuleCall cExprTokenParserRuleCall_0_0 = (RuleCall)cAlternatives_0.eContents().get(0);
+		private final Keyword cNULLKeyword_0_1 = (Keyword)cAlternatives_0.eContents().get(1);
+		private final RuleCall cExprTokenParserRuleCall_1 = (RuleCall)cGroup.eContents().get(1);
+		
+		//// DEFAULT's expression (PostgreSQL's b_expr): tokens and parenthesized groups up to the next
+		//// column constraint or the end of the column. NULL may only come first (DEFAULT NULL); later
+		//// it starts the NULL constraint, as do the other constraint keywords, none of which is an
+		//// ExprToken
+		//DefaultExpr:
+		//    (ExprToken | 'NULL') ExprToken*
+		//;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//(ExprToken | 'NULL') ExprToken*
+		public Group getGroup() { return cGroup; }
+		
+		//(ExprToken | 'NULL')
+		public Alternatives getAlternatives_0() { return cAlternatives_0; }
+		
+		//ExprToken
+		public RuleCall getExprTokenParserRuleCall_0_0() { return cExprTokenParserRuleCall_0_0; }
+		
+		//'NULL'
+		public Keyword getNULLKeyword_0_1() { return cNULLKeyword_0_1; }
+		
+		//ExprToken*
+		public RuleCall getExprTokenParserRuleCall_1() { return cExprTokenParserRuleCall_1; }
+	}
+	public class ExprTokenElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.ExprToken");
+		private final Alternatives cAlternatives = (Alternatives)rule.eContents().get(1);
+		private final RuleCall cExprNameParserRuleCall_0 = (RuleCall)cAlternatives.eContents().get(0);
+		private final RuleCall cSTRINGTerminalRuleCall_1 = (RuleCall)cAlternatives.eContents().get(1);
+		private final RuleCall cINTTerminalRuleCall_2 = (RuleCall)cAlternatives.eContents().get(2);
+		private final RuleCall cANY_OTHERTerminalRuleCall_3 = (RuleCall)cAlternatives.eContents().get(3);
+		private final Keyword cFullStopKeyword_4 = (Keyword)cAlternatives.eContents().get(4);
+		private final Keyword cWITHKeyword_5 = (Keyword)cAlternatives.eContents().get(5);
+		private final RuleCall cParenthesizedParserRuleCall_6 = (RuleCall)cAlternatives.eContents().get(6);
+		
+		//ExprToken:
+		//    ExprName | STRING | INT | ANY_OTHER | '.' | 'WITH' | Parenthesized
+		//;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//ExprName | STRING | INT | ANY_OTHER | '.' | 'WITH' | Parenthesized
+		public Alternatives getAlternatives() { return cAlternatives; }
+		
+		//ExprName
+		public RuleCall getExprNameParserRuleCall_0() { return cExprNameParserRuleCall_0; }
+		
+		//STRING
+		public RuleCall getSTRINGTerminalRuleCall_1() { return cSTRINGTerminalRuleCall_1; }
+		
+		//INT
+		public RuleCall getINTTerminalRuleCall_2() { return cINTTerminalRuleCall_2; }
+		
+		//ANY_OTHER
+		public RuleCall getANY_OTHERTerminalRuleCall_3() { return cANY_OTHERTerminalRuleCall_3; }
+		
+		//'.'
+		public Keyword getFullStopKeyword_4() { return cFullStopKeyword_4; }
+		
+		//'WITH'
+		public Keyword getWITHKeyword_5() { return cWITHKeyword_5; }
+		
+		//Parenthesized
+		public RuleCall getParenthesizedParserRuleCall_6() { return cParenthesizedParserRuleCall_6; }
+	}
+	public class ParenthesizedElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.Parenthesized");
+		private final Group cGroup = (Group)rule.eContents().get(1);
+		private final Keyword cLeftParenthesisKeyword_0 = (Keyword)cGroup.eContents().get(0);
+		private final RuleCall cInnerTokenParserRuleCall_1 = (RuleCall)cGroup.eContents().get(1);
+		private final Keyword cRightParenthesisKeyword_2 = (Keyword)cGroup.eContents().get(2);
+		
+		//Parenthesized:
+		//    '(' InnerToken* ')'
+		//;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//'(' InnerToken* ')'
+		public Group getGroup() { return cGroup; }
+		
+		//'('
+		public Keyword getLeftParenthesisKeyword_0() { return cLeftParenthesisKeyword_0; }
+		
+		//InnerToken*
+		public RuleCall getInnerTokenParserRuleCall_1() { return cInnerTokenParserRuleCall_1; }
+		
+		//')'
+		public Keyword getRightParenthesisKeyword_2() { return cRightParenthesisKeyword_2; }
+	}
+	public class InnerTokenElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.InnerToken");
+		private final Alternatives cAlternatives = (Alternatives)rule.eContents().get(1);
+		private final RuleCall cNameParserRuleCall_0 = (RuleCall)cAlternatives.eContents().get(0);
+		private final RuleCall cSTRINGTerminalRuleCall_1 = (RuleCall)cAlternatives.eContents().get(1);
+		private final RuleCall cINTTerminalRuleCall_2 = (RuleCall)cAlternatives.eContents().get(2);
+		private final RuleCall cANY_OTHERTerminalRuleCall_3 = (RuleCall)cAlternatives.eContents().get(3);
+		private final Keyword cFullStopKeyword_4 = (Keyword)cAlternatives.eContents().get(4);
+		private final Keyword cCommaKeyword_5 = (Keyword)cAlternatives.eContents().get(5);
+		private final RuleCall cParenthesizedParserRuleCall_6 = (RuleCall)cAlternatives.eContents().get(6);
+		private final Keyword cCREATEKeyword_7 = (Keyword)cAlternatives.eContents().get(7);
+		private final Keyword cTABLEKeyword_8 = (Keyword)cAlternatives.eContents().get(8);
+		private final Keyword cNOTKeyword_9 = (Keyword)cAlternatives.eContents().get(9);
+		private final Keyword cNULLKeyword_10 = (Keyword)cAlternatives.eContents().get(10);
+		private final Keyword cPRIMARYKeyword_11 = (Keyword)cAlternatives.eContents().get(11);
+		private final Keyword cUNIQUEKeyword_12 = (Keyword)cAlternatives.eContents().get(12);
+		private final Keyword cWITHKeyword_13 = (Keyword)cAlternatives.eContents().get(13);
+		private final Keyword cCONSTRAINTKeyword_14 = (Keyword)cAlternatives.eContents().get(14);
+		private final Keyword cFOREIGNKeyword_15 = (Keyword)cAlternatives.eContents().get(15);
+		private final Keyword cREFERENCESKeyword_16 = (Keyword)cAlternatives.eContents().get(16);
+		private final Keyword cONKeyword_17 = (Keyword)cAlternatives.eContents().get(17);
+		private final Keyword cDEFAULTKeyword_18 = (Keyword)cAlternatives.eContents().get(18);
+		private final Keyword cFULLKeyword_19 = (Keyword)cAlternatives.eContents().get(19);
+		private final Keyword cDEFERRABLEKeyword_20 = (Keyword)cAlternatives.eContents().get(20);
+		private final Keyword cINITIALLYKeyword_21 = (Keyword)cAlternatives.eContents().get(21);
+		private final Keyword cCHECKKeyword_22 = (Keyword)cAlternatives.eContents().get(22);
+		private final Keyword cASKeyword_23 = (Keyword)cAlternatives.eContents().get(23);
+		
+		//// inside parentheses: any token but ';' and unbalanced parentheses
+		//InnerToken:
+		//    Name | STRING | INT | ANY_OTHER | '.' | ',' | Parenthesized
+		//    | 'CREATE' | 'TABLE' | 'NOT' | 'NULL' | 'PRIMARY' | 'UNIQUE' | 'WITH' | 'CONSTRAINT' | 'FOREIGN'
+		//    | 'REFERENCES' | 'ON' | 'DEFAULT' | 'FULL' | 'DEFERRABLE' | 'INITIALLY' | 'CHECK' | 'AS'
+		//;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//Name | STRING | INT | ANY_OTHER | '.' | ',' | Parenthesized
+		//| 'CREATE' | 'TABLE' | 'NOT' | 'NULL' | 'PRIMARY' | 'UNIQUE' | 'WITH' | 'CONSTRAINT' | 'FOREIGN'
+		//| 'REFERENCES' | 'ON' | 'DEFAULT' | 'FULL' | 'DEFERRABLE' | 'INITIALLY' | 'CHECK' | 'AS'
+		public Alternatives getAlternatives() { return cAlternatives; }
+		
+		//Name
+		public RuleCall getNameParserRuleCall_0() { return cNameParserRuleCall_0; }
+		
+		//STRING
+		public RuleCall getSTRINGTerminalRuleCall_1() { return cSTRINGTerminalRuleCall_1; }
+		
+		//INT
+		public RuleCall getINTTerminalRuleCall_2() { return cINTTerminalRuleCall_2; }
+		
+		//ANY_OTHER
+		public RuleCall getANY_OTHERTerminalRuleCall_3() { return cANY_OTHERTerminalRuleCall_3; }
+		
+		//'.'
+		public Keyword getFullStopKeyword_4() { return cFullStopKeyword_4; }
+		
+		//','
+		public Keyword getCommaKeyword_5() { return cCommaKeyword_5; }
+		
+		//Parenthesized
+		public RuleCall getParenthesizedParserRuleCall_6() { return cParenthesizedParserRuleCall_6; }
+		
+		//'CREATE'
+		public Keyword getCREATEKeyword_7() { return cCREATEKeyword_7; }
+		
+		//'TABLE'
+		public Keyword getTABLEKeyword_8() { return cTABLEKeyword_8; }
+		
+		//'NOT'
+		public Keyword getNOTKeyword_9() { return cNOTKeyword_9; }
+		
+		//'NULL'
+		public Keyword getNULLKeyword_10() { return cNULLKeyword_10; }
+		
+		//'PRIMARY'
+		public Keyword getPRIMARYKeyword_11() { return cPRIMARYKeyword_11; }
+		
+		//'UNIQUE'
+		public Keyword getUNIQUEKeyword_12() { return cUNIQUEKeyword_12; }
+		
+		//'WITH'
+		public Keyword getWITHKeyword_13() { return cWITHKeyword_13; }
+		
+		//'CONSTRAINT'
+		public Keyword getCONSTRAINTKeyword_14() { return cCONSTRAINTKeyword_14; }
+		
+		//'FOREIGN'
+		public Keyword getFOREIGNKeyword_15() { return cFOREIGNKeyword_15; }
+		
+		//'REFERENCES'
+		public Keyword getREFERENCESKeyword_16() { return cREFERENCESKeyword_16; }
+		
+		//'ON'
+		public Keyword getONKeyword_17() { return cONKeyword_17; }
+		
+		//'DEFAULT'
+		public Keyword getDEFAULTKeyword_18() { return cDEFAULTKeyword_18; }
+		
+		//'FULL'
+		public Keyword getFULLKeyword_19() { return cFULLKeyword_19; }
+		
+		//'DEFERRABLE'
+		public Keyword getDEFERRABLEKeyword_20() { return cDEFERRABLEKeyword_20; }
+		
+		//'INITIALLY'
+		public Keyword getINITIALLYKeyword_21() { return cINITIALLYKeyword_21; }
+		
+		//'CHECK'
+		public Keyword getCHECKKeyword_22() { return cCHECKKeyword_22; }
+		
+		//'AS'
+		public Keyword getASKeyword_23() { return cASKeyword_23; }
 	}
 	public class NameElements extends AbstractParserRuleElementFinder {
 		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.Name");
+		private final Alternatives cAlternatives = (Alternatives)rule.eContents().get(1);
+		private final RuleCall cExprNameParserRuleCall_0 = (RuleCall)cAlternatives.eContents().get(0);
+		private final Keyword cGENERATEDKeyword_1 = (Keyword)cAlternatives.eContents().get(1);
+		
+		//// A table or column name: an identifier, a "quoted identifier", or a keyword of this grammar
+		//// that PostgreSQL accepts as a bare name (category U or C in pg_get_keywords(), or not a
+		//// PostgreSQL keyword at all). Reserved words (CREATE, TABLE, PRIMARY, UNIQUE, NOT, NULL) are
+		//// not names here either, as in PostgreSQL; quoted, they are. WITH (of TIMESTAMP WITH TIME ZONE) is
+		//// reserved too. SqlKeywordTest checks this list
+		//// against the PostgreSQL 17 keyword golden. Every word that starts a constraint is reserved,
+		//// so a column and a constraint are told apart by their first token.
+		//Name:
+		//    ExprName | 'GENERATED'                                                         // U
+		//;
+		@Override public ParserRule getRule() { return rule; }
+		
+		//ExprName | 'GENERATED'
+		public Alternatives getAlternatives() { return cAlternatives; }
+		
+		//ExprName
+		public RuleCall getExprNameParserRuleCall_0() { return cExprNameParserRuleCall_0; }
+		
+		//'GENERATED'
+		public Keyword getGENERATEDKeyword_1() { return cGENERATEDKeyword_1; }
+	}
+	public class ExprNameElements extends AbstractParserRuleElementFinder {
+		private final ParserRule rule = (ParserRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.ExprName");
 		private final Alternatives cAlternatives = (Alternatives)rule.eContents().get(1);
 		private final RuleCall cIDTerminalRuleCall_0 = (RuleCall)cAlternatives.eContents().get(0);
 		private final RuleCall cQUOTED_IDTerminalRuleCall_1 = (RuleCall)cAlternatives.eContents().get(1);
@@ -760,15 +1757,24 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 		private final Keyword cTIMESTAMPTZKeyword_29 = (Keyword)cAlternatives.eContents().get(29);
 		private final Keyword cJSONBKeyword_30 = (Keyword)cAlternatives.eContents().get(30);
 		private final Keyword cBYTEAKeyword_31 = (Keyword)cAlternatives.eContents().get(31);
+		private final Keyword cDELETEKeyword_32 = (Keyword)cAlternatives.eContents().get(32);
+		private final Keyword cUPDATEKeyword_33 = (Keyword)cAlternatives.eContents().get(33);
+		private final Keyword cCASCADEKeyword_34 = (Keyword)cAlternatives.eContents().get(34);
+		private final Keyword cRESTRICTKeyword_35 = (Keyword)cAlternatives.eContents().get(35);
+		private final Keyword cNOKeyword_36 = (Keyword)cAlternatives.eContents().get(36);
+		private final Keyword cACTIONKeyword_37 = (Keyword)cAlternatives.eContents().get(37);
+		private final Keyword cSETKeyword_38 = (Keyword)cAlternatives.eContents().get(38);
+		private final Keyword cMATCHKeyword_39 = (Keyword)cAlternatives.eContents().get(39);
+		private final Keyword cSIMPLEKeyword_40 = (Keyword)cAlternatives.eContents().get(40);
+		private final Keyword cDEFERREDKeyword_41 = (Keyword)cAlternatives.eContents().get(41);
+		private final Keyword cIMMEDIATEKeyword_42 = (Keyword)cAlternatives.eContents().get(42);
+		private final Keyword cALWAYSKeyword_43 = (Keyword)cAlternatives.eContents().get(43);
+		private final Keyword cBYKeyword_44 = (Keyword)cAlternatives.eContents().get(44);
+		private final Keyword cIDENTITYKeyword_45 = (Keyword)cAlternatives.eContents().get(45);
+		private final Keyword cSTOREDKeyword_46 = (Keyword)cAlternatives.eContents().get(46);
 		
-		//// A table or column name: an identifier, a "quoted identifier", or a keyword of this grammar
-		//// that PostgreSQL accepts as a bare name (category U or C in pg_get_keywords(), or not a
-		//// PostgreSQL keyword at all). Reserved words (CREATE, TABLE, PRIMARY, UNIQUE, NOT, NULL) are
-		//// not names here either, as in PostgreSQL; quoted, they are. WITH (of TIMESTAMP WITH TIME ZONE) is
-		//// reserved too. SqlKeywordTest checks this list
-		//// against the PostgreSQL 17 keyword golden. Every word that starts a constraint is reserved,
-		//// so a column and a constraint are told apart by their first token.
-		//Name:
+		//// every Name but GENERATED, which starts a column constraint and so cannot continue a DEFAULT
+		//ExprName:
 		//    ID | QUOTED_ID
 		//    | 'KEY' | 'TEXT' | 'IF' | 'EXISTS'                                                   // U, U, U, C
 		//    | 'INT' | 'BIGINT' | 'DECIMAL' | 'TIMESTAMP' | 'BOOLEAN' | 'VARCHAR'                 // C
@@ -776,6 +1782,8 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 		//    | 'CHAR' | 'CHARACTER' | 'TIME'                                                      // C
 		//    | 'DOUBLE' | 'VARYING' | 'WITHOUT' | 'ZONE'                                          // U
 		//    | 'UUID' | 'DATE' | 'SERIAL' | 'BIGSERIAL' | 'TIMESTAMPTZ' | 'JSONB' | 'BYTEA'       // not PostgreSQL keywords
+		//    | 'DELETE' | 'UPDATE' | 'CASCADE' | 'RESTRICT' | 'NO' | 'ACTION' | 'SET' | 'MATCH'    // U
+		//    | 'SIMPLE' | 'DEFERRED' | 'IMMEDIATE' | 'ALWAYS' | 'BY' | 'IDENTITY' | 'STORED'       // U
 		//;
 		@Override public ParserRule getRule() { return rule; }
 		
@@ -785,7 +1793,9 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 		//| 'INTEGER' | 'SMALLINT' | 'NUMERIC' | 'REAL' | 'FLOAT' | 'PRECISION'                // C
 		//| 'CHAR' | 'CHARACTER' | 'TIME'                                                      // C
 		//| 'DOUBLE' | 'VARYING' | 'WITHOUT' | 'ZONE'                                          // U
-		//| 'UUID' | 'DATE' | 'SERIAL' | 'BIGSERIAL' | 'TIMESTAMPTZ' | 'JSONB' | 'BYTEA'
+		//| 'UUID' | 'DATE' | 'SERIAL' | 'BIGSERIAL' | 'TIMESTAMPTZ' | 'JSONB' | 'BYTEA'       // not PostgreSQL keywords
+		//| 'DELETE' | 'UPDATE' | 'CASCADE' | 'RESTRICT' | 'NO' | 'ACTION' | 'SET' | 'MATCH'    // U
+		//| 'SIMPLE' | 'DEFERRED' | 'IMMEDIATE' | 'ALWAYS' | 'BY' | 'IDENTITY' | 'STORED'
 		public Alternatives getAlternatives() { return cAlternatives; }
 		
 		//ID
@@ -883,6 +1893,51 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 		
 		//'BYTEA'
 		public Keyword getBYTEAKeyword_31() { return cBYTEAKeyword_31; }
+		
+		//'DELETE'
+		public Keyword getDELETEKeyword_32() { return cDELETEKeyword_32; }
+		
+		//'UPDATE'
+		public Keyword getUPDATEKeyword_33() { return cUPDATEKeyword_33; }
+		
+		//'CASCADE'
+		public Keyword getCASCADEKeyword_34() { return cCASCADEKeyword_34; }
+		
+		//'RESTRICT'
+		public Keyword getRESTRICTKeyword_35() { return cRESTRICTKeyword_35; }
+		
+		//'NO'
+		public Keyword getNOKeyword_36() { return cNOKeyword_36; }
+		
+		//'ACTION'
+		public Keyword getACTIONKeyword_37() { return cACTIONKeyword_37; }
+		
+		//'SET'
+		public Keyword getSETKeyword_38() { return cSETKeyword_38; }
+		
+		//'MATCH'
+		public Keyword getMATCHKeyword_39() { return cMATCHKeyword_39; }
+		
+		//'SIMPLE'
+		public Keyword getSIMPLEKeyword_40() { return cSIMPLEKeyword_40; }
+		
+		//'DEFERRED'
+		public Keyword getDEFERREDKeyword_41() { return cDEFERREDKeyword_41; }
+		
+		//'IMMEDIATE'
+		public Keyword getIMMEDIATEKeyword_42() { return cIMMEDIATEKeyword_42; }
+		
+		//'ALWAYS'
+		public Keyword getALWAYSKeyword_43() { return cALWAYSKeyword_43; }
+		
+		//'BY'
+		public Keyword getBYKeyword_44() { return cBYKeyword_44; }
+		
+		//'IDENTITY'
+		public Keyword getIDENTITYKeyword_45() { return cIDENTITYKeyword_45; }
+		
+		//'STORED'
+		public Keyword getSTOREDKeyword_46() { return cSTOREDKeyword_46; }
 	}
 	
 	public class AllTypesElements extends AbstractElementFinder.AbstractEnumRuleElementFinder {
@@ -1091,9 +2146,162 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 		//'ZONE'
 		public Keyword getTIMESTAMPTZZONEKeyword_0() { return cTIMESTAMPTZZONEKeyword_0; }
 	}
+	public class RefActionElements extends AbstractElementFinder.AbstractEnumRuleElementFinder {
+		private final EnumRule rule = (EnumRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.RefAction");
+		private final Alternatives cAlternatives = (Alternatives)rule.eContents().get(1);
+		private final EnumLiteralDeclaration cCASCADEEnumLiteralDeclaration_0 = (EnumLiteralDeclaration)cAlternatives.eContents().get(0);
+		private final Keyword cCASCADECASCADEKeyword_0_0 = (Keyword)cCASCADEEnumLiteralDeclaration_0.eContents().get(0);
+		private final EnumLiteralDeclaration cRESTRICTEnumLiteralDeclaration_1 = (EnumLiteralDeclaration)cAlternatives.eContents().get(1);
+		private final Keyword cRESTRICTRESTRICTKeyword_1_0 = (Keyword)cRESTRICTEnumLiteralDeclaration_1.eContents().get(0);
+		
+		//// the actions; NO ACTION and SET NULL / SET DEFAULT are spelled out, their last keyword carries the
+		//// literal. ForeignKey.onDelete / onUpdate / match are unsettable (SqlEcorePostProcessor): unset
+		//// means not written
+		//enum RefAction: CASCADE='CASCADE' | RESTRICT='RESTRICT';
+		public EnumRule getRule() { return rule; }
+		
+		//CASCADE='CASCADE' | RESTRICT='RESTRICT'
+		public Alternatives getAlternatives() { return cAlternatives; }
+		
+		//CASCADE='CASCADE'
+		public EnumLiteralDeclaration getCASCADEEnumLiteralDeclaration_0() { return cCASCADEEnumLiteralDeclaration_0; }
+		
+		//'CASCADE'
+		public Keyword getCASCADECASCADEKeyword_0_0() { return cCASCADECASCADEKeyword_0_0; }
+		
+		//RESTRICT='RESTRICT'
+		public EnumLiteralDeclaration getRESTRICTEnumLiteralDeclaration_1() { return cRESTRICTEnumLiteralDeclaration_1; }
+		
+		//'RESTRICT'
+		public Keyword getRESTRICTRESTRICTKeyword_1_0() { return cRESTRICTRESTRICTKeyword_1_0; }
+	}
+	public class NoActionElements extends AbstractElementFinder.AbstractEnumRuleElementFinder {
+		private final EnumRule rule = (EnumRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.NoAction");
+		private final EnumLiteralDeclaration cNO_ACTIONEnumLiteralDeclaration = (EnumLiteralDeclaration)rule.eContents().get(1);
+		private final Keyword cNO_ACTIONACTIONKeyword_0 = (Keyword)cNO_ACTIONEnumLiteralDeclaration.eContents().get(0);
+		
+		//enum NoAction returns RefAction: NO_ACTION='ACTION';
+		public EnumRule getRule() { return rule; }
+		
+		//NO_ACTION='ACTION'
+		public EnumLiteralDeclaration getNO_ACTIONEnumLiteralDeclaration() { return cNO_ACTIONEnumLiteralDeclaration; }
+		
+		//'ACTION'
+		public Keyword getNO_ACTIONACTIONKeyword_0() { return cNO_ACTIONACTIONKeyword_0; }
+	}
+	public class SetActionElements extends AbstractElementFinder.AbstractEnumRuleElementFinder {
+		private final EnumRule rule = (EnumRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.SetAction");
+		private final Alternatives cAlternatives = (Alternatives)rule.eContents().get(1);
+		private final EnumLiteralDeclaration cSET_NULLEnumLiteralDeclaration_0 = (EnumLiteralDeclaration)cAlternatives.eContents().get(0);
+		private final Keyword cSET_NULLNULLKeyword_0_0 = (Keyword)cSET_NULLEnumLiteralDeclaration_0.eContents().get(0);
+		private final EnumLiteralDeclaration cSET_DEFAULTEnumLiteralDeclaration_1 = (EnumLiteralDeclaration)cAlternatives.eContents().get(1);
+		private final Keyword cSET_DEFAULTDEFAULTKeyword_1_0 = (Keyword)cSET_DEFAULTEnumLiteralDeclaration_1.eContents().get(0);
+		
+		//enum SetAction returns RefAction: SET_NULL='NULL' | SET_DEFAULT='DEFAULT';
+		public EnumRule getRule() { return rule; }
+		
+		//SET_NULL='NULL' | SET_DEFAULT='DEFAULT'
+		public Alternatives getAlternatives() { return cAlternatives; }
+		
+		//SET_NULL='NULL'
+		public EnumLiteralDeclaration getSET_NULLEnumLiteralDeclaration_0() { return cSET_NULLEnumLiteralDeclaration_0; }
+		
+		//'NULL'
+		public Keyword getSET_NULLNULLKeyword_0_0() { return cSET_NULLNULLKeyword_0_0; }
+		
+		//SET_DEFAULT='DEFAULT'
+		public EnumLiteralDeclaration getSET_DEFAULTEnumLiteralDeclaration_1() { return cSET_DEFAULTEnumLiteralDeclaration_1; }
+		
+		//'DEFAULT'
+		public Keyword getSET_DEFAULTDEFAULTKeyword_1_0() { return cSET_DEFAULTDEFAULTKeyword_1_0; }
+	}
+	public class MatchKindElements extends AbstractElementFinder.AbstractEnumRuleElementFinder {
+		private final EnumRule rule = (EnumRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.MatchKind");
+		private final Alternatives cAlternatives = (Alternatives)rule.eContents().get(1);
+		private final EnumLiteralDeclaration cSIMPLEEnumLiteralDeclaration_0 = (EnumLiteralDeclaration)cAlternatives.eContents().get(0);
+		private final Keyword cSIMPLESIMPLEKeyword_0_0 = (Keyword)cSIMPLEEnumLiteralDeclaration_0.eContents().get(0);
+		private final EnumLiteralDeclaration cFULLEnumLiteralDeclaration_1 = (EnumLiteralDeclaration)cAlternatives.eContents().get(1);
+		private final Keyword cFULLFULLKeyword_1_0 = (Keyword)cFULLEnumLiteralDeclaration_1.eContents().get(0);
+		
+		//enum MatchKind: SIMPLE='SIMPLE' | FULL='FULL';
+		public EnumRule getRule() { return rule; }
+		
+		//SIMPLE='SIMPLE' | FULL='FULL'
+		public Alternatives getAlternatives() { return cAlternatives; }
+		
+		//SIMPLE='SIMPLE'
+		public EnumLiteralDeclaration getSIMPLEEnumLiteralDeclaration_0() { return cSIMPLEEnumLiteralDeclaration_0; }
+		
+		//'SIMPLE'
+		public Keyword getSIMPLESIMPLEKeyword_0_0() { return cSIMPLESIMPLEKeyword_0_0; }
+		
+		//FULL='FULL'
+		public EnumLiteralDeclaration getFULLEnumLiteralDeclaration_1() { return cFULLEnumLiteralDeclaration_1; }
+		
+		//'FULL'
+		public Keyword getFULLFULLKeyword_1_0() { return cFULLFULLKeyword_1_0; }
+	}
+	public class DefaultKindElements extends AbstractElementFinder.AbstractEnumRuleElementFinder {
+		private final EnumRule rule = (EnumRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.DefaultKind");
+		private final EnumLiteralDeclaration cDEFAULTEnumLiteralDeclaration = (EnumLiteralDeclaration)rule.eContents().get(1);
+		private final Keyword cDEFAULTDEFAULTKeyword_0 = (Keyword)cDEFAULTEnumLiteralDeclaration.eContents().get(0);
+		
+		//// the keyword of each kind of verbatim text
+		//enum DefaultKind returns RawKind: DEFAULT='DEFAULT';
+		public EnumRule getRule() { return rule; }
+		
+		//DEFAULT='DEFAULT'
+		public EnumLiteralDeclaration getDEFAULTEnumLiteralDeclaration() { return cDEFAULTEnumLiteralDeclaration; }
+		
+		//'DEFAULT'
+		public Keyword getDEFAULTDEFAULTKeyword_0() { return cDEFAULTDEFAULTKeyword_0; }
+	}
+	public class CheckKindElements extends AbstractElementFinder.AbstractEnumRuleElementFinder {
+		private final EnumRule rule = (EnumRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.CheckKind");
+		private final EnumLiteralDeclaration cCHECKEnumLiteralDeclaration = (EnumLiteralDeclaration)rule.eContents().get(1);
+		private final Keyword cCHECKCHECKKeyword_0 = (Keyword)cCHECKEnumLiteralDeclaration.eContents().get(0);
+		
+		//enum CheckKind returns RawKind: CHECK='CHECK';
+		public EnumRule getRule() { return rule; }
+		
+		//CHECK='CHECK'
+		public EnumLiteralDeclaration getCHECKEnumLiteralDeclaration() { return cCHECKEnumLiteralDeclaration; }
+		
+		//'CHECK'
+		public Keyword getCHECKCHECKKeyword_0() { return cCHECKCHECKKeyword_0; }
+	}
+	public class GeneratedKindElements extends AbstractElementFinder.AbstractEnumRuleElementFinder {
+		private final EnumRule rule = (EnumRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.GeneratedKind");
+		private final EnumLiteralDeclaration cGENERATEDEnumLiteralDeclaration = (EnumLiteralDeclaration)rule.eContents().get(1);
+		private final Keyword cGENERATEDGENERATEDKeyword_0 = (Keyword)cGENERATEDEnumLiteralDeclaration.eContents().get(0);
+		
+		//enum GeneratedKind returns RawKind: GENERATED='GENERATED';
+		public EnumRule getRule() { return rule; }
+		
+		//GENERATED='GENERATED'
+		public EnumLiteralDeclaration getGENERATEDEnumLiteralDeclaration() { return cGENERATEDEnumLiteralDeclaration; }
+		
+		//'GENERATED'
+		public Keyword getGENERATEDGENERATEDKeyword_0() { return cGENERATEDGENERATEDKeyword_0; }
+	}
+	public class WithKindElements extends AbstractElementFinder.AbstractEnumRuleElementFinder {
+		private final EnumRule rule = (EnumRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.WithKind");
+		private final EnumLiteralDeclaration cWITHEnumLiteralDeclaration = (EnumLiteralDeclaration)rule.eContents().get(1);
+		private final Keyword cWITHWITHKeyword_0 = (Keyword)cWITHEnumLiteralDeclaration.eContents().get(0);
+		
+		//enum WithKind returns RawKind: WITH='WITH';
+		public EnumRule getRule() { return rule; }
+		
+		//WITH='WITH'
+		public EnumLiteralDeclaration getWITHEnumLiteralDeclaration() { return cWITHEnumLiteralDeclaration; }
+		
+		//'WITH'
+		public Keyword getWITHWITHKeyword_0() { return cWITHWITHKeyword_0; }
+	}
 	
 	private final SchemaElements pSchema;
 	private final TableElements pTable;
+	private final TableOptionsElements pTableOptions;
 	private final ColumnElements pColumn;
 	private final VarcharElements pVarchar;
 	private final NumericElements pNumeric;
@@ -1102,14 +2310,41 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 	private final DoublePrecisionElements eDoublePrecision;
 	private final ZoneNoTzElements eZoneNoTz;
 	private final ZoneTzElements eZoneTz;
+	private final NamedConstraintElements pNamedConstraint;
+	private final ConstraintNameElements pConstraintName;
 	private final ConstraintElements pConstraint;
 	private final PrimaryAnnotationElements pPrimaryAnnotation;
 	private final UniqueAnnotationElements pUniqueAnnotation;
 	private final NotNullElements pNotNull;
+	private final NullableElements pNullable;
+	private final ColumnReferencesElements pColumnReferences;
+	private final ColumnRawElements pColumnRaw;
 	private final TableConstraintElements pTableConstraint;
+	private final KeyColumnsElements pKeyColumns;
 	private final PrimaryKeyElements pPrimaryKey;
 	private final UniqueKeyElements pUniqueKey;
+	private final ForeignKeyElements pForeignKey;
+	private final TableCheckElements pTableCheck;
+	private final CheckClauseElements pCheckClause;
+	private final ReferencesElements pReferences;
+	private final OnDeleteElements pOnDelete;
+	private final OnUpdateElements pOnUpdate;
+	private final RefActionElements eRefAction;
+	private final NoActionElements eNoAction;
+	private final SetActionElements eSetAction;
+	private final MatchKindElements eMatchKind;
+	private final DefaultKindElements eDefaultKind;
+	private final CheckKindElements eCheckKind;
+	private final GeneratedKindElements eGeneratedKind;
+	private final WithKindElements eWithKind;
+	private final DeferrabilityElements pDeferrability;
+	private final GeneratedTailElements pGeneratedTail;
+	private final DefaultExprElements pDefaultExpr;
+	private final ExprTokenElements pExprToken;
+	private final ParenthesizedElements pParenthesized;
+	private final InnerTokenElements pInnerToken;
 	private final NameElements pName;
+	private final ExprNameElements pExprName;
 	private final TerminalRule tID;
 	private final TerminalRule tQUOTED_ID;
 	private final TerminalRule tSTRING;
@@ -1126,6 +2361,7 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 		this.grammar = internalFindGrammar(grammarProvider);
 		this.pSchema = new SchemaElements();
 		this.pTable = new TableElements();
+		this.pTableOptions = new TableOptionsElements();
 		this.pColumn = new ColumnElements();
 		this.pVarchar = new VarcharElements();
 		this.pNumeric = new NumericElements();
@@ -1134,14 +2370,41 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 		this.eDoublePrecision = new DoublePrecisionElements();
 		this.eZoneNoTz = new ZoneNoTzElements();
 		this.eZoneTz = new ZoneTzElements();
+		this.pNamedConstraint = new NamedConstraintElements();
+		this.pConstraintName = new ConstraintNameElements();
 		this.pConstraint = new ConstraintElements();
 		this.pPrimaryAnnotation = new PrimaryAnnotationElements();
 		this.pUniqueAnnotation = new UniqueAnnotationElements();
 		this.pNotNull = new NotNullElements();
+		this.pNullable = new NullableElements();
+		this.pColumnReferences = new ColumnReferencesElements();
+		this.pColumnRaw = new ColumnRawElements();
 		this.pTableConstraint = new TableConstraintElements();
+		this.pKeyColumns = new KeyColumnsElements();
 		this.pPrimaryKey = new PrimaryKeyElements();
 		this.pUniqueKey = new UniqueKeyElements();
+		this.pForeignKey = new ForeignKeyElements();
+		this.pTableCheck = new TableCheckElements();
+		this.pCheckClause = new CheckClauseElements();
+		this.pReferences = new ReferencesElements();
+		this.pOnDelete = new OnDeleteElements();
+		this.pOnUpdate = new OnUpdateElements();
+		this.eRefAction = new RefActionElements();
+		this.eNoAction = new NoActionElements();
+		this.eSetAction = new SetActionElements();
+		this.eMatchKind = new MatchKindElements();
+		this.eDefaultKind = new DefaultKindElements();
+		this.eCheckKind = new CheckKindElements();
+		this.eGeneratedKind = new GeneratedKindElements();
+		this.eWithKind = new WithKindElements();
+		this.pDeferrability = new DeferrabilityElements();
+		this.pGeneratedTail = new GeneratedTailElements();
+		this.pDefaultExpr = new DefaultExprElements();
+		this.pExprToken = new ExprTokenElements();
+		this.pParenthesized = new ParenthesizedElements();
+		this.pInnerToken = new InnerTokenElements();
 		this.pName = new NameElements();
+		this.pExprName = new ExprNameElements();
 		this.tID = (TerminalRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.ID");
 		this.tQUOTED_ID = (TerminalRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.QUOTED_ID");
 		this.tSTRING = (TerminalRule) GrammarUtil.findRuleForName(getGrammar(), "io.shardml.SQL.STRING");
@@ -1193,7 +2456,7 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 	//    'CREATE' 'TABLE' (ifNotExists ?= 'IF' 'NOT' 'EXISTS')? (schemaName=Name '.')? name=Name '('
 	//        (columns += Column | constraints += TableConstraint)
 	//        (',' (columns += Column | constraints += TableConstraint))*
-	//    ')'
+	//    ')' (options=TableOptions)?
 	//;
 	public TableElements getTableAccess() {
 		return pTable;
@@ -1201,6 +2464,18 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 	
 	public ParserRule getTableRule() {
 		return getTableAccess().getRule();
+	}
+	
+	//// WITH (storage_parameter = value, ...) after a table, kept verbatim (pgbench: fillfactor)
+	//TableOptions returns RawSql:
+	//    kind=WithKind text=Parenthesized
+	//;
+	public TableOptionsElements getTableOptionsAccess() {
+		return pTableOptions;
+	}
+	
+	public ParserRule getTableOptionsRule() {
+		return getTableOptionsAccess().getRule();
 	}
 	
 	//// supports zero or more constraints (primary key, unique, not null)
@@ -1306,10 +2581,36 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 		return getZoneTzAccess().getRule();
 	}
 	
-	//// we use Xtext's forced type instantiation {Type} here
-	//// this is necessary because each constraint has no feature assignments
+	//// Constraints (Plan-sql 4.5, step 4). Every column and table constraint may be named
+	//// (CONSTRAINT name ...): the name is a feature of NamedConstraint, the common supertype of Constraint
+	//// and TableConstraint. That rule is never called; it only declares the supertype, so that ForeignKey,
+	//// which is both a Constraint (column-level REFERENCES) and a TableConstraint (FOREIGN KEY), inherits
+	//// one name, not two.
+	//NamedConstraint:
+	//    Constraint | TableConstraint
+	//;
+	public NamedConstraintElements getNamedConstraintAccess() {
+		return pNamedConstraint;
+	}
+	
+	public ParserRule getNamedConstraintRule() {
+		return getNamedConstraintAccess().getRule();
+	}
+	
+	//fragment ConstraintName returns NamedConstraint:
+	//    ('CONSTRAINT' name=Name)?
+	//;
+	public ConstraintNameElements getConstraintNameAccess() {
+		return pConstraintName;
+	}
+	
+	public ParserRule getConstraintNameRule() {
+		return getConstraintNameAccess().getRule();
+	}
+	
+	//// column level. Forced type instantiation {Type} where a constraint has no other assignment.
 	//Constraint:
-	//    PrimaryAnnotation | UniqueAnnotation | NotNull
+	//    PrimaryAnnotation | UniqueAnnotation | NotNull | Nullable | ColumnReferences | ColumnRaw
 	//;
 	public ConstraintElements getConstraintAccess() {
 		return pConstraint;
@@ -1320,7 +2621,7 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 	}
 	
 	//PrimaryAnnotation:
-	//    {PrimaryAnnotation} 'PRIMARY''KEY'
+	//    {PrimaryAnnotation} ConstraintName 'PRIMARY' 'KEY'
 	//;
 	public PrimaryAnnotationElements getPrimaryAnnotationAccess() {
 		return pPrimaryAnnotation;
@@ -1331,7 +2632,7 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 	}
 	
 	//UniqueAnnotation:
-	//    {UniqueAnnotation} 'UNIQUE'
+	//    {UniqueAnnotation} ConstraintName 'UNIQUE'
 	//;
 	public UniqueAnnotationElements getUniqueAnnotationAccess() {
 		return pUniqueAnnotation;
@@ -1342,7 +2643,7 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 	}
 	
 	//NotNull:
-	//    {NotNull} 'NOT''NULL'
+	//    {NotNull} ConstraintName 'NOT' 'NULL'
 	//;
 	public NotNullElements getNotNullAccess() {
 		return pNotNull;
@@ -1352,10 +2653,50 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 		return getNotNullAccess().getRule();
 	}
 	
-	//// table-level constraints over one or more columns of the same table,
-	//// e.g. PRIMARY KEY (customer_id, id)
+	//// the explicit NULL constraint (the default; written back as given)
+	//Nullable:
+	//    {Nullable} ConstraintName 'NULL'
+	//;
+	public NullableElements getNullableAccess() {
+		return pNullable;
+	}
+	
+	public ParserRule getNullableRule() {
+		return getNullableAccess().getRule();
+	}
+	
+	//// column-level REFERENCES: a ForeignKey whose own columns list is empty; SchemaFacts fills in
+	//// the column it is declared on
+	//ColumnReferences returns ForeignKey:
+	//    ConstraintName 'REFERENCES' References
+	//;
+	public ColumnReferencesElements getColumnReferencesAccess() {
+		return pColumnReferences;
+	}
+	
+	public ParserRule getColumnReferencesRule() {
+		return getColumnReferencesAccess().getRule();
+	}
+	
+	//// DEFAULT, CHECK and GENERATED, kept as written (RawSql, the one class holding original text)
+	//ColumnRaw returns RawSql:
+	//    ConstraintName
+	//    ( kind=DefaultKind text=DefaultExpr
+	//    | kind=CheckKind text=Parenthesized
+	//    | kind=GeneratedKind text=GeneratedTail
+	//    )
+	//;
+	public ColumnRawElements getColumnRawAccess() {
+		return pColumnRaw;
+	}
+	
+	public ParserRule getColumnRawRule() {
+		return getColumnRawAccess().getRule();
+	}
+	
+	//// table level. The key columns resolve to columns of the same table (SQLScopeProvider)
 	//TableConstraint:
-	//    PrimaryKey | UniqueKey
+	//    PrimaryKey | UniqueKey | ForeignKey | TableCheck
 	//;
 	public TableConstraintElements getTableConstraintAccess() {
 		return pTableConstraint;
@@ -1365,8 +2706,21 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 		return getTableConstraintAccess().getRule();
 	}
 	
+	//// columns is declared on TableConstraint itself, not lifted from its subclasses, so that TableCheck,
+	//// which has no columns, leaves it where it was
+	//fragment KeyColumns returns TableConstraint:
+	//    '(' columns += [Column|Name] (',' columns += [Column|Name])* ')'
+	//;
+	public KeyColumnsElements getKeyColumnsAccess() {
+		return pKeyColumns;
+	}
+	
+	public ParserRule getKeyColumnsRule() {
+		return getKeyColumnsAccess().getRule();
+	}
+	
 	//PrimaryKey:
-	//    'PRIMARY' 'KEY' '(' columns += [Column|Name] (',' columns += [Column|Name])* ')'
+	//    ConstraintName 'PRIMARY' 'KEY' KeyColumns
 	//;
 	public PrimaryKeyElements getPrimaryKeyAccess() {
 		return pPrimaryKey;
@@ -1377,7 +2731,7 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 	}
 	
 	//UniqueKey:
-	//    'UNIQUE' '(' columns += [Column|Name] (',' columns += [Column|Name])* ')'
+	//    ConstraintName 'UNIQUE' KeyColumns
 	//;
 	public UniqueKeyElements getUniqueKeyAccess() {
 		return pUniqueKey;
@@ -1385,6 +2739,236 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 	
 	public ParserRule getUniqueKeyRule() {
 		return getUniqueKeyAccess().getRule();
+	}
+	
+	//ForeignKey:
+	//    ConstraintName 'FOREIGN' 'KEY' KeyColumns 'REFERENCES' References
+	//;
+	public ForeignKeyElements getForeignKeyAccess() {
+		return pForeignKey;
+	}
+	
+	public ParserRule getForeignKeyRule() {
+		return getForeignKeyAccess().getRule();
+	}
+	
+	//TableCheck:
+	//    ConstraintName check=CheckClause
+	//;
+	public TableCheckElements getTableCheckAccess() {
+		return pTableCheck;
+	}
+	
+	public ParserRule getTableCheckRule() {
+		return getTableCheckAccess().getRule();
+	}
+	
+	//CheckClause returns RawSql:
+	//    kind=CheckKind text=Parenthesized
+	//;
+	public CheckClauseElements getCheckClauseAccess() {
+		return pCheckClause;
+	}
+	
+	public ParserRule getCheckClauseRule() {
+		return getCheckClauseAccess().getRule();
+	}
+	
+	//// what follows REFERENCES. The referenced table is named without its schema (refSchema holds the
+	//// qualifier, if written); no column list means the referenced table's primary key. Each action
+	//// at most once, in either order, as in PostgreSQL. ON DELETE SET NULL (columns) is not supported.
+	//fragment References returns ForeignKey:
+	//    (refSchema=Name '.')? refTable=[Table|Name]
+	//    ('(' refColumns += [Column|Name] (',' refColumns += [Column|Name])* ')')?
+	//    ('MATCH' match=MatchKind)?
+	//    (OnDelete OnUpdate? | OnUpdate OnDelete?)?
+	//    (deferrable=Deferrability)?
+	//;
+	public ReferencesElements getReferencesAccess() {
+		return pReferences;
+	}
+	
+	public ParserRule getReferencesRule() {
+		return getReferencesAccess().getRule();
+	}
+	
+	//fragment OnDelete returns ForeignKey:
+	//    'ON' 'DELETE' (onDelete=RefAction | 'NO' onDelete=NoAction | 'SET' onDelete=SetAction)
+	//;
+	public OnDeleteElements getOnDeleteAccess() {
+		return pOnDelete;
+	}
+	
+	public ParserRule getOnDeleteRule() {
+		return getOnDeleteAccess().getRule();
+	}
+	
+	//fragment OnUpdate returns ForeignKey:
+	//    'ON' 'UPDATE' (onUpdate=RefAction | 'NO' onUpdate=NoAction | 'SET' onUpdate=SetAction)
+	//;
+	public OnUpdateElements getOnUpdateAccess() {
+		return pOnUpdate;
+	}
+	
+	public ParserRule getOnUpdateRule() {
+		return getOnUpdateAccess().getRule();
+	}
+	
+	//// the actions; NO ACTION and SET NULL / SET DEFAULT are spelled out, their last keyword carries the
+	//// literal. ForeignKey.onDelete / onUpdate / match are unsettable (SqlEcorePostProcessor): unset
+	//// means not written
+	//enum RefAction: CASCADE='CASCADE' | RESTRICT='RESTRICT';
+	public RefActionElements getRefActionAccess() {
+		return eRefAction;
+	}
+	
+	public EnumRule getRefActionRule() {
+		return getRefActionAccess().getRule();
+	}
+	
+	//enum NoAction returns RefAction: NO_ACTION='ACTION';
+	public NoActionElements getNoActionAccess() {
+		return eNoAction;
+	}
+	
+	public EnumRule getNoActionRule() {
+		return getNoActionAccess().getRule();
+	}
+	
+	//enum SetAction returns RefAction: SET_NULL='NULL' | SET_DEFAULT='DEFAULT';
+	public SetActionElements getSetActionAccess() {
+		return eSetAction;
+	}
+	
+	public EnumRule getSetActionRule() {
+		return getSetActionAccess().getRule();
+	}
+	
+	//enum MatchKind: SIMPLE='SIMPLE' | FULL='FULL';
+	public MatchKindElements getMatchKindAccess() {
+		return eMatchKind;
+	}
+	
+	public EnumRule getMatchKindRule() {
+		return getMatchKindAccess().getRule();
+	}
+	
+	//// the keyword of each kind of verbatim text
+	//enum DefaultKind returns RawKind: DEFAULT='DEFAULT';
+	public DefaultKindElements getDefaultKindAccess() {
+		return eDefaultKind;
+	}
+	
+	public EnumRule getDefaultKindRule() {
+		return getDefaultKindAccess().getRule();
+	}
+	
+	//enum CheckKind returns RawKind: CHECK='CHECK';
+	public CheckKindElements getCheckKindAccess() {
+		return eCheckKind;
+	}
+	
+	public EnumRule getCheckKindRule() {
+		return getCheckKindAccess().getRule();
+	}
+	
+	//enum GeneratedKind returns RawKind: GENERATED='GENERATED';
+	public GeneratedKindElements getGeneratedKindAccess() {
+		return eGeneratedKind;
+	}
+	
+	public EnumRule getGeneratedKindRule() {
+		return getGeneratedKindAccess().getRule();
+	}
+	
+	//enum WithKind returns RawKind: WITH='WITH';
+	public WithKindElements getWithKindAccess() {
+		return eWithKind;
+	}
+	
+	public EnumRule getWithKindRule() {
+		return getWithKindAccess().getRule();
+	}
+	
+	//// Verbatim text. These rules only delimit it: the value is the source text of the rule's tokens,
+	//// with comments dropped and whitespace between tokens collapsed to one space (SQLValueConverters).
+	//// Parentheses are balanced and there is no top-level ';', so the text never runs into the next
+	//// clause or statement.
+	//// [NOT] DEFERRABLE [INITIALLY DEFERRED | IMMEDIATE], in PostgreSQL's two orders
+	//Deferrability:
+	//    'NOT'? 'DEFERRABLE' ('INITIALLY' ('DEFERRED' | 'IMMEDIATE'))?
+	//    | 'INITIALLY' ('DEFERRED' | 'IMMEDIATE') ('NOT'? 'DEFERRABLE')?
+	//;
+	public DeferrabilityElements getDeferrabilityAccess() {
+		return pDeferrability;
+	}
+	
+	public ParserRule getDeferrabilityRule() {
+		return getDeferrabilityAccess().getRule();
+	}
+	
+	//// ALWAYS | BY DEFAULT AS IDENTITY [( sequence options )], or ALWAYS AS ( expression ) STORED.
+	//// PostgreSQL 18's VIRTUAL is a syntax error: the bench cluster runs PostgreSQL 17.
+	//GeneratedTail:
+	//    ('ALWAYS' | 'BY' 'DEFAULT') 'AS' ('IDENTITY' Parenthesized? | Parenthesized 'STORED')
+	//;
+	public GeneratedTailElements getGeneratedTailAccess() {
+		return pGeneratedTail;
+	}
+	
+	public ParserRule getGeneratedTailRule() {
+		return getGeneratedTailAccess().getRule();
+	}
+	
+	//// DEFAULT's expression (PostgreSQL's b_expr): tokens and parenthesized groups up to the next
+	//// column constraint or the end of the column. NULL may only come first (DEFAULT NULL); later
+	//// it starts the NULL constraint, as do the other constraint keywords, none of which is an
+	//// ExprToken
+	//DefaultExpr:
+	//    (ExprToken | 'NULL') ExprToken*
+	//;
+	public DefaultExprElements getDefaultExprAccess() {
+		return pDefaultExpr;
+	}
+	
+	public ParserRule getDefaultExprRule() {
+		return getDefaultExprAccess().getRule();
+	}
+	
+	//ExprToken:
+	//    ExprName | STRING | INT | ANY_OTHER | '.' | 'WITH' | Parenthesized
+	//;
+	public ExprTokenElements getExprTokenAccess() {
+		return pExprToken;
+	}
+	
+	public ParserRule getExprTokenRule() {
+		return getExprTokenAccess().getRule();
+	}
+	
+	//Parenthesized:
+	//    '(' InnerToken* ')'
+	//;
+	public ParenthesizedElements getParenthesizedAccess() {
+		return pParenthesized;
+	}
+	
+	public ParserRule getParenthesizedRule() {
+		return getParenthesizedAccess().getRule();
+	}
+	
+	//// inside parentheses: any token but ';' and unbalanced parentheses
+	//InnerToken:
+	//    Name | STRING | INT | ANY_OTHER | '.' | ',' | Parenthesized
+	//    | 'CREATE' | 'TABLE' | 'NOT' | 'NULL' | 'PRIMARY' | 'UNIQUE' | 'WITH' | 'CONSTRAINT' | 'FOREIGN'
+	//    | 'REFERENCES' | 'ON' | 'DEFAULT' | 'FULL' | 'DEFERRABLE' | 'INITIALLY' | 'CHECK' | 'AS'
+	//;
+	public InnerTokenElements getInnerTokenAccess() {
+		return pInnerToken;
+	}
+	
+	public ParserRule getInnerTokenRule() {
+		return getInnerTokenAccess().getRule();
 	}
 	
 	//// A table or column name: an identifier, a "quoted identifier", or a keyword of this grammar
@@ -1395,13 +2979,7 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 	//// against the PostgreSQL 17 keyword golden. Every word that starts a constraint is reserved,
 	//// so a column and a constraint are told apart by their first token.
 	//Name:
-	//    ID | QUOTED_ID
-	//    | 'KEY' | 'TEXT' | 'IF' | 'EXISTS'                                                   // U, U, U, C
-	//    | 'INT' | 'BIGINT' | 'DECIMAL' | 'TIMESTAMP' | 'BOOLEAN' | 'VARCHAR'                 // C
-	//    | 'INTEGER' | 'SMALLINT' | 'NUMERIC' | 'REAL' | 'FLOAT' | 'PRECISION'                // C
-	//    | 'CHAR' | 'CHARACTER' | 'TIME'                                                      // C
-	//    | 'DOUBLE' | 'VARYING' | 'WITHOUT' | 'ZONE'                                          // U
-	//    | 'UUID' | 'DATE' | 'SERIAL' | 'BIGSERIAL' | 'TIMESTAMPTZ' | 'JSONB' | 'BYTEA'       // not PostgreSQL keywords
+	//    ExprName | 'GENERATED'                                                         // U
 	//;
 	public NameElements getNameAccess() {
 		return pName;
@@ -1409,6 +2987,26 @@ public class SQLGrammarAccess extends AbstractElementFinder.AbstractGrammarEleme
 	
 	public ParserRule getNameRule() {
 		return getNameAccess().getRule();
+	}
+	
+	//// every Name but GENERATED, which starts a column constraint and so cannot continue a DEFAULT
+	//ExprName:
+	//    ID | QUOTED_ID
+	//    | 'KEY' | 'TEXT' | 'IF' | 'EXISTS'                                                   // U, U, U, C
+	//    | 'INT' | 'BIGINT' | 'DECIMAL' | 'TIMESTAMP' | 'BOOLEAN' | 'VARCHAR'                 // C
+	//    | 'INTEGER' | 'SMALLINT' | 'NUMERIC' | 'REAL' | 'FLOAT' | 'PRECISION'                // C
+	//    | 'CHAR' | 'CHARACTER' | 'TIME'                                                      // C
+	//    | 'DOUBLE' | 'VARYING' | 'WITHOUT' | 'ZONE'                                          // U
+	//    | 'UUID' | 'DATE' | 'SERIAL' | 'BIGSERIAL' | 'TIMESTAMPTZ' | 'JSONB' | 'BYTEA'       // not PostgreSQL keywords
+	//    | 'DELETE' | 'UPDATE' | 'CASCADE' | 'RESTRICT' | 'NO' | 'ACTION' | 'SET' | 'MATCH'    // U
+	//    | 'SIMPLE' | 'DEFERRED' | 'IMMEDIATE' | 'ALWAYS' | 'BY' | 'IDENTITY' | 'STORED'       // U
+	//;
+	public ExprNameElements getExprNameAccess() {
+		return pExprName;
+	}
+	
+	public ParserRule getExprNameRule() {
+		return getExprNameAccess().getRule();
 	}
 	
 	//// PostgreSQL's identifier characters (ASCII); no ^ escape, a keyword is quoted instead

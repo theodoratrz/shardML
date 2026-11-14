@@ -69,13 +69,24 @@ public class SqlKeywordTest {
 	@Test
 	public void testNameRuleIsExactlyTheWordsPostgresAllowsBare() throws Exception {
 		Map<String, String> pg = PostgresKeywordsTest.keywords();
-		Set<String> inName = GrammarUtil.containedKeywords(grammar.getNameRule()).stream().map(Keyword::getValue)
-				.map(w -> w.toUpperCase(Locale.ROOT)).collect(Collectors.toCollection(TreeSet::new));
+		// Name is ExprName | 'GENERATED' (step 4): ExprName continues a DEFAULT expression, and
+		// GENERATED starts the next column constraint instead
+		Set<String> inExprName = keywordsOf(grammar.getExprNameRule());
+		Set<String> inName = new TreeSet<>(keywordsOf(grammar.getNameRule()));
+		inName.addAll(inExprName);
 		Set<String> expected = grammarKeywords().stream().filter(w -> bareNameInPostgres(pg, w))
 				.collect(Collectors.toCollection(TreeSet::new));
 		Assertions.assertEquals(expected, inName,
 				"rule Name must list exactly the grammar's keywords whose pg_get_keywords() category is U or C, "
 						+ "or that are not PostgreSQL keywords");
+		Set<String> nameButGenerated = new TreeSet<>(expected);
+		nameButGenerated.remove("GENERATED");
+		Assertions.assertEquals(nameButGenerated, inExprName, "rule ExprName must be every Name keyword but GENERATED");
+	}
+
+	private static Set<String> keywordsOf(org.eclipse.xtext.AbstractRule rule) {
+		return GrammarUtil.containedKeywords(rule).stream().map(Keyword::getValue).map(w -> w.toUpperCase(Locale.ROOT))
+				.collect(Collectors.toCollection(TreeSet::new));
 	}
 
 	@Test
@@ -126,8 +137,11 @@ public class SqlKeywordTest {
 					failures.add(word + " quoted: the name is not kept as written");
 			}
 		}
-		// the reserved words of the grammar today: step 3 added WITH (TIMESTAMP WITH TIME ZONE)
-		Assertions.assertEquals(List.of("CREATE", "NOT", "NULL", "PRIMARY", "TABLE", "UNIQUE", "WITH"), reserved);
+		// the reserved words of the grammar today: step 3 added WITH (TIMESTAMP WITH TIME ZONE), step 4
+		// the constraint words (AS, CHECK, CONSTRAINT, DEFAULT, DEFERRABLE, FOREIGN, INITIALLY, ON,
+		// REFERENCES) and FULL (category T, MATCH FULL)
+		Assertions.assertEquals(List.of("AS", "CHECK", "CONSTRAINT", "CREATE", "DEFAULT", "DEFERRABLE", "FOREIGN", "FULL",
+				"INITIALLY", "NOT", "NULL", "ON", "PRIMARY", "REFERENCES", "TABLE", "UNIQUE", "WITH"), reserved);
 		Assertions.assertEquals(List.of(), failures);
 	}
 

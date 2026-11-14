@@ -13,7 +13,8 @@ import org.eclipse.xtext.xtext.ecoreInference.IXtext2EcorePostProcessor;
  * An attribute that is not unsettable cannot tell "the default was parsed" from "nothing was
  * parsed": Column.simpleType reads INT, its first literal, and a size reads 0. Unsettable, the
  * parser's assignment sets a flag, so isSetSimpleType() is false for a column whose type did not
- * parse, and isSetSize() for a VARCHAR whose length did not.
+ * parse, and isSetSize() for a VARCHAR whose length did not. The same holds for a foreign key's
+ * ON DELETE / ON UPDATE action and MATCH kind: unset means not written.
  *
  * Fails the build if an attribute is missing, rather than generating silently without the flag.
  *
@@ -33,6 +34,10 @@ public class SqlEcorePostProcessor implements IXtext2EcorePostProcessor {
 		unsettable(ePackage, "Char", "size");
 		unsettable(ePackage, "Numeric", "precision");
 		unsettable(ePackage, "Numeric", "scale");
+		// a foreign key's actions and MATCH: not written is not the first literal (step 4)
+		unsettable(ePackage, "ForeignKey", "onDelete");
+		unsettable(ePackage, "ForeignKey", "onUpdate");
+		unsettable(ePackage, "ForeignKey", "match");
 	}
 
 	private static void unsettable(EPackage ePackage, String className, String attributeName) {

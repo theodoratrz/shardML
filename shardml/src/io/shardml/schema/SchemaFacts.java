@@ -4,36 +4,106 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
+import org.eclipse.emf.ecore.EObject;
+
+import io.shardml.schema.SqlTypes.Base;
 import io.shardml.schema.SqlTypes.SqlType;
 import io.shardml.sql.Column;
 import io.shardml.sql.Constraint;
+import io.shardml.sql.ForeignKey;
 import io.shardml.sql.NotNull;
 import io.shardml.sql.PrimaryAnnotation;
 import io.shardml.sql.PrimaryKey;
+import io.shardml.sql.RawKind;
+import io.shardml.sql.RawSql;
+import io.shardml.sql.RefAction;
 import io.shardml.sql.Schema;
 import io.shardml.sql.Table;
 import io.shardml.sql.TableConstraint;
+import io.shardml.sql.UniqueAnnotation;
+import io.shardml.sql.UniqueKey;
 
 /* An EMF-free view of a .msql schema: what the cost model and the validators need to know about
  * tables and columns, read in one place. Column types come from SqlTypes, so a type that did not
  * parse is UNKNOWN here, never INT.
  *
- * This first version has columns, their types and nullability, and the primary key. Unique keys
- * and foreign keys join it with the grammar that declares them (Plan-sql, step 4). */
+ * It is the only reader of constraints (ColumnTypeAccessGuardTest). A constraint's meaning
+ * depends on its class and on where it is declared, which is easy to get wrong one reader at a
+ * time: an FK read as a UNIQUE, a column-level REFERENCES without its column, a missing
+ * referenced column list that means the primary key. Here, every form of a key comes out in one
+ * shape:
+ *  - primary key: a column-level PRIMARY KEY or a table-level one;
+ *  - unique keys: column-level UNIQUE and table-level UNIQUE, in declaration order, duplicates kept;
+ *  - foreign keys: table-level FOREIGN KEY and column-level REFERENCES, with the referencing
+ *    columns filled in, and the referenced columns resolved to the referenced primary key
+ *    when the source omits them.
+ * Keys added by ALTER TABLE and unique indexes join it with the grammar that declares them
+ * (Plan-sql, step 5). CHECK, DEFAULT and GENERATED are not keys, and never appear as one.
+ *
+ * The static methods that take a model object (foreignKey, primaryKeyDeclarations, defaultText)
+ * are for validators, which report on that object. */
 public final class SchemaFacts {
 
 	private SchemaFacts() {
 	}
 
-	// nullable: no NOT NULL and not part of the primary key
-	public record ColumnFacts(String name, SqlType type, boolean nullable) {
+	// a foreign key action; null in ForeignKeyFacts when the source does not write one (PostgreSQL
+	// then applies NO ACTION)
+	public enum Action {
+		NO_ACTION, RESTRICT, CASCADE, SET_NULL, SET_DEFAULT
 	}
 
-	public record TableFacts(String name, List<ColumnFacts> columns, List<String> primaryKey) {
+	// nullable: no NOT NULL, not part of the primary key, not an identity and not a serial column.
+	// defaultText: the DEFAULT expression as written, or null. storedGenerated: GENERATED ALWAYS AS
+	// (..) STORED (an identity column is not one)
+	public record ColumnFacts(String name, SqlType type, boolean nullable, String defaultText, boolean storedGenerated) {
+	}
+
+	// columns: the referencing columns, in order. refColumns: the referenced ones, the referenced
+	// table's primary key if the source omits them (refColumnsDeclared false); empty if it omits them
+	// and that table has no primary key. name: the constraint's name, or null
+	public record ForeignKeyFacts(String name, String table, List<String> columns, String refTable,
+			List<String> refColumns, boolean refColumnsDeclared, Action onDelete, Action onUpdate) {
+
+		// the actions that write the referencing columns themselves, as "ON DELETE SET NULL": ON DELETE
+		// SET NULL / SET DEFAULT, ON UPDATE SET NULL / SET DEFAULT / CASCADE (an ON DELETE CASCADE
+		// deletes the row and writes no column). Citus rejects exactly these when the columns include
+		// the distribution column (measured, Plan-sql section 11e)
+		public List<String> actionsWritingColumns() {
+			List<String> actions = new ArrayList<>();
+			if (onDelete == Action.SET_NULL || onDelete == Action.SET_DEFAULT)
+				actions.add("ON DELETE " + spelling(onDelete));
+			if (onUpdate == Action.SET_NULL || onUpdate == Action.SET_DEFAULT || onUpdate == Action.CASCADE)
+				actions.add("ON UPDATE " + spelling(onUpdate));
+			return List.copyOf(actions);
+		}
+
+		private static String spelling(Action action) {
+			return action.name().replace('_', ' ');
+		}
+	}
+
+	public record TableFacts(String schema, String name, List<ColumnFacts> columns, List<String> primaryKey,
+			List<List<String>> uniqueKeys, List<ForeignKeyFacts> foreignKeys) {
 
 		public ColumnFacts column(String name) {
 			return columns.stream().filter(c -> c.name().equals(name)).findFirst().orElse(null);
+		}
+
+		// whether these columns, in any order, are the primary key or a unique key: what a foreign key
+		// may reference (PostgreSQL: "there is no unique constraint matching given keys")
+		public boolean isKey(List<String> keyColumns) {
+			if (keyColumns.isEmpty())
+				return false;
+			if (sameSet(primaryKey, keyColumns))
+				return true;
+			return uniqueKeys.stream().anyMatch(u -> sameSet(u, keyColumns));
+		}
+
+		private static boolean sameSet(List<String> a, List<String> b) {
+			return a.size() == b.size() && a.containsAll(b) && b.containsAll(a);
 		}
 	}
 
@@ -47,30 +117,157 @@ public final class SchemaFacts {
 				continue;
 			List<String> primaryKey = primaryKey(table);
 			List<ColumnFacts> columns = new ArrayList<>();
+			List<List<String>> uniqueKeys = new ArrayList<>();
+			List<ForeignKeyFacts> foreignKeys = new ArrayList<>();
 			for (Column column : table.getColumns()) {
 				if (column.getName() == null)
 					continue;
-				boolean notNull = primaryKey.contains(column.getName())
-						|| column.getConstraint().stream().anyMatch(NotNull.class::isInstance);
-				columns.add(new ColumnFacts(column.getName(), SqlTypes.of(column), !notNull));
+				SqlType type = SqlTypes.of(column);
+				boolean notNull = primaryKey.contains(column.getName()) || isSerial(type);
+				String defaultText = null;
+				boolean storedGenerated = false;
+				for (Constraint constraint : column.getConstraint()) {
+					if (constraint instanceof NotNull)
+						notNull = true;
+					else if (constraint instanceof UniqueAnnotation)
+						uniqueKeys.add(List.of(column.getName()));
+					else if (constraint instanceof RawSql raw && raw.getKind() == RawKind.DEFAULT)
+						defaultText = raw.getText();
+					else if (constraint instanceof RawSql raw && raw.getKind() == RawKind.GENERATED) {
+						if (isIdentity(raw))
+							notNull = true;
+						else
+							storedGenerated = true;
+					}
+				}
+				columns.add(new ColumnFacts(column.getName(), type, !notNull, defaultText, storedGenerated));
 			}
-			tables.putIfAbsent(table.getName(), new TableFacts(table.getName(), List.copyOf(columns), primaryKey));
+			// table-level keys after the column-level ones; a foreign key comes out at its position among
+			// the column-level REFERENCES and the table-level FOREIGN KEYs, in source order
+			for (EObject key : keysInOrder(table)) {
+				if (key instanceof ForeignKey fk) {
+					ForeignKeyFacts facts = foreignKey(fk);
+					if (facts != null)
+						foreignKeys.add(facts);
+				} else if (key instanceof UniqueKey unique) {
+					List<String> names = names(unique.getColumns());
+					if (names != null)
+						uniqueKeys.add(names);
+				}
+			}
+			tables.putIfAbsent(table.getName(), new TableFacts(table.getSchemaName(), table.getName(),
+					List.copyOf(columns), primaryKey, List.copyOf(uniqueKeys), List.copyOf(foreignKeys)));
 		}
 		return tables;
 	}
 
-	// a column-level PRIMARY KEY, or the columns of a table-level one
-	private static List<String> primaryKey(Table table) {
+	// column-level foreign keys (in column order), then the table-level constraints
+	private static List<EObject> keysInOrder(Table table) {
+		List<EObject> keys = new ArrayList<>();
 		for (Column column : table.getColumns()) {
 			for (Constraint constraint : column.getConstraint()) {
-				if (constraint instanceof PrimaryAnnotation && column.getName() != null)
-					return List.of(column.getName());
+				if (constraint instanceof ForeignKey)
+					keys.add(constraint);
+			}
+		}
+		keys.addAll(table.getConstraints());
+		return keys;
+	}
+
+	// a foreign key, normalised; null if its table, its referenced table or one of its columns is
+	// unresolved (a linking error is reported there) or unnamed
+	public static ForeignKeyFacts foreignKey(ForeignKey key) {
+		Table table = (Table) org.eclipse.xtext.EcoreUtil2.getContainerOfType(key, Table.class);
+		Table refTable = key.getRefTable();
+		if (table == null || table.getName() == null || refTable == null || refTable.eIsProxy() || refTable.getName() == null)
+			return null;
+		List<String> columns;
+		if (key.eContainer() instanceof Column column) {
+			if (column.getName() == null)
+				return null;
+			columns = List.of(column.getName());
+		} else {
+			columns = names(key.getColumns());
+		}
+		List<String> refColumns;
+		boolean declared = !key.getRefColumns().isEmpty();
+		if (declared)
+			refColumns = names(key.getRefColumns());
+		else
+			refColumns = primaryKey(refTable);
+		if (columns == null || refColumns == null)
+			return null;
+		return new ForeignKeyFacts(key.getName(), table.getName(), columns, refTable.getName(), refColumns, declared,
+				key.isSetOnDelete() ? action(key.getOnDelete()) : null,
+				key.isSetOnUpdate() ? action(key.getOnUpdate()) : null);
+	}
+
+	private static Action action(RefAction action) {
+		return switch (action) {
+			case NO_ACTION -> Action.NO_ACTION;
+			case RESTRICT -> Action.RESTRICT;
+			case CASCADE -> Action.CASCADE;
+			case SET_NULL -> Action.SET_NULL;
+			case SET_DEFAULT -> Action.SET_DEFAULT;
+		};
+	}
+
+	// every PRIMARY KEY a table declares, column-level and table-level, in source order. More than one
+	// is an error (SHML_067); of() reads the first
+	public static List<EObject> primaryKeyDeclarations(Table table) {
+		List<EObject> keys = new ArrayList<>();
+		for (Column column : table.getColumns()) {
+			for (Constraint constraint : column.getConstraint()) {
+				if (constraint instanceof PrimaryAnnotation)
+					keys.add(constraint);
 			}
 		}
 		for (TableConstraint constraint : table.getConstraints()) {
-			if (constraint instanceof PrimaryKey key)
-				return key.getColumns().stream().filter(c -> !c.eIsProxy()).map(Column::getName).toList();
+			if (constraint instanceof PrimaryKey)
+				keys.add(constraint);
+		}
+		return keys;
+	}
+
+	// the expression of a DEFAULT as written, or null if this is another kind of verbatim text
+	public static String defaultText(RawSql raw) {
+		return raw.getKind() == RawKind.DEFAULT && raw.eContainer() instanceof Column ? raw.getText() : null;
+	}
+
+	// a column-level PRIMARY KEY, or the columns of a table-level one; the first declared
+	private static List<String> primaryKey(Table table) {
+		for (EObject key : primaryKeyDeclarations(table)) {
+			if (key instanceof PrimaryAnnotation && key.eContainer() instanceof Column column && column.getName() != null)
+				return List.of(column.getName());
+			if (key instanceof PrimaryKey pk) {
+				List<String> columns = names(pk.getColumns());
+				return columns == null ? List.of() : columns;
+			}
 		}
 		return List.of();
+	}
+
+	// the names of resolved columns, or null if one is unresolved
+	private static List<String> names(List<Column> columns) {
+		List<String> names = new ArrayList<>();
+		for (Column column : columns) {
+			if (column.eIsProxy() || column.getName() == null)
+				return null;
+			names.add(column.getName());
+		}
+		return List.copyOf(names);
+	}
+
+	// GENERATED .. AS IDENTITY makes a column NOT NULL; a stored generated column may be null
+	private static final Pattern IDENTITY = Pattern.compile("(?i)\\bAS\\s+IDENTITY\\b");
+
+	private static boolean isIdentity(RawSql raw) {
+		return raw.getKind() == RawKind.GENERATED && IDENTITY.matcher(raw.getText()).find();
+	}
+
+	// SERIAL and BIGSERIAL are NOT NULL (with a sequence default)
+	private static boolean isSerial(SqlType type) {
+		return (type.base() == Base.INT4 || type.base() == Base.INT8)
+				&& ("SERIAL".equalsIgnoreCase(type.spelling()) || "BIGSERIAL".equalsIgnoreCase(type.spelling()));
 	}
 }

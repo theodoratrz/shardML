@@ -3,6 +3,7 @@ package io.shardml.tests;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.emf.common.util.URI;
@@ -79,6 +80,69 @@ public class ShardMLGeneratorTest {
 	}
 
 	// --- Citus (postgres) output ---
+
+	@Test
+	public void testForeignKeysGoToTheirOwnFileOnlyWhenThereAreAny() throws IOException {
+		String shardml = """
+				import "test.msql"
+				database d {
+				    type: postgres
+				    shard parents {
+				        strategy: hash
+				        key: id
+				        buckets: 4
+				    }
+				    shard children {
+				        strategy: hash
+				        key: parent_id
+				        buckets: 4
+				        colocate_with: parents
+				    }
+				}
+				""";
+		String msql = """
+				CREATE TABLE parents (
+				    id BIGINT PRIMARY KEY
+				)
+				CREATE TABLE children (
+				    parent_id BIGINT REFERENCES parents ON DELETE CASCADE,
+				    id BIGINT,
+				    PRIMARY KEY (parent_id, id)
+				)
+				""";
+		InMemoryFileSystemAccess fsa = new InMemoryFileSystemAccess();
+		generator.doGenerate(parseShardML(msql, shardml).eResource(), fsa, new GeneratorContext());
+		Map<String, CharSequence> files = fsa.getTextFiles();
+		Assertions.assertEquals(List.of("d-distribution.sql", "d-foreign-keys.sql", "d-schema.sql", "d-sharding.json"),
+				files.keySet().stream().map(k -> k.substring("DEFAULT_OUTPUT".length())).sorted().toList());
+		// the key is not in CREATE TABLE, where it would fail on Citus: children is distributed before
+		// its foreign key exists, and parents first
+		Assertions.assertEquals("""
+				CREATE TABLE parents (
+				    id BIGINT PRIMARY KEY
+				);
+
+				CREATE TABLE children (
+				    parent_id BIGINT,
+				    id BIGINT,
+				    PRIMARY KEY (parent_id, id)
+				);
+				""", file(files, "d-schema.sql"));
+		Assertions.assertEquals("""
+				-- Foreign keys of d. Apply after d-distribution.sql: Citus accepts a
+				-- foreign key only once the tables on both sides are distributed or reference tables.
+				ALTER TABLE children ADD FOREIGN KEY (parent_id) REFERENCES parents ON DELETE CASCADE;
+				""", file(files, "d-foreign-keys.sql"));
+
+		// no foreign keys, no file
+		Assertions.assertNull(file(generate("""
+				import "test.msql"
+				database d {
+				    type: postgres
+				}
+				"""), "d-foreign-keys.sql"));
+	}
+
 
 	@Test
 	public void testPostgresJsonContainsDatabaseName() throws IOException {

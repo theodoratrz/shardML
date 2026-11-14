@@ -26,16 +26,16 @@ import io.shardml.shardML.ShardDecl;
 import io.shardml.shardML.ShardMLPackage;
 import io.shardml.shardML.Strategy;
 import io.shardml.shardML.WhereCondition;
+import io.shardml.schema.SchemaFacts;
+import io.shardml.schema.SchemaFacts.ColumnFacts;
+import io.shardml.schema.SchemaFacts.ForeignKeyFacts;
+import io.shardml.schema.SchemaFacts.TableFacts;
 import io.shardml.schema.SqlTypes;
 import io.shardml.schema.SqlTypes.Base;
 import io.shardml.schema.SqlTypes.SqlType;
 import io.shardml.sql.Column;
-import io.shardml.sql.Constraint;
-import io.shardml.sql.PrimaryAnnotation;
-import io.shardml.sql.PrimaryKey;
+import io.shardml.sql.Schema;
 import io.shardml.sql.Table;
-import io.shardml.sql.TableConstraint;
-import io.shardml.sql.UniqueAnnotation;
 
 public class ShardMLValidator extends AbstractShardMLValidator {
 
@@ -79,6 +79,13 @@ public class ShardMLValidator extends AbstractShardMLValidator {
 	private static final String PLACEMENT_SKEW            = "SHML_037";
 	private static final String DUPLICATE_PLACEMENT       = "SHML_038";
 	private static final String PLACEMENT_WITHOUT_SHARD   = "SHML_039";
+	// SHML_040-060 are workload codes, 061-068 SQL (SQLValidator, SQLLinkingDiagnosticMessageProvider)
+	private static final String FK_KEYS_NOT_PAIRED        = "SHML_069";
+	private static final String FK_NOT_COLOCATED          = "SHML_070";
+	private static final String FK_REFERENCE_TO_DISTRIBUTED = "SHML_071";
+	private static final String FK_SETS_SHARD_KEY         = "SHML_072";
+	// SHML_073 is reserved (Plan-sql step 6: a schema FK with no belongs_to)
+	private static final String GENERATED_SHARD_KEY       = "SHML_074";
 
 	// restrict validation to shardML only
 	@Override
@@ -232,39 +239,135 @@ public class ShardMLValidator extends AbstractShardMLValidator {
 		}
 	}
 
+	// the facts of a table, read from its schema (null if the table is unresolved)
+	private static TableFacts factsOf(Table table) {
+		if (table == null || table.eIsProxy() || !(table.eContainer() instanceof Schema schema))
+			return null;
+		return SchemaFacts.of(schema).get(table.getName());
+	}
+
 	// Citus enforces PRIMARY KEY / UNIQUE only within one shard, so every such
-	// constraint on a distributed table must include the distribution column
+	// constraint on a distributed table must include the distribution column. The keys come from
+	// SchemaFacts, so a FOREIGN KEY or a CHECK is never read as a UNIQUE
 	@Check
 	public void checkUniqueIncludesShardKey(ShardDecl shard) {
 		Table table = shard.getEntity();
 		Column key = shard.getId();
 		if (!isHashed(shard) || table == null || table.eIsProxy() || key == null || key.eIsProxy())
 			return;
-		for (Column column : table.getColumns()) {
-			for (Constraint constraint : column.getConstraint()) {
-				if (constraint instanceof PrimaryAnnotation)
-					checkUniqueColumns(shard, "PRIMARY KEY", List.of(column));
-				else if (constraint instanceof UniqueAnnotation)
-					checkUniqueColumns(shard, "UNIQUE", List.of(column));
-			}
-		}
-		for (TableConstraint constraint : table.getConstraints())
-			checkUniqueColumns(shard, constraint instanceof PrimaryKey ? "PRIMARY KEY" : "UNIQUE", constraint.getColumns());
+		TableFacts facts = factsOf(table);
+		if (facts == null)
+			return;
+		if (!facts.primaryKey().isEmpty())
+			checkUniqueColumns(shard, "PRIMARY KEY", facts.primaryKey());
+		for (List<String> unique : facts.uniqueKeys())
+			checkUniqueColumns(shard, "UNIQUE", unique);
 	}
 
-	private void checkUniqueColumns(ShardDecl shard, String kind, List<Column> columns) {
-		if (columns.contains(shard.getId()))
+	private void checkUniqueColumns(ShardDecl shard, String kind, List<String> columns) {
+		if (columns.contains(shard.getId().getName()))
 			return;
 		String table = shard.getEntity().getName();
 		String key = shard.getId().getName();
-		String names = columns.stream().map(Column::getName).collect(Collectors.joining(", "));
+		String names = String.join(", ", columns);
 		error(kind + " (" + names + ") on '" + table + "' does not include the shard key '" + key + "'. "
 				+ "Citus enforces uniqueness only within one shard, so it cannot enforce this constraint. Options: "
 				+ "enforce it in the application; "
-				+ "a lookup table with PRIMARY KEY (" + names + "), distributed by " + columns.get(0).getName()
+				+ "a lookup table with PRIMARY KEY (" + names + "), distributed by " + columns.get(0)
 				+ " and written in the same transaction; "
 				+ "or, if '" + table + "' is small, make it a reference table (strategy: replicated).",
 				shard, ShardMLPackage.Literals.SHARD_DECL__ID, UNIQUE_WITHOUT_SHARD_KEY);
+	}
+
+	// The schema's foreign keys against the layout, as Citus checks them when the generated
+	// <db>-foreign-keys.sql runs (measured, Plan-sql section 2):
+	//  - between two hash-sharded tables, the key must pair the referencing shard key with the
+	//    referenced one (case 3, SHML_069), and the tables must be colocated (case 4, SHML_070);
+	//  - hash-sharded -> replicated is fine (case 2); replicated -> hash-sharded is not (case 5, SHML_071);
+	//  - an action that writes the referencing columns, on a key that includes the shard key (case
+	//    12, SHML_072): Citus rejects ON DELETE SET NULL / SET DEFAULT and ON UPDATE SET NULL / SET
+	//    DEFAULT / CASCADE there, to a hash-sharded or a replicated table alike, and accepts every
+	//    action on a key that leaves the shard key out (measured, Plan-sql section 11e).
+	// A key from or to a table the model does not shard is not checked: Citus accepts a local ->
+	// hash-sharded key but enforces it only on the child's side (case 7), and that is left alone.
+	@Check
+	public void checkForeignKeysAgainstLayout(ShardDecl shard) {
+		Table table = shard.getEntity();
+		TableFacts facts = factsOf(table);
+		if (facts == null || !(table.eContainer() instanceof Schema schema))
+			return;
+		Database db = (Database) shard.eContainer();
+		for (ForeignKeyFacts fk : facts.foreignKeys()) {
+			ShardDecl parent = shardFor(db, tableNamed(schema, fk.refTable()));
+			if (parent == null || fk.columns().size() != fk.refColumns().size())
+				continue; // a local table, or a key that SQLValidator already rejects
+			String what = foreignKeyLabel(fk);
+			if (!isHashed(shard)) {
+				if (isHashed(parent))
+					error(what + " goes from the replicated table '" + table.getName() + "' to the hash-sharded table '"
+							+ fk.refTable() + "'. Citus does not support a foreign key from a reference table to a "
+							+ "distributed one: every node holds all of '" + table.getName() + "', but only some of '"
+							+ fk.refTable() + "'. Shard '" + table.getName() + "' too, or replicate '" + fk.refTable() + "'.",
+							shard, ShardMLPackage.Literals.SHARD_DECL__ENTITY, FK_REFERENCE_TO_DISTRIBUTED);
+				continue;
+			}
+			if (!hasKey(shard))
+				continue;
+			String key = shard.getId().getName();
+			if (hasKey(parent)) {
+				String parentKey = parent.getId().getName();
+				boolean paired = false;
+				for (int i = 0; i < fk.columns().size(); i++)
+					paired |= fk.columns().get(i).equals(key) && fk.refColumns().get(i).equals(parentKey);
+				if (!paired) {
+					error(what + " does not pair the shard key " + table.getName() + "." + key + " with the shard key "
+							+ fk.refTable() + "." + parentKey + ". Citus accepts a foreign key between two hash-sharded "
+							+ "tables only when it does, because only then is every referenced row in the same shard. "
+							+ "Shard '" + table.getName() + "' by the column that references " + fk.refTable() + "."
+							+ parentKey + ", or replicate '" + fk.refTable() + "'.",
+							shard, ShardMLPackage.Literals.SHARD_DECL__ID, FK_KEYS_NOT_PAIRED);
+				} else if (ColocationGroups.rootOf(db, shard) != ColocationGroups.rootOf(db, parent)) {
+					error(what + " pairs the shard keys of '" + table.getName() + "' and '" + fk.refTable()
+							+ "', but the tables are not colocated, and Citus requires it. Add `colocate_with: "
+							+ fk.refTable() + "` to '" + table.getName() + "'.",
+							shard, ShardMLPackage.Literals.SHARD_DECL__ENTITY, FK_NOT_COLOCATED);
+				}
+			}
+			List<String> writing = fk.actionsWritingColumns();
+			if (!writing.isEmpty() && fk.columns().contains(key)) {
+				error(what + " has " + String.join(" and ", writing) + ", which would write its columns, and they "
+						+ "include the shard key " + table.getName() + "." + key + ". Citus rejects a foreign key that "
+						+ "writes a distribution column: ON DELETE SET NULL / SET DEFAULT and ON UPDATE SET NULL / SET "
+						+ "DEFAULT / CASCADE. Use ON DELETE CASCADE, RESTRICT or NO ACTION, and ON UPDATE RESTRICT or "
+						+ "NO ACTION.",
+						shard, ShardMLPackage.Literals.SHARD_DECL__ID, FK_SETS_SHARD_KEY);
+			}
+		}
+	}
+
+	// Citus rejects a stored generated column as the distribution column ("Distribution column must
+	// not use GENERATED ALWAYS AS (...) STORED", measured on Citus 14.2). An identity column is fine.
+	@Check
+	public void checkGeneratedShardKey(ShardDecl shard) {
+		if (!isHashed(shard) || !hasKey(shard))
+			return;
+		TableFacts facts = factsOf(shard.getEntity());
+		ColumnFacts column = facts == null ? null : facts.column(shard.getId().getName());
+		if (column != null && column.storedGenerated()) {
+			error("Shard key '" + column.name() + "' of '" + facts.name() + "' is a stored generated column "
+					+ "(GENERATED ALWAYS AS (..) STORED). Citus rejects it as a distribution column. Shard by a "
+					+ "column the application writes; an identity column (GENERATED .. AS IDENTITY) is fine.",
+					shard, ShardMLPackage.Literals.SHARD_DECL__ID, GENERATED_SHARD_KEY);
+		}
+	}
+
+	private static Table tableNamed(Schema schema, String name) {
+		return schema.getTables().stream().filter(t -> name.equals(t.getName())).findFirst().orElse(null);
+	}
+
+	private static String foreignKeyLabel(ForeignKeyFacts fk) {
+		return "Foreign key " + (fk.name() == null ? "" : fk.name() + " ") + fk.table() + " ("
+				+ String.join(", ", fk.columns()) + ") -> " + fk.refTable() + " (" + String.join(", ", fk.refColumns()) + ")";
 	}
 
 	// Helper: issue warning or error based on the route rule policy

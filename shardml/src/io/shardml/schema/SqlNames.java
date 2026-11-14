@@ -10,6 +10,7 @@ import org.eclipse.xtext.nodemodel.INode;
 import org.eclipse.xtext.nodemodel.util.NodeModelUtils;
 
 import io.shardml.sql.Column;
+import io.shardml.sql.NamedConstraint;
 import io.shardml.sql.SqlPackage;
 import io.shardml.sql.Table;
 
@@ -98,6 +99,12 @@ public final class SqlNames {
 
 	public static String column(Column column) {
 		return write(column, SqlPackage.Literals.COLUMN__NAME, column.getName());
+	}
+
+	// a constraint's name (CONSTRAINT name), or null if it has none
+	public static String constraint(NamedConstraint constraint) {
+		return constraint.getName() == null ? null
+				: write(constraint, SqlPackage.Literals.NAMED_CONSTRAINT__NAME, constraint.getName());
 	}
 
 	public static String schema(Table table) {

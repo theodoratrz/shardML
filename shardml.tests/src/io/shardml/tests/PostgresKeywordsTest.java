@@ -101,6 +101,14 @@ public class PostgresKeywordsTest {
 				Map.entry("DOUBLE", "U"), Map.entry("FLOAT", "C"), Map.entry("INTEGER", "C"), Map.entry("JSONB", "-"),
 				Map.entry("NUMERIC", "C"), Map.entry("PRECISION", "C"), Map.entry("REAL", "C"), Map.entry("SERIAL", "-"),
 				Map.entry("SMALLINT", "C"), Map.entry("TIME", "C"), Map.entry("TIMESTAMPTZ", "-"), Map.entry("VARYING", "U"),
-				Map.entry("WITH", "R"), Map.entry("WITHOUT", "U"), Map.entry("ZONE", "U")), categories);
+				Map.entry("WITH", "R"), Map.entry("WITHOUT", "U"), Map.entry("ZONE", "U"),
+				// step 4: constraints and foreign keys
+				Map.entry("ACTION", "U"), Map.entry("ALWAYS", "U"), Map.entry("AS", "R"), Map.entry("BY", "U"),
+				Map.entry("CASCADE", "U"), Map.entry("CHECK", "R"), Map.entry("CONSTRAINT", "R"), Map.entry("DEFAULT", "R"),
+				Map.entry("DEFERRABLE", "R"), Map.entry("DEFERRED", "U"), Map.entry("DELETE", "U"), Map.entry("FOREIGN", "R"),
+				Map.entry("FULL", "T"), Map.entry("GENERATED", "U"), Map.entry("IDENTITY", "U"), Map.entry("IMMEDIATE", "U"),
+				Map.entry("INITIALLY", "R"), Map.entry("MATCH", "U"), Map.entry("NO", "U"), Map.entry("ON", "R"),
+				Map.entry("REFERENCES", "R"), Map.entry("RESTRICT", "U"), Map.entry("SET", "U"), Map.entry("SIMPLE", "U"),
+				Map.entry("STORED", "U"), Map.entry("UPDATE", "U")), categories);
 	}
 }

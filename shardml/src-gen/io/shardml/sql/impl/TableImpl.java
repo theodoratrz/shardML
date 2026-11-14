@@ -4,6 +4,7 @@
 package io.shardml.sql.impl;
 
 import io.shardml.sql.Column;
+import io.shardml.sql.RawSql;
 import io.shardml.sql.SqlPackage;
 import io.shardml.sql.Table;
 import io.shardml.sql.TableConstraint;
@@ -37,6 +38,7 @@ import org.eclipse.emf.ecore.util.InternalEList;
  *   <li>{@link io.shardml.sql.impl.TableImpl#getName <em>Name</em>}</li>
  *   <li>{@link io.shardml.sql.impl.TableImpl#getColumns <em>Columns</em>}</li>
  *   <li>{@link io.shardml.sql.impl.TableImpl#getConstraints <em>Constraints</em>}</li>
+ *   <li>{@link io.shardml.sql.impl.TableImpl#getOptions <em>Options</em>}</li>
  * </ul>
  *
  * @generated
@@ -122,6 +124,16 @@ public class TableImpl extends MinimalEObjectImpl.Container implements Table
    * @ordered
    */
   protected EList<TableConstraint> constraints;
+
+  /**
+   * The cached value of the '{@link #getOptions() <em>Options</em>}' containment reference.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @see #getOptions()
+   * @generated
+   * @ordered
+   */
+  protected RawSql options;
 
   /**
    * <!-- begin-user-doc -->
@@ -255,6 +267,56 @@ public class TableImpl extends MinimalEObjectImpl.Container implements Table
    * @generated
    */
   @Override
+  public RawSql getOptions()
+  {
+    return options;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  public NotificationChain basicSetOptions(RawSql newOptions, NotificationChain msgs)
+  {
+    RawSql oldOptions = options;
+    options = newOptions;
+    if (eNotificationRequired())
+    {
+      ENotificationImpl notification = new ENotificationImpl(this, Notification.SET, SqlPackage.TABLE__OPTIONS, oldOptions, newOptions);
+      if (msgs == null) msgs = notification; else msgs.add(notification);
+    }
+    return msgs;
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
+  public void setOptions(RawSql newOptions)
+  {
+    if (newOptions != options)
+    {
+      NotificationChain msgs = null;
+      if (options != null)
+        msgs = ((InternalEObject)options).eInverseRemove(this, EOPPOSITE_FEATURE_BASE - SqlPackage.TABLE__OPTIONS, null, msgs);
+      if (newOptions != null)
+        msgs = ((InternalEObject)newOptions).eInverseAdd(this, EOPPOSITE_FEATURE_BASE - SqlPackage.TABLE__OPTIONS, null, msgs);
+      msgs = basicSetOptions(newOptions, msgs);
+      if (msgs != null) msgs.dispatch();
+    }
+    else if (eNotificationRequired())
+      eNotify(new ENotificationImpl(this, Notification.SET, SqlPackage.TABLE__OPTIONS, newOptions, newOptions));
+  }
+
+  /**
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @generated
+   */
+  @Override
   public NotificationChain eInverseRemove(InternalEObject otherEnd, int featureID, NotificationChain msgs)
   {
     switch (featureID)
@@ -263,6 +325,8 @@ public class TableImpl extends MinimalEObjectImpl.Container implements Table
         return ((InternalEList<?>)getColumns()).basicRemove(otherEnd, msgs);
       case SqlPackage.TABLE__CONSTRAINTS:
         return ((InternalEList<?>)getConstraints()).basicRemove(otherEnd, msgs);
+      case SqlPackage.TABLE__OPTIONS:
+        return basicSetOptions(null, msgs);
     }
     return super.eInverseRemove(otherEnd, featureID, msgs);
   }
@@ -287,6 +351,8 @@ public class TableImpl extends MinimalEObjectImpl.Container implements Table
         return getColumns();
       case SqlPackage.TABLE__CONSTRAINTS:
         return getConstraints();
+      case SqlPackage.TABLE__OPTIONS:
+        return getOptions();
     }
     return super.eGet(featureID, resolve, coreType);
   }
@@ -319,6 +385,9 @@ public class TableImpl extends MinimalEObjectImpl.Container implements Table
         getConstraints().clear();
         getConstraints().addAll((Collection<? extends TableConstraint>)newValue);
         return;
+      case SqlPackage.TABLE__OPTIONS:
+        setOptions((RawSql)newValue);
+        return;
     }
     super.eSet(featureID, newValue);
   }
@@ -348,6 +417,9 @@ public class TableImpl extends MinimalEObjectImpl.Container implements Table
       case SqlPackage.TABLE__CONSTRAINTS:
         getConstraints().clear();
         return;
+      case SqlPackage.TABLE__OPTIONS:
+        setOptions((RawSql)null);
+        return;
     }
     super.eUnset(featureID);
   }
@@ -372,6 +444,8 @@ public class TableImpl extends MinimalEObjectImpl.Container implements Table
         return columns != null && !columns.isEmpty();
       case SqlPackage.TABLE__CONSTRAINTS:
         return constraints != null && !constraints.isEmpty();
+      case SqlPackage.TABLE__OPTIONS:
+        return options != null;
     }
     return super.eIsSet(featureID);
   }

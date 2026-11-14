@@ -17,4 +17,9 @@ public class SQLRuntimeModule extends AbstractSQLRuntimeModule {
 	public Class<? extends IValueConverterService> bindIValueConverterService() {
 		return SQLValueConverters.class;
 	}
+
+	// unknown tables and columns get SHML_062 / SHML_063
+	public Class<? extends org.eclipse.xtext.linking.ILinkingDiagnosticMessageProvider.Extended> bindILinkingDiagnosticMessageProvider$Extended() {
+		return io.shardml.validation.SQLLinkingDiagnosticMessageProvider.class;
+	}
 }

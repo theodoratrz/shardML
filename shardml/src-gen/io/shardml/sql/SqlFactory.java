@@ -42,6 +42,15 @@ public interface SqlFactory extends EFactory
   Table createTable();
 
   /**
+   * Returns a new object of class '<em>Raw Sql</em>'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return a new object of class '<em>Raw Sql</em>'.
+   * @generated
+   */
+  RawSql createRawSql();
+
+  /**
    * Returns a new object of class '<em>Column</em>'.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
@@ -76,6 +85,15 @@ public interface SqlFactory extends EFactory
    * @generated
    */
   Char createChar();
+
+  /**
+   * Returns a new object of class '<em>Named Constraint</em>'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return a new object of class '<em>Named Constraint</em>'.
+   * @generated
+   */
+  NamedConstraint createNamedConstraint();
 
   /**
    * Returns a new object of class '<em>Constraint</em>'.
@@ -114,6 +132,24 @@ public interface SqlFactory extends EFactory
   NotNull createNotNull();
 
   /**
+   * Returns a new object of class '<em>Nullable</em>'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return a new object of class '<em>Nullable</em>'.
+   * @generated
+   */
+  Nullable createNullable();
+
+  /**
+   * Returns a new object of class '<em>Foreign Key</em>'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return a new object of class '<em>Foreign Key</em>'.
+   * @generated
+   */
+  ForeignKey createForeignKey();
+
+  /**
    * Returns a new object of class '<em>Table Constraint</em>'.
    * <!-- begin-user-doc -->
    * <!-- end-user-doc -->
@@ -139,6 +175,15 @@ public interface SqlFactory extends EFactory
    * @generated
    */
   UniqueKey createUniqueKey();
+
+  /**
+   * Returns a new object of class '<em>Table Check</em>'.
+   * <!-- begin-user-doc -->
+   * <!-- end-user-doc -->
+   * @return a new object of class '<em>Table Check</em>'.
+   * @generated
+   */
+  TableCheck createTableCheck();
 
   /**
    * Returns the package supported by this factory.

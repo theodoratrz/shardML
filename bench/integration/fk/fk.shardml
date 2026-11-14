@@ -1,0 +1,34 @@
+import "fk.msql"
+
+// Foreign keys on Citus: three colocated hash-sharded tables whose foreign keys pair their shard
+// keys, and a replicated table referenced from one of them. See fk.msql.
+database fk {
+    type: postgres
+
+    shard companies {
+        strategy: hash
+        key: id
+        buckets: 4
+    }
+
+    shard campaigns {
+        strategy: hash
+        key: company_id
+        buckets: 4
+        colocate_with: companies
+    }
+
+    shard ads {
+        strategy: hash
+        key: company_id
+        buckets: 4
+        colocate_with: campaigns
+    }
+
+    shard countries {
+        strategy: replicated
+    }
+
+    campaigns belongs_to companies via company_id
+    ads belongs_to campaigns via company_id
+}

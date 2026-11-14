@@ -65,6 +65,7 @@ database banking {
 | `<database>-sharding.json` | Distribution config in JSON |
 | `<database>-schema.sql` | `CREATE TABLE` statements for the imported schema (apply before the distribution script) |
 | `<database>-distribution.sql` | Citus SQL commands (`create_distributed_table`, `create_reference_table`); every root (a table without `colocate_with`) gets `colocate_with => 'none'`, so it starts its own Citus colocation group instead of joining another table of the same shape |
+| `<database>-foreign-keys.sql` | Only when the schema has foreign keys: one `ALTER TABLE .. ADD .. FOREIGN KEY` each, applied after the distribution script. Citus rejects a foreign key to a table it has not distributed yet, so foreign keys are never written inside `CREATE TABLE` |
 | `<database>-placement.sql` | Only for a model that declares `node`s: moves every shard to the node the model assigns it (apply last, see below) |
 
 ### Placement script
@@ -136,7 +137,7 @@ A notable detail: column references are scoped to the *specific table* they belo
 
 - Keywords match in any case (`create table`, `CREATE TABLE`). Statements may end in `;`. Comments are `--` and `/* */`; `//` is not a comment (it was before).
 - An unquoted name is folded to lower case, so `CREATE TABLE Customers` declares `customers`, and a model refers to it as `customers`. A `"quoted"` name is kept exactly as written, and the generator writes it back quoted.
-- A keyword can be a table or column name exactly when PostgreSQL allows it bare: `key`, `text`, `date`, `int`, ... are names, while reserved words (`table`, `unique`, `primary`, `not`, `null`, `create`, `with`) must be quoted, e.g. `"unique" BIGINT`. The list follows PostgreSQL 17's `pg_get_keywords()`.
+- A keyword can be a table or column name exactly when PostgreSQL allows it bare: `key`, `text`, `date`, `int`, `set`, `match`, ... are names, while reserved words (`table`, `unique`, `primary`, `not`, `null`, `create`, `with`, `check`, `default`, `constraint`, `references`, `foreign`, `on`, `as`, `full`, ...) must be quoted, e.g. `"unique" BIGINT`. The list follows PostgreSQL 17's `pg_get_keywords()`.
 - Tables may be schema-qualified (`banking.accounts`) and use `IF NOT EXISTS`; both are written back as given. A model refers to a table by its name without the schema, so two tables of one name in one file are an error (SHML_066), also in different schemas.
 - Known limit: a quoted name that is not a plain identifier (with a space, or mixed case meant to differ from the folded name) cannot be referred to from a `.shardml` or `.workload` file yet.
 
@@ -152,9 +153,42 @@ A notable detail: column references are scoped to the *specific table* they belo
 
 Type words are column names where PostgreSQL allows it (`double DOUBLE PRECISION`, `zone TIMESTAMPTZ`). Validators compare PostgreSQL's types, not spellings: `INT`, `INTEGER` and `SERIAL` are all `int4`, so a `SERIAL` key colocates with an `INT` foreign key. Any other type (`INTERVAL`, arrays, user-defined types) is a syntax error, and so is a sized type without its size (`VARCHAR`, `CHAR`). A column whose type did not parse is never read as `INT`. `bench/integration/types/` deploys one distributed table with every type above to the bench cluster.
 
+### Constraints and foreign keys in `.msql` files
+
+Besides `PRIMARY KEY`, `UNIQUE` and `NOT NULL`, a `.msql` schema may use:
+
+- **Named constraints** (`CONSTRAINT name ...`) on any column or table constraint, and the explicit `NULL`.
+- **Foreign keys**, column-level (`customer_id BIGINT REFERENCES customers`) or table-level and composite (`FOREIGN KEY (a, b) REFERENCES t (x, y)`), with `MATCH`, `ON DELETE` / `ON UPDATE` (`NO ACTION`, `RESTRICT`, `CASCADE`, `SET NULL`, `SET DEFAULT`) and `[NOT] DEFERRABLE` / `INITIALLY ..`. The referenced table must be in the same file; a schema qualifier (`REFERENCES public.t`) must match its `CREATE TABLE`. Without a column list, a key references the primary key.
+- **`DEFAULT`, `CHECK`, `GENERATED .. AS IDENTITY` and `GENERATED ALWAYS AS (..) STORED`**, and **`WITH (..)` table options**. Their text is kept as written and written back verbatim: comments are dropped and whitespace is collapsed, nothing else changes.
+
+The generator writes foreign keys to `<database>-foreign-keys.sql`; everything else stays in `CREATE TABLE`. Errors:
+
+| Code | |
+|---|---|
+| SHML_062 | unknown table in `REFERENCES` |
+| SHML_063 | unknown column in a key or a foreign key |
+| SHML_064 | a foreign key's column count differs from the referenced one's (or from the referenced primary key's) |
+| SHML_065 | a foreign key references columns that are neither the primary key nor a `UNIQUE`; or omits them, and the table has no primary key |
+| SHML_067 | more than one `PRIMARY KEY` on a table |
+| SHML_068 | `DEFAULT nextval(..)`: sequences are not modelled; use `SERIAL` / `BIGSERIAL` or `GENERATED .. AS IDENTITY` |
+
+The schema's foreign keys are also checked against the layout, by the rules Citus applies (measured on Citus 14.2):
+
+| Code | |
+|---|---|
+| SHML_069 | a foreign key between two hash-sharded tables does not pair the two shard keys |
+| SHML_070 | it does, but the tables are not colocated |
+| SHML_071 | a foreign key from a replicated table to a hash-sharded one |
+| SHML_072 | a foreign key whose columns include the shard key has `ON DELETE SET NULL` / `SET DEFAULT`, or `ON UPDATE SET NULL` / `SET DEFAULT` / `CASCADE` (every other action is accepted, and every action on a key that leaves the shard key out) |
+| SHML_074 | the shard key is a stored generated column (`GENERATED ALWAYS AS (..) STORED`); an identity column is fine |
+
+A hash-sharded table may reference a replicated one. A foreign key from or to a table the model does not shard is not checked: Citus accepts one from a local table to a distributed one, but enforces it only on the local side.
+
+Verbatim text is not checked beyond `nextval`, and can fail on deploy although the schema validated: a function, type or collation the schema does not create cannot be told from a built-in without a database. PostgreSQL 18's `VIRTUAL` generated columns are a syntax error. `bench/integration/fk/` deploys foreign keys of every allowed kind and verbatim constraints to the bench cluster and checks that each is enforced.
+
 ### Table relationships vs. foreign keys
 
-The `has_many`, `has_one`, and `belongs_to` relationship declarations are **application-level semantic relationships**, not a mirror of SQL foreign key constraints. The distinction is intentional: sharding decisions are driven by how the application queries data, not just by the schema's referential constraints. A foreign key tells you data is related; a relationship declaration in ShardML tells the validator which tables will be joined at the application layer, enabling colocation warnings when those tables land on different shards.
+The `has_many`, `has_one`, and `belongs_to` relationship declarations are **application-level semantic relationships**, not a mirror of SQL foreign key constraints (the schema's own foreign keys are checked separately, see above). The distinction is intentional: sharding decisions are driven by how the application queries data, not just by the schema's referential constraints. A foreign key tells you data is related; a relationship declaration in ShardML tells the validator which tables will be joined at the application layer, enabling colocation warnings when those tables land on different shards.
 
 `belongs_to` names the foreign key column on the subject (`accounts belongs_to customers via customer_id`). When that column is the subject's shard key, it ties the subject's placement to the parent's: a table's *root key* is its shard key, followed through such links. Tables joined by `colocate_with` must share a root key, with the same column type at every link (SHML_026, SHML_027); otherwise their related rows hash to different shards and Citus refuses the join. A colocated table with no `belongs_to` to a sharded table at all gets a warning instead (SHML_030): its key may well reference the other table's, the model just does not say so. Types are compared the way Citus does: `VARCHAR(50)` colocates with `VARCHAR(100)`, but `VARCHAR` with `TEXT` or `INT` with `BIGINT` does not.
 
@@ -217,7 +251,7 @@ The tests cover all major validators and the generator, including multi-resource
 
 ## Limitations
 
-- The SQL grammar supports a subset of DDL (no ALTER, no indices, no FOREIGN KEY constraints).
+- The SQL grammar supports a subset of DDL: `CREATE TABLE` only (no `ALTER TABLE`, no indexes, no sequences yet).
 - `via` is trusted. `X belongs_to Y via k`, with `k` the shard key of `X`, is taken to mean that `k` references the shard key of `Y`. Nothing checks which column `k` really references, so a model that names the wrong column still validates; only the type check (SHML_027) and the examples' probe joins against a real cluster catch it.
 - Citus is the only target; Vitess is not supported.
 - Query patterns are declared manually and must be kept in sync with application code.

@@ -86,6 +86,11 @@ public class SqlAdapterFactory extends AdapterFactoryImpl
         return createTableAdapter();
       }
       @Override
+      public Adapter caseRawSql(RawSql object)
+      {
+        return createRawSqlAdapter();
+      }
+      @Override
       public Adapter caseColumn(Column object)
       {
         return createColumnAdapter();
@@ -104,6 +109,11 @@ public class SqlAdapterFactory extends AdapterFactoryImpl
       public Adapter caseChar(Char object)
       {
         return createCharAdapter();
+      }
+      @Override
+      public Adapter caseNamedConstraint(NamedConstraint object)
+      {
+        return createNamedConstraintAdapter();
       }
       @Override
       public Adapter caseConstraint(Constraint object)
@@ -126,6 +136,16 @@ public class SqlAdapterFactory extends AdapterFactoryImpl
         return createNotNullAdapter();
       }
       @Override
+      public Adapter caseNullable(Nullable object)
+      {
+        return createNullableAdapter();
+      }
+      @Override
+      public Adapter caseForeignKey(ForeignKey object)
+      {
+        return createForeignKeyAdapter();
+      }
+      @Override
       public Adapter caseTableConstraint(TableConstraint object)
       {
         return createTableConstraintAdapter();
@@ -139,6 +159,11 @@ public class SqlAdapterFactory extends AdapterFactoryImpl
       public Adapter caseUniqueKey(UniqueKey object)
       {
         return createUniqueKeyAdapter();
+      }
+      @Override
+      public Adapter caseTableCheck(TableCheck object)
+      {
+        return createTableCheckAdapter();
       }
       @Override
       public Adapter defaultCase(EObject object)
@@ -188,6 +213,21 @@ public class SqlAdapterFactory extends AdapterFactoryImpl
    * @generated
    */
   public Adapter createTableAdapter()
+  {
+    return null;
+  }
+
+  /**
+   * Creates a new adapter for an object of class '{@link io.shardml.sql.RawSql <em>Raw Sql</em>}'.
+   * <!-- begin-user-doc -->
+   * This default implementation returns null so that we can easily ignore cases;
+   * it's useful to ignore a case when inheritance will catch all the cases anyway.
+   * <!-- end-user-doc -->
+   * @return the new adapter.
+   * @see io.shardml.sql.RawSql
+   * @generated
+   */
+  public Adapter createRawSqlAdapter()
   {
     return null;
   }
@@ -253,6 +293,21 @@ public class SqlAdapterFactory extends AdapterFactoryImpl
   }
 
   /**
+   * Creates a new adapter for an object of class '{@link io.shardml.sql.NamedConstraint <em>Named Constraint</em>}'.
+   * <!-- begin-user-doc -->
+   * This default implementation returns null so that we can easily ignore cases;
+   * it's useful to ignore a case when inheritance will catch all the cases anyway.
+   * <!-- end-user-doc -->
+   * @return the new adapter.
+   * @see io.shardml.sql.NamedConstraint
+   * @generated
+   */
+  public Adapter createNamedConstraintAdapter()
+  {
+    return null;
+  }
+
+  /**
    * Creates a new adapter for an object of class '{@link io.shardml.sql.Constraint <em>Constraint</em>}'.
    * <!-- begin-user-doc -->
    * This default implementation returns null so that we can easily ignore cases;
@@ -313,6 +368,36 @@ public class SqlAdapterFactory extends AdapterFactoryImpl
   }
 
   /**
+   * Creates a new adapter for an object of class '{@link io.shardml.sql.Nullable <em>Nullable</em>}'.
+   * <!-- begin-user-doc -->
+   * This default implementation returns null so that we can easily ignore cases;
+   * it's useful to ignore a case when inheritance will catch all the cases anyway.
+   * <!-- end-user-doc -->
+   * @return the new adapter.
+   * @see io.shardml.sql.Nullable
+   * @generated
+   */
+  public Adapter createNullableAdapter()
+  {
+    return null;
+  }
+
+  /**
+   * Creates a new adapter for an object of class '{@link io.shardml.sql.ForeignKey <em>Foreign Key</em>}'.
+   * <!-- begin-user-doc -->
+   * This default implementation returns null so that we can easily ignore cases;
+   * it's useful to ignore a case when inheritance will catch all the cases anyway.
+   * <!-- end-user-doc -->
+   * @return the new adapter.
+   * @see io.shardml.sql.ForeignKey
+   * @generated
+   */
+  public Adapter createForeignKeyAdapter()
+  {
+    return null;
+  }
+
+  /**
    * Creates a new adapter for an object of class '{@link io.shardml.sql.TableConstraint <em>Table Constraint</em>}'.
    * <!-- begin-user-doc -->
    * This default implementation returns null so that we can easily ignore cases;
@@ -353,6 +438,21 @@ public class SqlAdapterFactory extends AdapterFactoryImpl
    * @generated
    */
   public Adapter createUniqueKeyAdapter()
+  {
+    return null;
+  }
+
+  /**
+   * Creates a new adapter for an object of class '{@link io.shardml.sql.TableCheck <em>Table Check</em>}'.
+   * <!-- begin-user-doc -->
+   * This default implementation returns null so that we can easily ignore cases;
+   * it's useful to ignore a case when inheritance will catch all the cases anyway.
+   * <!-- end-user-doc -->
+   * @return the new adapter.
+   * @see io.shardml.sql.TableCheck
+   * @generated
+   */
+  public Adapter createTableCheckAdapter()
   {
     return null;
   }

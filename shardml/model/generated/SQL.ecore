@@ -13,6 +13,12 @@
         eType="#//Column" containment="true"/>
     <eStructuralFeatures xsi:type="ecore:EReference" name="constraints" upperBound="-1"
         eType="#//TableConstraint" containment="true"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="options" eType="#//RawSql"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="RawSql" eSuperTypes="#//Constraint">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="kind" eType="#//RawKind"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="text" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="Column">
     <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
@@ -64,14 +70,52 @@
     <eLiterals name="BYTEA" value="17" literal="BYTEA"/>
     <eLiterals name="DOUBLE_PRECISION" value="18" literal="PRECISION"/>
   </eClassifiers>
-  <eClassifiers xsi:type="ecore:EClass" name="Constraint"/>
+  <eClassifiers xsi:type="ecore:EClass" name="NamedConstraint">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="name" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="Constraint" eSuperTypes="#//NamedConstraint"/>
   <eClassifiers xsi:type="ecore:EClass" name="PrimaryAnnotation" eSuperTypes="#//Constraint"/>
   <eClassifiers xsi:type="ecore:EClass" name="UniqueAnnotation" eSuperTypes="#//Constraint"/>
   <eClassifiers xsi:type="ecore:EClass" name="NotNull" eSuperTypes="#//Constraint"/>
-  <eClassifiers xsi:type="ecore:EClass" name="TableConstraint">
+  <eClassifiers xsi:type="ecore:EClass" name="Nullable" eSuperTypes="#//Constraint"/>
+  <eClassifiers xsi:type="ecore:EClass" name="ForeignKey" eSuperTypes="#//Constraint #//TableConstraint">
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="refSchema" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="refTable" eType="#//Table"/>
+    <eStructuralFeatures xsi:type="ecore:EReference" name="refColumns" unique="false"
+        upperBound="-1" eType="#//Column"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="match" eType="#//MatchKind"
+        unsettable="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="deferrable" eType="ecore:EDataType http://www.eclipse.org/emf/2002/Ecore#//EString"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="onDelete" eType="#//RefAction"
+        unsettable="true"/>
+    <eStructuralFeatures xsi:type="ecore:EAttribute" name="onUpdate" eType="#//RefAction"
+        unsettable="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EClass" name="TableConstraint" eSuperTypes="#//NamedConstraint">
     <eStructuralFeatures xsi:type="ecore:EReference" name="columns" unique="false"
         upperBound="-1" eType="#//Column"/>
   </eClassifiers>
   <eClassifiers xsi:type="ecore:EClass" name="PrimaryKey" eSuperTypes="#//TableConstraint"/>
   <eClassifiers xsi:type="ecore:EClass" name="UniqueKey" eSuperTypes="#//TableConstraint"/>
+  <eClassifiers xsi:type="ecore:EClass" name="TableCheck" eSuperTypes="#//TableConstraint">
+    <eStructuralFeatures xsi:type="ecore:EReference" name="check" eType="#//RawSql"
+        containment="true"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="RefAction">
+    <eLiterals name="CASCADE" literal="CASCADE"/>
+    <eLiterals name="RESTRICT" value="1" literal="RESTRICT"/>
+    <eLiterals name="NO_ACTION" value="2" literal="ACTION"/>
+    <eLiterals name="SET_NULL" value="3" literal="NULL"/>
+    <eLiterals name="SET_DEFAULT" value="4" literal="DEFAULT"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="MatchKind">
+    <eLiterals name="SIMPLE" literal="SIMPLE"/>
+    <eLiterals name="FULL" value="1" literal="FULL"/>
+  </eClassifiers>
+  <eClassifiers xsi:type="ecore:EEnum" name="RawKind">
+    <eLiterals name="DEFAULT" literal="DEFAULT"/>
+    <eLiterals name="CHECK" value="1" literal="CHECK"/>
+    <eLiterals name="GENERATED" value="2" literal="GENERATED"/>
+    <eLiterals name="WITH" value="3" literal="WITH"/>
+  </eClassifiers>
 </ecore:EPackage>

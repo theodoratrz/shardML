@@ -187,8 +187,11 @@ public class SqlCorpusTest {
 				// and item parse. The other seven stop at step-4 syntax: stock, district and order_line at
 				// FOREIGN KEY, customer, history and oorder at a DEFAULT, new_order at an explicit NULL
 				// (ol_delivery_d timestamp NULL). The whole file is unchanged (DROP TABLE, step 5)
-				new Today(1, "line 7: missing EOF at 'DROP'", 0, List.of("warehouse", "item"),
-						"stock: no viable alternative at input 'KEY'"));
+				// step 4: FOREIGN KEY .. REFERENCES .. ON DELETE CASCADE (composite included), DEFAULT
+				// CURRENT_TIMESTAMP / DEFAULT NULL and the explicit NULL parse, so all nine tables do. The
+				// whole file is unchanged (DROP TABLE, step 5)
+				new Today(1, "line 7: missing EOF at 'DROP'", 0, List.of("warehouse", "item", "stock", "district", "customer",
+						"history", "oorder", "new_order", "order_line"), null));
 	}
 
 	@Test
@@ -201,8 +204,10 @@ public class SqlCorpusTest {
 				// step 3: integer, character(n), bigint, timestamp are types. pgbench_history, the one
 				// table without storage options, parses; the other three stop after their closing
 				// parenthesis at WITH (fillfactor='100'), table options (step 4, RawSql)
-				new Today(1, "line 11: missing EOF at '\\'", 0, List.of("public.pgbench_history"),
-						"public.pgbench_accounts: missing EOF at 'WITH'"));
+				// step 4: WITH (..) table options parse (kept verbatim), so all four tables do. Their keys
+				// and foreign keys are in ALTER TABLE (step 5); the whole file is unchanged
+				new Today(1, "line 11: missing EOF at '\\'", 0, List.of("public.pgbench_accounts", "public.pgbench_branches",
+						"public.pgbench_history", "public.pgbench_tellers"), null));
 	}
 
 	@Test
@@ -225,7 +230,11 @@ public class SqlCorpusTest {
 				// as in step 1, at the named CONSTRAINT album_pkey of its first table (step 4)
 				// step 3: unchanged; all 11 tables still stop at their named CONSTRAINT .. PRIMARY KEY
 				// (step 4), each after its column types, which parse
-				new Today(2, "line 39: no viable alternative at input 'album_pkey'", 1, List.of(), "album: no viable alternative at input 'album_pkey'"));
+				// step 4: named CONSTRAINT x PRIMARY KEY (..) parses, so all 11 tables do, alone and in the
+				// whole file, which now stops after them, at its first ALTER TABLE .. ADD CONSTRAINT ..
+				// FOREIGN KEY (line 160, step 5)
+				new Today(1, "line 160: missing EOF at 'ALTER'", 11, List.of("album", "artist", "customer", "employee", "genre",
+						"invoice", "invoice_line", "media_type", "playlist", "playlist_track", "track"), null));
 	}
 
 	@Test
@@ -258,8 +267,21 @@ public class SqlCorpusTest {
 		// (nextval, now(), literals: step 4, and SHML_068 for nextval), the 71st
 		// (public.film_embedding) at public.vector(20), a pgvector type that stays unsupported. The whole
 		// file is unchanged
+		// step 4: DEFAULT parses (kept verbatim), so 68 of the 71 tables do. The 13 with a
+		// DEFAULT nextval(..) parse too: that is SHML_068, a validation error, not a syntax error. Three
+		// stop: public.film at its column type public.mpaa_rating (a CREATE TYPE enum, unsupported),
+		// public.film_embedding at public.vector(20) (pgvector) and public.payment, the partitioned
+		// parent, at PARTITION BY (unsupported). The whole file is unchanged
+		List<String> tables = new ArrayList<>(List.of("public.customer", "public.actor", "public.category",
+				"public.film_actor", "public.film_category", "public.address", "public.city", "public.country",
+				"public.inventory", "public.language"));
+		for (int year = 2022; year <= 2026; year++) {
+			for (int month = 1; month <= (year == 2026 ? 7 : 12); month++)
+				tables.add(String.format("public.payment_p%d_%02d", year, month));
+		}
+		tables.addAll(List.of("public.rental", "public.staff", "public.store"));
 		check("pagila-schema.sql", statements, 121,
-				new Today(1, "line 15: missing EOF at 'SET'", 0, List.of(), "public.customer: mismatched input 'DEFAULT' expecting ')'"));
+				new Today(1, "line 15: missing EOF at 'SET'", 0, tables, "public.film: no viable alternative at input 'public'"));
 	}
 
 	@Test

@@ -19,26 +19,18 @@ import io.shardml.shardML.Model;
 import io.shardml.shardML.ShardDecl;
 import io.shardml.shardML.Strategy;
 import io.shardml.scoping.ImportedSchema;
+import io.shardml.schema.SqlDdl;
 import io.shardml.schema.SqlNames;
-import io.shardml.schema.SqlTypes;
-import io.shardml.schema.SqlTypes.SqlType;
-import io.shardml.sql.Column;
-import io.shardml.sql.Constraint;
-import io.shardml.sql.NotNull;
-import io.shardml.sql.PrimaryAnnotation;
-import io.shardml.sql.PrimaryKey;
 import io.shardml.sql.Schema;
-import io.shardml.sql.Table;
-import io.shardml.sql.TableConstraint;
-import io.shardml.sql.UniqueAnnotation;
-import io.shardml.sql.UniqueKey;
 
 /*Produces 3 output files per model, all for Citus:
  * 1. A json sharding config
  * 2. A SQL schema script with the imported tables
  * 3. A SQL distribution script
- * and, for a model that declares nodes, a fourth:
- * 4. A SQL placement script that moves every shard to the node the model assigns it
+ * and, when the schema has foreign keys:
+ * 4. A SQL foreign-key script, applied after the distribution script
+ * and, for a model that declares nodes:
+ * 5. A SQL placement script that moves every shard to the node the model assigns it
  * Citus (postgres) is the only supported target; the validator rejects
  * mysql models (SHML_025), so they never reach the generator.
  */
@@ -54,6 +46,9 @@ public class ShardMLGenerator extends AbstractGenerator {
 		fsa.generateFile(database.getName() + "-sharding.json", PostgresJSON(database));
 		fsa.generateFile(database.getName() + "-schema.sql", schemaDefinitions(ImportedSchema.of(model)));
 		fsa.generateFile(database.getName() + "-distribution.sql", distributionDefinitions(database));
+		CharSequence foreignKeys = foreignKeyDefinitions(database.getName(), ImportedSchema.of(model));
+		if (foreignKeys.length() > 0)
+			fsa.generateFile(database.getName() + "-foreign-keys.sql", foreignKeys);
 		Placement placement = PlacementResolver.resolve(database);
 		if (!placement.isEmpty())
 			fsa.generateFile(database.getName() + "-placement.sql", placementDefinitions(database.getName(), placement));
@@ -98,59 +93,20 @@ public class ShardMLGenerator extends AbstractGenerator {
 
 	// generates CREATE TABLE statements for every table of the imported schema,
 	// so the schema and distribution scripts together deploy to an empty database.
+	// Foreign keys are left out: they go to foreignKeyDefinitions
 	public CharSequence schemaDefinitions(Schema schema) {
-		StringBuilder out = new StringBuilder();
-		if (schema == null)
-			return out;
-		for (Table table : schema.getTables()) {
-			if (out.length() > 0)
-				out.append("\n");
-			// table constraints go after the columns, as in most hand-written DDL
-			List<String> lines = new ArrayList<>();
-			for (Column column : table.getColumns()) {
-				StringBuilder line = new StringBuilder(SqlNames.column(column)).append(" ").append(columnType(table, column));
-				for (Constraint constraint : column.getConstraint())
-					line.append(" ").append(constraintSQL(constraint));
-				lines.add(line.toString());
-			}
-			for (TableConstraint constraint : table.getConstraints())
-				lines.add(tableConstraintSQL(constraint));
-			// names as the schema wrote them: a quoted name stays quoted, a schema qualifier stays
-			out.append("CREATE TABLE ").append(table.isIfNotExists() ? "IF NOT EXISTS " : "")
-					.append(SqlNames.qualified(table)).append(" (\n    ");
-			out.append(String.join(",\n    ", lines));
-			out.append("\n);\n");
-		}
-		return out;
+		return SqlDdl.createTables(schema);
 	}
 
-	// through SqlTypes: a type that did not parse must stop generation, not come out as the enum's
-	// default INT. Validation reports the syntax error first, so this only guards direct callers
-	private static String columnType(Table table, Column column) {
-		SqlType type = SqlTypes.of(column);
-		if (!type.isKnown())
-			throw new IllegalStateException("The type of " + SqlNames.stored(table) + "." + SqlNames.stored(column)
-					+ " did not parse; fix the .msql before generating.");
-		return type.spelling();
-	}
-
-	private static String constraintSQL(Constraint constraint) {
-		if (constraint instanceof PrimaryAnnotation)
-			return "PRIMARY KEY";
-		if (constraint instanceof UniqueAnnotation)
-			return "UNIQUE";
-		if (constraint instanceof NotNull)
-			return "NOT NULL";
-		throw new IllegalArgumentException("Unknown constraint: " + constraint.eClass().getName());
-	}
-
-	private static String tableConstraintSQL(TableConstraint constraint) {
-		String columns = constraint.getColumns().stream().map(SqlNames::column).collect(Collectors.joining(", "));
-		if (constraint instanceof PrimaryKey)
-			return "PRIMARY KEY (" + columns + ")";
-		if (constraint instanceof UniqueKey)
-			return "UNIQUE (" + columns + ")";
-		throw new IllegalArgumentException("Unknown table constraint: " + constraint.eClass().getName());
+	// the schema's foreign keys as ALTER TABLE statements, applied after the distribution script:
+	// Citus rejects a foreign key to a table that is not distributed yet. Empty if there are none,
+	// and then no file is written
+	public CharSequence foreignKeyDefinitions(String database, Schema schema) {
+		String keys = SqlDdl.foreignKeys(schema);
+		if (keys.isEmpty())
+			return "";
+		return "-- Foreign keys of " + database + ". Apply after " + database + "-distribution.sql: Citus accepts a\n"
+				+ "-- foreign key only once the tables on both sides are distributed or reference tables.\n" + keys;
 	}
 
 	// generates Citus distribution commands for each sharded table.
