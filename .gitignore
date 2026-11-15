@@ -18,6 +18,7 @@ target/
 __MACOSX/
 
 
-# Notes stay local; only READMEs are published
+# Notes stay local; only READMEs are published, and the pre-registered Phase 4 plan
 *.md
 !README.md
+!docs/phase4-validation-plan.md
