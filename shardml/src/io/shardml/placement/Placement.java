@@ -14,6 +14,37 @@ public final class Placement {
 	private final List<ColocationGroup> groups;
 	private final Map<ShardSlot, Node> assignments;
 
+	// a placement with every shard placed by an explicit map (Phase 7), for the tables and nodes of
+	// shape: the map must place every shard shape places, and nothing else, on shape's nodes only.
+	// groups() still describes shape's groups (tables and buckets; their round-robin targets are
+	// shape's); assignments() and nodeOf are the map
+	public static Placement of(Placement shape, Map<ShardSlot, Node> assignments) {
+		for (ShardSlot slot : shape.assignments.keySet()) {
+			if (!assignments.containsKey(slot))
+				throw new IllegalArgumentException("The placement does not place bucket " + slot.bucket() + " of " + slot.table() + ".");
+		}
+		for (Map.Entry<ShardSlot, Node> entry : assignments.entrySet()) {
+			ShardSlot slot = entry.getKey();
+			if (!shape.assignments.containsKey(slot))
+				throw new IllegalArgumentException("The placement places bucket " + slot.bucket() + " of " + slot.table()
+						+ ", which the layout does not have.");
+			if (!shape.nodes.contains(entry.getValue()))
+				throw new IllegalArgumentException("The placement puts bucket " + slot.bucket() + " of " + slot.table()
+						+ " on " + entry.getValue() + ", which the layout does not declare.");
+		}
+		// in shape's order, so equal placements iterate alike
+		Map<ShardSlot, Node> ordered = new LinkedHashMap<>();
+		for (ShardSlot slot : shape.assignments.keySet())
+			ordered.put(slot, assignments.get(slot));
+		return new Placement(shape.nodes, shape.groups, ordered);
+	}
+
+	private Placement(List<Node> nodes, List<ColocationGroup> groups, Map<ShardSlot, Node> assignments) {
+		this.nodes = List.copyOf(nodes);
+		this.groups = List.copyOf(groups);
+		this.assignments = Collections.unmodifiableMap(assignments);
+	}
+
 	Placement(List<Node> nodes, List<ColocationGroup> groups) {
 		this.nodes = List.copyOf(nodes);
 		this.groups = List.copyOf(groups);
@@ -49,5 +80,21 @@ public final class Placement {
 	// true iff the model declares no nodes, so placement is left to Citus
 	public boolean isEmpty() {
 		return nodes.isEmpty();
+	}
+
+	// value equality: the same nodes, groups and shard map
+	@Override
+	public boolean equals(Object o) {
+		return o instanceof Placement p && nodes.equals(p.nodes) && groups.equals(p.groups) && assignments.equals(p.assignments);
+	}
+
+	@Override
+	public int hashCode() {
+		return java.util.Objects.hash(nodes, groups, assignments);
+	}
+
+	@Override
+	public String toString() {
+		return "Placement[nodes=" + nodes + ", groups=" + groups + ", assignments=" + assignments + "]";
 	}
 }

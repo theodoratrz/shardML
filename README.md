@@ -273,3 +273,4 @@ The tests cover all major validators and the generator, including multi-resource
 - `via` is trusted. `X belongs_to Y via k`, with `k` the shard key of `X`, is taken to mean that `k` references the shard key of `Y`. Nothing checks which column `k` really references, so a model that names the wrong column still validates; only the type check (SHML_027) and the examples' probe joins against a real cluster catch it.
 - Citus is the only target; Vitess is not supported.
 - Query patterns are declared manually and must be kept in sync with application code.
+- The cost model (in progress, `io.shardml.cost`) models hash-distributed and reference tables only. A workload statement on a table the layout does not distribute (a local, coordinator-only table) is rejected, not modelled. Shard keys must be `SMALLINT`, `INTEGER`/`SERIAL` or `BIGINT`/`BIGSERIAL`, the types whose Citus hash it reproduces.
