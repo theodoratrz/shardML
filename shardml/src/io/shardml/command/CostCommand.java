@@ -5,24 +5,11 @@ import java.io.PrintStream;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-import org.eclipse.emf.common.util.URI;
 import org.eclipse.emf.ecore.resource.Resource;
-import org.eclipse.emf.ecore.util.EcoreUtil;
-import org.eclipse.xtext.diagnostics.Severity;
-import org.eclipse.xtext.resource.XtextResource;
-import org.eclipse.xtext.resource.XtextResourceSet;
-import org.eclipse.xtext.util.CancelIndicator;
-import org.eclipse.xtext.validation.CheckMode;
-import org.eclipse.xtext.validation.Issue;
 
-import io.shardml.SQLStandaloneSetup;
-import io.shardml.ShardMLStandaloneSetup;
-import io.shardml.WorkloadStandaloneSetup;
 import io.shardml.cost.CostModel;
 import io.shardml.cost.CostReport;
 import io.shardml.cost.CostReportFormat;
@@ -31,7 +18,6 @@ import io.shardml.cost.Layouts;
 import io.shardml.cost.SweepPoint;
 import io.shardml.cost.Workload;
 import io.shardml.cost.Workloads;
-import io.shardml.scoping.ImportedSchema;
 import io.shardml.shardML.Model;
 import io.shardml.workload.Param;
 import io.shardml.workload.WorkloadModel;
@@ -201,31 +187,20 @@ public final class CostCommand {
 	}
 
 	private static int execute(Options options, PrintStream out, PrintStream err) {
-		SQLStandaloneSetup.doSetup();
-		ShardMLStandaloneSetup.doSetup();
-		com.google.inject.Injector injector = new WorkloadStandaloneSetup().createInjectorAndDoEMFRegistration();
+		com.google.inject.Injector injector = CommandSupport.setup();
 		// each file in a resource set of its own, as `shardml validate` reads it: the records are EMF-free and
 		// the cross-input checks compare names and types, so nothing needs a shared resource set (and two
 		// schemas with the same table names in one set confuse ShardML's relationship checks, Plan-phase3 4.5a)
 		List<Resource> files = new ArrayList<>();
 		try {
-			files.add(load(injector, options.workload()));
+			files.add(CommandSupport.load(injector, options.workload()));
 			for (File model : options.models())
-				files.add(load(injector, model));
+				files.add(CommandSupport.load(injector, model));
 		} catch (RuntimeException e) {
 			err.println("shardml cost: error: cannot read " + e.getMessage());
 			return ERROR;
 		}
-
-		// every file, then the .msql it imports (each schema once): file:line: severity: message [code]
-		int errors = 0;
-		Set<URI> schemas = new LinkedHashSet<>();
-		for (Resource file : files) {
-			Resource schema = file.getContents().isEmpty() ? null : ImportedSchema.resource(file.getContents().get(0));
-			if (schema instanceof XtextResource && schemas.add(schema.getURI()))
-				errors += report(validate(schema), schema, err);
-			errors += report(validate(file), file, err);
-		}
+		int errors = CommandSupport.validate(files, err);
 		if (errors > 0) {
 			err.println("shardml cost: " + errors + (errors == 1 ? " error" : " errors"));
 			return ERROR;
@@ -300,44 +275,5 @@ public final class CostCommand {
 		else
 			out.print(options.csv() ? CostReportFormat.sweepCsv(points, offsetColumn) : CostReportFormat.sweep(points, offsetColumn));
 		return OK;
-	}
-
-	private static Resource load(com.google.inject.Injector injector, File file) {
-		XtextResourceSet resources = injector.getInstance(XtextResourceSet.class);
-		resources.addLoadOption(XtextResource.OPTION_RESOLVE_ALL, Boolean.TRUE);
-		try {
-			Resource resource = resources.getResource(URI.createFileURI(file.getCanonicalPath()), true);
-			EcoreUtil.resolveAll(resources);
-			return resource;
-		} catch (java.io.IOException | RuntimeException e) {
-			throw new IllegalStateException(file.getPath() + ": " + e.getMessage(), e);
-		}
-	}
-
-	private static List<Issue> validate(Resource resource) {
-		return ((XtextResource) resource).getResourceServiceProvider().getResourceValidator().validate(resource,
-				CheckMode.ALL, CancelIndicator.NullImpl);
-	}
-
-	// prints the issues to err as file:line: severity: message [code]; returns the error count
-	private static int report(List<Issue> issues, Resource resource, PrintStream err) {
-		int errors = 0;
-		String file = URI.decode(resource.getURI().lastSegment());
-		for (Issue issue : issues) {
-			if (issue.getSeverity() == Severity.ERROR)
-				errors++;
-			String code = issue.getCode() == null ? "" : " [" + issue.getCode() + "]";
-			err.println(file + ":" + issue.getLineNumber() + ": " + severity(issue.getSeverity()) + ": " + issue.getMessage() + code);
-		}
-		return errors;
-	}
-
-	private static String severity(Severity severity) {
-		return switch (severity) {
-			case ERROR -> "error";
-			case WARNING -> "warning";
-			case INFO -> "info";
-			case IGNORE -> "ignore";
-		};
 	}
 }

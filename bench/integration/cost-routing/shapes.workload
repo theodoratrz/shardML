@@ -1,0 +1,36 @@
+import "../../../examples/cost/tpcc.msql"
+
+// Statement shapes the cost examples do not have, for bench/integration/test-cost-routing.sh with the TPC-C
+// layouts (examples/cost): a reference-table write, a reference table joined with a routed one, a colocated
+// join with no key condition (unrouted under W, a repartition join under S), and a delete.
+workload shapes {
+    domain warehouse { size: 12 }
+    domain item      { size: 100000 }
+
+    table warehouse  { rows: per warehouse          w_id: warehouse }
+    table district   { rows: 10 per warehouse       d_w_id: warehouse }
+    table customer   { rows: 3000 per warehouse     c_w_id: warehouse }
+    table history    { rows: 3000 per warehouse     h_w_id: warehouse }
+    table orders     { rows: 3000 per warehouse     o_w_id: warehouse }
+    table new_order  { rows: 900 per warehouse      no_w_id: warehouse }
+    table order_line { rows: 30000 per warehouse    ol_w_id: warehouse }
+    table stock      { rows: per warehouse, item    s_w_id: warehouse  s_i_id: item }
+    table item       { rows: per item               i_id: item }
+
+    transaction reference_write weight 1 {
+        let i = item uniform
+        write item where i_id = $i
+    }
+    transaction reference_join weight 1 {
+        let w = warehouse uniform
+        read order_line join item on order_line.ol_i_id = item.i_id where ol_w_id = $w
+    }
+    transaction colocated_unrouted weight 1 {
+        read order_line join stock on order_line.ol_w_id = stock.s_w_id AND order_line.ol_i_id = stock.s_i_id
+             where ol_i_id > ?
+    }
+    transaction delete_routed weight 1 {
+        let w = warehouse uniform
+        delete new_order where no_w_id = $w
+    }
+}

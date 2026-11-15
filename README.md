@@ -308,6 +308,20 @@ shard-relation touches per transaction; a reference-table read adds 1/n to every
 repartition joins are flagged and left out of fan-out, distributed transactions and load; there is no composite
 score. The predictions are not yet validated against measured throughput.
 
+### Checking the model's routing against Citus
+
+`shardml route <model.shardml> <workload>` prints every workload statement as SQL for sampled bindings (the hottest
+values, the smallest and largest, seeded draws) with the cost model's prediction: task count, nodes, or a
+repartition join. `bench/integration/test-cost-routing.sh` (CI) deploys each example layout on the bench
+cluster and compares the predictions with `EXPLAIN (FORMAT JSON)`, and 10,000 keys per key type with
+`get_shard_id_for_distribution_column`. Every bucket, node and task count matches; the differences are two
+stated assumptions, listed in `bench/integration/cost-routing/allowlist.tsv`:
+
+- a standalone reference-table **read** is modelled as 1/n of a touch on every worker; Citus plans it on the
+  coordinator's own placement, so that load lands on the coordinator;
+- a reference-table **write** is modelled as touching every worker (it commits on all of them, measured with
+  `pg_dist_transaction`); `EXPLAIN` shows one task on the coordinator and does not list the replicated writes.
+
 ## Limitations
 
 - The SQL grammar supports a subset of DDL: `CREATE TABLE`, `ALTER TABLE .. ADD` constraint, `CREATE [UNIQUE] INDEX`, `CREATE SCHEMA` and the pg_dump preamble. Sequences, user-defined types, partitions, functions, triggers and views are errors (SHML_061), and other `ALTER TABLE` actions (`ALTER COLUMN`, `ADD COLUMN`, ..) are not supported.

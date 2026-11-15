@@ -79,6 +79,11 @@ jobs:
       - name: Corpus catalogs, original vs generated
         run: bench/integration/test-sql-corpus.sh
 
+      # The cost model's routing against Citus EXPLAIN: keys, task counts, task nodes and
+      # repartition joins for every example layout, but for the allowlist
+      - name: Cost model routing on Citus
+        run: bench/integration/test-cost-routing.sh
+
       # Applies generated placement scripts and compares the live shard map with
       # `shardml placement`; every psql run is bounded by timeout(1).
       - name: Shard placement on Citus
