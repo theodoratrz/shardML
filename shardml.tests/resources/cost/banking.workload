@@ -1,0 +1,38 @@
+import "banking.msql"
+
+// Plan-phase3 5.A, verbatim: hot customers own many accounts (accounts per customer ~ zipf(s)),
+// account-level operations are uniform over accounts.
+workload banking {
+    param s = 1.0
+    param overview_w = 2
+    param history_w = 48
+    param transfer_w = 50
+
+    domain customer { size: 10000 }
+    domain account  { size: 1000000 within customer zipf($s) }
+
+    table customers    { rows: per customer   id: customer }
+    table cards        { rows: per customer   customer_id: customer  unique id }
+    table accounts     { rows: per account    id: account  customer_id: account.customer }
+    table transactions { rows: 2000000 over account uniform
+                         account_id: account  customer_id: account.customer  unique id }
+
+    transaction overview weight $overview_w {
+        let c = customer uniform
+        read customers where id = $c
+        read accounts  where customer_id = $c
+        read cards     where customer_id = $c
+    }
+    transaction history weight $history_w {
+        let a = account uniform
+        read transactions where customer_id = $a.customer AND account_id = $a
+    }
+    transaction transfer weight $transfer_w {
+        let src = account uniform
+        let dst = account uniform distinct from $src
+        write accounts     where customer_id = $src.customer AND id = $src
+        write accounts     where customer_id = $dst.customer AND id = $dst
+        write transactions where customer_id = $src.customer AND account_id = $src
+        write transactions where customer_id = $dst.customer AND account_id = $dst
+    }
+}
