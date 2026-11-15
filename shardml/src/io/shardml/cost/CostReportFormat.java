@@ -383,8 +383,9 @@ public final class CostReportFormat {
 		return java.math.BigDecimal.valueOf(value).stripTrailingZeros().toPlainString();
 	}
 
-	// a small JSON writer: two-space indentation, one value per line, commas where they belong
-	private static final class Json {
+	// a small JSON writer: two-space indentation, one value per line, commas where they belong (also
+	// TouchProfile's)
+	static final class Json {
 		private static final char QUOTE = '"';
 		private final StringBuilder out = new StringBuilder();
 		private int depth;

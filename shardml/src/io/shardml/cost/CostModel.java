@@ -71,7 +71,41 @@ public final class CostModel {
 	public SkewAndLoad skewAndLoad(Layout layout, Workload workload, long rankOffset) {
 		CostInputs.check(layout, workload);
 		budget(layout, workload, false);
-		return loads(layout, workload, mapping(workload, rankOffset), rankOffset, new java.util.HashMap<>());
+		return loads(layout, workload, mapping(workload, rankOffset), rankOffset, new java.util.HashMap<>(), null);
+	}
+
+	// Phase 4 (P4.0b): skewAndLoad's load split by touch kind, and statements per transaction by kind with their
+	// entry-node counts (TouchProfile). The same walk; nothing SkewAndLoad or CostReport report changes
+	public TouchProfile touchProfile(Layout layout, Workload workload, long rankOffset) {
+		CostInputs.check(layout, workload);
+		budget(layout, workload, false);
+		ByKind byKind = new ByKind(layout.nodes().size());
+		loads(layout, workload, mapping(workload, rankOffset), rankOffset, new java.util.HashMap<>(), byKind);
+		List<Node> nodes = layout.nodes();
+		List<TouchProfile.KindNodes> touches = new ArrayList<>();
+		List<TouchProfile.KindValue> statements = new ArrayList<>();
+		List<TouchProfile.KindNodes> entry = new ArrayList<>();
+		for (TouchKind k : TouchKind.values()) {
+			touches.add(new TouchProfile.KindNodes(k, values(nodes, byKind.touches[k.ordinal()])));
+			statements.add(new TouchProfile.KindValue(k, byKind.statements[k.ordinal()]));
+			double[] each = new double[nodes.size()];
+			java.util.Arrays.fill(each, byKind.statements[k.ordinal()] / nodes.size());
+			entry.add(new TouchProfile.KindNodes(k, values(nodes, each)));
+		}
+		return new TouchProfile(layout.name(), workload.name(), rankOffset, nodes.stream().map(Node::name).toList(), touches,
+				statements, byKind.repartitions, entry);
+	}
+
+	// what touchProfile collects from the load walk: touches per kind and node, statements per kind, repartitions
+	// (all per transaction, weighted by the templates' probabilities)
+	private static final class ByKind {
+		final double[][] touches;
+		final double[] statements = new double[TouchKind.values().length];
+		double repartitions;
+
+		ByKind(int nodes) {
+			touches = new double[TouchKind.values().length][nodes];
+		}
 	}
 
 	// The full report (Plan-phase3 4.4): Step 6's data and load, plus M1 distributed transactions,
@@ -81,7 +115,7 @@ public final class CostModel {
 		budget(layout, workload, true);
 		RankMapping mapping = mapping(workload, rankOffset);
 		java.util.Map<String, Double> touches = new java.util.HashMap<>();
-		SkewAndLoad loads = loads(layout, workload, mapping, rankOffset, touches);
+		SkewAndLoad loads = loads(layout, workload, mapping, rankOffset, touches, null);
 		DistributedTransactions m1 = new DistributedTransactions(layout, mapping, hasher);
 		double totalWeight = totalWeight(workload);
 		double twoPhase = 0;
@@ -159,7 +193,7 @@ public final class CostModel {
 	}
 
 	private SkewAndLoad loads(Layout layout, Workload workload, RankMapping mapping, long rankOffset,
-			java.util.Map<String, Double> touches) {
+			java.util.Map<String, Double> touches, ByKind byKind) {
 		List<Node> nodes = layout.nodes();
 		DataSkew data = data(layout, workload, mapping, nodes);
 
@@ -172,7 +206,7 @@ public final class CostModel {
 		for (Transaction t : workload.transactions()) {
 			double pi = t.weight() / totalWeight;
 			Marginals marginals = Marginals.of(workload, mapping, t);
-			LoadWalk walk = new LoadWalk(layout, mapping, marginals, t, pi, read, write, repartitions);
+			LoadWalk walk = new LoadWalk(layout, mapping, marginals, t, pi, read, write, repartitions, byKind);
 			walk.steps(t.steps(), 1);
 			touches.put(t.name(), walk.touches);
 		}
@@ -233,6 +267,8 @@ public final class CostModel {
 		private final double[] read;
 		private final double[] write;
 		private final List<RepartitionJoin> repartitions;
+		// null but for touchProfile; only ever added to, never read by the walk
+		private final ByKind byKind;
 		private final List<Node> nodes;
 		private final java.util.Map<Integer, String> letDomains = new java.util.HashMap<>();
 		// per (let, path, bucket count): what the budget pre-pass counts once
@@ -242,7 +278,7 @@ public final class CostModel {
 		double touches;
 
 		LoadWalk(Layout layout, RankMapping mapping, Marginals marginals, Transaction transaction, double pi, double[] read,
-				double[] write, List<RepartitionJoin> repartitions) {
+				double[] write, List<RepartitionJoin> repartitions, ByKind byKind) {
 			this.layout = layout;
 			this.mapping = mapping;
 			this.marginals = marginals;
@@ -251,6 +287,7 @@ public final class CostModel {
 			this.read = read;
 			this.write = write;
 			this.repartitions = repartitions;
+			this.byKind = byKind;
 			this.nodes = layout.nodes();
 			List<Let> lets = new ArrayList<>();
 			collect(transaction.steps(), lets, new ArrayList<>());
@@ -274,22 +311,41 @@ public final class CostModel {
 			Route route = Routing.route(s, layout);
 			if (route instanceof Repartition r) {
 				repartitions.add(new RepartitionJoin(transaction.name(), statement, s.table(), r.reason(), pi, times));
-			} else if (route instanceof ReferenceOnly ref) {
+				if (byKind != null)
+					byKind.repartitions += w;
+				return;
+			}
+			// the same additions as into[], to the statement's kind as well
+			double[] kind = byKind == null ? null : byKind.touches[TouchKind.of(route, s.kind() != Kind.READ).ordinal()];
+			if (byKind != null)
+				byKind.statements[TouchKind.of(route, s.kind() != Kind.READ).ordinal()] += w;
+			if (route instanceof ReferenceOnly ref) {
 				double each = s.kind() == Kind.READ ? (double) ref.relations().size() / nodes.size() : ref.relations().size();
-				for (int n = 0; n < into.length; n++)
+				for (int n = 0; n < into.length; n++) {
 					into[n] += w * each;
+					if (kind != null)
+						kind[n] += w * each;
+				}
 				touches += times * each * nodes.size();
 			} else if (route instanceof AllShards all) {
 				int relations = all.relations().size();
-				for (int b = 0; b < all.anyTable().buckets(); b++)
-					into[nodes.indexOf(layout.nodeOf(all.anyTable(), b))] += w * relations;
+				for (int b = 0; b < all.anyTable().buckets(); b++) {
+					int n = nodes.indexOf(layout.nodeOf(all.anyTable(), b));
+					into[n] += w * relations;
+					if (kind != null)
+						kind[n] += w * relations;
+				}
 				touches += (double) times * relations * all.anyTable().buckets();
 			} else {
 				Routed routed = (Routed) route;
 				int relations = routed.relations().size();
 				double[] mass = bucketMass(routed.value(), routed.keyTable().buckets());
-				for (int b = 0; b < mass.length; b++)
-					into[nodes.indexOf(layout.nodeOf(routed.keyTable(), b))] += w * relations * mass[b];
+				for (int b = 0; b < mass.length; b++) {
+					int n = nodes.indexOf(layout.nodeOf(routed.keyTable(), b));
+					into[n] += w * relations * mass[b];
+					if (kind != null)
+						kind[n] += w * relations * mass[b];
+				}
 				touches += (double) times * relations;
 			}
 		}
