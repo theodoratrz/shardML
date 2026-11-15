@@ -16,7 +16,7 @@ public final class LargestRemainder {
 	public static double[] zipfWeights(int n, double s) {
 		double[] weights = new double[n];
 		for (int r = 1; r <= n; r++)
-			weights[r - 1] = s == 0 ? 1.0 : Math.pow(r, -s);
+			weights[r - 1] = s == 0 ? 1.0 : StrictMath.pow(r, -s);
 		return weights;
 	}
 

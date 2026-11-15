@@ -85,7 +85,9 @@ public class ColumnTypeAccessGuardTest {
 			new Allowed("ShardMLGenerator.java", "StringBuilder(value.length() + 2).append('\"')",
 					"opens a JSON string literal in jsonString"),
 			new Allowed("ShardMLGenerator.java", "return out.append('\"').toString();",
-					"closes a JSON string literal in jsonString"));
+					"closes a JSON string literal in jsonString"),
+			new Allowed("CostReportFormat.java", "private static final char QUOTE = '\"';",
+					"the JSON string quote of the cost report's JSON writer, not identifier quoting"));
 
 	@Test
 	public void testOnlySqlTypesReadsTheColumnType() throws IOException {

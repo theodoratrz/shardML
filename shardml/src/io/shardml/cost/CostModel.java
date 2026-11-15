@@ -63,8 +63,96 @@ public final class CostModel {
 
 	public SkewAndLoad skewAndLoad(Layout layout, Workload workload, long rankOffset) {
 		CostInputs.check(layout, workload);
-		budget(layout, workload);
+		budget(layout, workload, false);
+		return loads(layout, workload, RankMapping.of(workload, rankOffset), rankOffset, new java.util.HashMap<>());
+	}
+
+	// The full report (Plan-phase3 4.4): Step 6's data and load, plus M1 distributed transactions,
+	// M2 fan-out, per template. The budget pre-pass covers every loop before any runs
+	public CostReport evaluate(Layout layout, Workload workload, long rankOffset) {
+		CostInputs.check(layout, workload);
+		budget(layout, workload, true);
 		RankMapping mapping = RankMapping.of(workload, rankOffset);
+		java.util.Map<String, Double> touches = new java.util.HashMap<>();
+		SkewAndLoad loads = loads(layout, workload, mapping, rankOffset, touches);
+		DistributedTransactions m1 = new DistributedTransactions(layout, mapping, hasher);
+		double totalWeight = totalWeight(workload);
+		double twoPhase = 0;
+		double multiNode = 0;
+		double tasks = 0;
+		double statements = 0;
+		double multiShard = 0;
+		int max = 0;
+		List<CostReport.TransactionCost> costs = new ArrayList<>();
+		for (Transaction t : workload.transactions()) {
+			double pi = t.weight() / totalWeight;
+			DistributedTransactions.Result r = m1.of(t);
+			FanOutSum f = new FanOutSum(layout);
+			f.steps(t.steps(), 1);
+			twoPhase += pi * r.twoPhase();
+			multiNode += pi * r.multiNode();
+			tasks += pi * f.tasks;
+			statements += pi * f.statements;
+			multiShard += pi * f.multiShard;
+			max = Math.max(max, f.max);
+			costs.add(new CostReport.TransactionCost(t.name(), pi, r.twoPhase(), r.multiNode(),
+					f.statements == 0 ? 0 : f.tasks / f.statements, f.max, touches.get(t.name())));
+		}
+		return new CostReport(layout.name(), workload.name(), loads.nodes(), rankOffset, workload.params(),
+				new CostReport.Distributed(twoPhase, multiNode),
+				new CostReport.FanOut(statements == 0 ? 0 : tasks / statements, statements == 0 ? 0 : multiShard / statements, max),
+				loads.data(), loads.load(), loads.repartitions(), costs);
+	}
+
+	// the convenience form: a parsed model, with its own placement unless another is given (rank offset 0)
+	public static CostReport evaluate(io.shardml.shardML.Database db, Workload workload, io.shardml.placement.Placement placement) {
+		Layout layout = Layouts.of(db);
+		java.util.Objects.requireNonNull(placement, "placement");
+		if (!placement.assignments().equals(layout.placement().assignments()))
+			layout = layout.withPlacement(placement.assignments());
+		return new CostModel().evaluate(layout, workload, 0);
+	}
+
+	private static double totalWeight(Workload workload) {
+		double total = 0;
+		for (Transaction t : workload.transactions())
+			total += t.weight();
+		return total;
+	}
+
+	// M2 per template: tasks per executed statement, repeat multiplicities included; repartitions excluded
+	private static final class FanOutSum {
+		private final Layout layout;
+		double tasks;
+		double statements;
+		double multiShard;
+		int max;
+
+		FanOutSum(Layout layout) {
+			this.layout = layout;
+		}
+
+		void steps(List<Step> steps, long times) {
+			for (Step step : steps) {
+				if (step instanceof Repeat repeat)
+					steps(repeat.steps(), times * repeat.count());
+				else if (step instanceof Statement s) {
+					Route route = Routing.route(s, layout);
+					if (route instanceof Repartition)
+						continue;
+					int f = route instanceof AllShards all ? all.anyTable().buckets() : 1;
+					tasks += (double) times * f;
+					statements += times;
+					if (f > 1)
+						multiShard += times;
+					max = Math.max(max, f);
+				}
+			}
+		}
+	}
+
+	private SkewAndLoad loads(Layout layout, Workload workload, RankMapping mapping, long rankOffset,
+			java.util.Map<String, Double> touches) {
 		List<Node> nodes = layout.nodes();
 		DataSkew data = data(layout, workload, mapping, nodes);
 
@@ -77,7 +165,9 @@ public final class CostModel {
 		for (Transaction t : workload.transactions()) {
 			double pi = t.weight() / totalWeight;
 			Marginals marginals = Marginals.of(workload, mapping, t);
-			new LoadWalk(layout, mapping, marginals, t, pi, read, write, repartitions).steps(t.steps(), 1);
+			LoadWalk walk = new LoadWalk(layout, mapping, marginals, t, pi, read, write, repartitions);
+			walk.steps(t.steps(), 1);
+			touches.put(t.name(), walk.touches);
 		}
 		double[] total = new double[nodes.size()];
 		for (int n = 0; n < total.length; n++)
@@ -140,6 +230,8 @@ public final class CostModel {
 		// per (let, path, bucket count): what the budget pre-pass counts once
 		private final java.util.Map<List<Object>, double[]> masses = new java.util.HashMap<>();
 		private int statement;
+		// the template's expected shard relations per execution (unweighted)
+		double touches;
 
 		LoadWalk(Layout layout, RankMapping mapping, Marginals marginals, Transaction transaction, double pi, double[] read,
 				double[] write, List<RepartitionJoin> repartitions) {
@@ -178,16 +270,19 @@ public final class CostModel {
 				double each = s.kind() == Kind.READ ? (double) ref.relations().size() / nodes.size() : ref.relations().size();
 				for (int n = 0; n < into.length; n++)
 					into[n] += w * each;
+				touches += times * each * nodes.size();
 			} else if (route instanceof AllShards all) {
 				int relations = all.relations().size();
 				for (int b = 0; b < all.anyTable().buckets(); b++)
 					into[nodes.indexOf(layout.nodeOf(all.anyTable(), b))] += w * relations;
+				touches += (double) times * relations * all.anyTable().buckets();
 			} else {
 				Routed routed = (Routed) route;
 				int relations = routed.relations().size();
 				double[] mass = bucketMass(routed.value(), routed.keyTable().buckets());
 				for (int b = 0; b < mass.length; b++)
 					into[nodes.indexOf(layout.nodeOf(routed.keyTable(), b))] += w * relations * mass[b];
+				touches += (double) times * relations;
 			}
 		}
 
@@ -210,7 +305,7 @@ public final class CostModel {
 
 	// --- the budget pre-pass (4.4c, 5) ---
 
-	private void budget(Layout layout, Workload workload) {
+	private void budget(Layout layout, Workload workload, boolean distributed) {
 		Budget budget = new Budget(perTemplate, perEvaluation);
 		for (TableLayout table : layout.tables()) {
 			if (!(table instanceof HashTable hash))
@@ -227,7 +322,8 @@ public final class CostModel {
 			budget.charge("table '" + hash.table() + "' (data skew)", steps);
 		}
 		for (Transaction t : workload.transactions())
-			budget.charge("transaction '" + t.name() + "'", steps(layout, workload, t));
+			budget.charge("transaction '" + t.name() + "'",
+					steps(layout, workload, t) + (distributed ? DistributedTransactions.steps(t, layout, workload) : 0));
 	}
 
 	private static long steps(Layout layout, Workload workload, Transaction t) {

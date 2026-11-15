@@ -26,13 +26,15 @@ import org.junit.jupiter.api.Test;
 // layouts as plain records. Every public type of io.shardml.cost, and every io.shardml type its
 // public API reaches (Placement, Node, SqlType, ...), is scanned: return types, parameters, record
 // components, public fields, generic arguments included. No type of EMF, Xtext or the generated
-// model packages may appear, except the parameters of the two factories, Layouts.of and Workloads.of.
+// model packages may appear, except the parameters of the two factories, Layouts.of and Workloads.of, and of the convenience
+// form CostModel.evaluate(Database, Workload, Placement).
 public class EmfFreeApiTest {
 
 	private static final List<String> FORBIDDEN = List.of("org.eclipse.", "io.shardml.shardML.", "io.shardml.sql.",
 			"io.shardml.workload.");
 	private static final Set<String> ALLOWED = Set.of("io.shardml.cost.Layouts.of(io.shardml.shardML.Database)",
-			"io.shardml.cost.Workloads.of(io.shardml.workload.WorkloadModel)");
+			"io.shardml.cost.Workloads.of(io.shardml.workload.WorkloadModel)",
+			"io.shardml.cost.CostModel.evaluate(io.shardml.shardML.Database)");
 
 	@Test
 	public void testNoEmfTypeInThePublicApi() throws Exception {
