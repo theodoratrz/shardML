@@ -62,9 +62,10 @@ public final class DistributedTransactions {
 		return new Result(clean(writes), clean(all));
 	}
 
-	// rounding can leave -1e-17 for an exact 0
+	// a probability, with the rounding of long sums (about 1e-11 over 10^6 values) kept inside [0, 1]: an
+	// exact 0 can come out as -1e-12, which would print as -0.000000
 	private static double clean(double p) {
-		return Math.abs(p) < 1e-15 ? 0 : p;
+		return Math.abs(p) < 1e-15 ? 0 : Math.min(1, Math.max(0, p));
 	}
 
 	// z(T) of the transaction's write statements (writesOnly) or all of them: z[0] = P[every node set is

@@ -1,0 +1,211 @@
+{
+  "layout": "banking_by_customer",
+  "workload": "banking",
+  "nodes": [
+    "w2",
+    "w3",
+    "w1"
+  ],
+  "rankOffset": 0,
+  "params": [
+    {
+      "name": "s",
+      "value": 1.000000,
+      "overridden": false
+    },
+    {
+      "name": "overview_w",
+      "value": 2.000000,
+      "overridden": false
+    },
+    {
+      "name": "history_w",
+      "value": 48.000000,
+      "overridden": false
+    },
+    {
+      "name": "transfer_w",
+      "value": 50.000000,
+      "overridden": false
+    }
+  ],
+  "distributed": {
+    "twoPhase": 0.330080,
+    "multiNode": 0.330080
+  },
+  "fanOut": {
+    "mean": 1.000000,
+    "multiShardShare": 0.000000,
+    "max": 1
+  },
+  "dataSkew": {
+    "maxOverMean": 1.123992,
+    "maxNode": "w3",
+    "rowsPerNode": [
+      {
+        "node": "w2",
+        "rows": 1077468
+      },
+      {
+        "node": "w3",
+        "rows": 1131485
+      },
+      {
+        "node": "w1",
+        "rows": 811047
+      }
+    ],
+    "tables": [
+      {
+        "table": "customers",
+        "reference": false,
+        "rowsPerNode": [
+          {
+            "node": "w2",
+            "rows": 3501
+          },
+          {
+            "node": "w3",
+            "rows": 3424
+          },
+          {
+            "node": "w1",
+            "rows": 3075
+          }
+        ]
+      },
+      {
+        "table": "accounts",
+        "reference": false,
+        "rowsPerNode": [
+          {
+            "node": "w2",
+            "rows": 356822
+          },
+          {
+            "node": "w3",
+            "rows": 374879
+          },
+          {
+            "node": "w1",
+            "rows": 268299
+          }
+        ]
+      },
+      {
+        "table": "transactions",
+        "reference": false,
+        "rowsPerNode": [
+          {
+            "node": "w2",
+            "rows": 713644
+          },
+          {
+            "node": "w3",
+            "rows": 749758
+          },
+          {
+            "node": "w1",
+            "rows": 536598
+          }
+        ]
+      },
+      {
+        "table": "cards",
+        "reference": false,
+        "rowsPerNode": [
+          {
+            "node": "w2",
+            "rows": 3501
+          },
+          {
+            "node": "w3",
+            "rows": 3424
+          },
+          {
+            "node": "w1",
+            "rows": 3075
+          }
+        ]
+      }
+    ]
+  },
+  "load": {
+    "total": 2.540000,
+    "bottleneck": 0.950244,
+    "maxOverMean": 1.122335,
+    "maxNode": "w3",
+    "perNode": [
+      {
+        "node": "w2",
+        "value": 0.905925
+      },
+      {
+        "node": "w3",
+        "value": 0.950244
+      },
+      {
+        "node": "w1",
+        "value": 0.683832
+      }
+    ],
+    "readPerNode": [
+      {
+        "node": "w2",
+        "value": 0.192281
+      },
+      {
+        "node": "w3",
+        "value": 0.200486
+      },
+      {
+        "node": "w1",
+        "value": 0.147234
+      }
+    ],
+    "writePerNode": [
+      {
+        "node": "w2",
+        "value": 0.713644
+      },
+      {
+        "node": "w3",
+        "value": 0.749758
+      },
+      {
+        "node": "w1",
+        "value": 0.536598
+      }
+    ]
+  },
+  "repartitions": [],
+  "transactions": [
+    {
+      "name": "overview",
+      "probability": 0.020000,
+      "twoPhase": 0.000000,
+      "multiNode": 0.000000,
+      "fanOutMean": 1.000000,
+      "maxFanOut": 1,
+      "touches": 3.000000
+    },
+    {
+      "name": "history",
+      "probability": 0.480000,
+      "twoPhase": 0.000000,
+      "multiNode": 0.000000,
+      "fanOutMean": 1.000000,
+      "maxFanOut": 1,
+      "touches": 1.000000
+    },
+    {
+      "name": "transfer",
+      "probability": 0.500000,
+      "twoPhase": 0.660160,
+      "multiNode": 0.660160,
+      "fanOutMean": 1.000000,
+      "maxFanOut": 1,
+      "touches": 4.000000
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+shardml cost: banking_by_account x banking
+nodes: w2, w3, w1
+params: s=1, overview_w=2, history_w=48, transfer_w=50; rank offset 0
+
+metric                          value     note
+distributed txns (2PC)          0.333010
+multi-node txns                 0.353010
+fan-out (mean tasks/stmt)       1.244094  multi-shard 0.007874, max 32
+data skew (max/mean rows)       1.032734  max on w3
+load skew (max/mean touches)    1.032392  max on w3
+bottleneck load (touches/txn)   1.087453  on w3
+repartition joins               none
+
+node                   rows      read load     write load     total load
+w2                  1036518       0.398727       0.686344       1.085071
+w3                  1039619       0.398939       0.688514       1.087453
+w1                   943863       0.362334       0.625142       0.987476
+
+transaction               p        2PC multi-node    fan-out    max    touches
+overview           0.020000   0.000000   1.000000  11.333333     32  34.000000
+history            0.480000   0.000000   0.000000   1.000000      1   1.000000
+transfer           0.500000   0.666020   0.666020   1.000000      1   4.000000
+
+assumptions:
+  - the shard of a key is Citus's own hash (worker_hash) for SMALLINT, INTEGER and BIGINT keys, reproduced exactly
+  - rank r of a distribution is value r, rotated by the rank offset for top-level domains; a child domain's values follow its parent's rank order
+  - load is counted in shard-relation touches per transaction, unweighted
+  - a reference-table read adds 1/n to every node; a reference-table write adds 1 to every node (it commits on all)
+  - a repartition join is flagged and left out of fan-out, distributed transactions and load
+  - no composite score: the metrics are reported side by side

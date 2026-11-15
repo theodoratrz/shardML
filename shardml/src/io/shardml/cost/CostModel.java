@@ -45,6 +45,13 @@ public final class CostModel {
 	private final KeyHasher hasher;
 	private final long perTemplate;
 	private final long perEvaluation;
+	// RankMapping depends only on the domains and the rank offset; one CostModel reused across a sweep or a
+	// comparison builds each mapping (and its cached per-key arrays) once
+	private final java.util.Map<List<Object>, RankMapping> mappings = new java.util.HashMap<>();
+
+	private RankMapping mapping(Workload workload, long rankOffset) {
+		return mappings.computeIfAbsent(List.of(workload.domains(), rankOffset), k -> RankMapping.of(workload, rankOffset));
+	}
 
 	public CostModel() {
 		this(CitusHash.INSTANCE);
@@ -64,7 +71,7 @@ public final class CostModel {
 	public SkewAndLoad skewAndLoad(Layout layout, Workload workload, long rankOffset) {
 		CostInputs.check(layout, workload);
 		budget(layout, workload, false);
-		return loads(layout, workload, RankMapping.of(workload, rankOffset), rankOffset, new java.util.HashMap<>());
+		return loads(layout, workload, mapping(workload, rankOffset), rankOffset, new java.util.HashMap<>());
 	}
 
 	// The full report (Plan-phase3 4.4): Step 6's data and load, plus M1 distributed transactions,
@@ -72,7 +79,7 @@ public final class CostModel {
 	public CostReport evaluate(Layout layout, Workload workload, long rankOffset) {
 		CostInputs.check(layout, workload);
 		budget(layout, workload, true);
-		RankMapping mapping = RankMapping.of(workload, rankOffset);
+		RankMapping mapping = mapping(workload, rankOffset);
 		java.util.Map<String, Double> touches = new java.util.HashMap<>();
 		SkewAndLoad loads = loads(layout, workload, mapping, rankOffset, touches);
 		DistributedTransactions m1 = new DistributedTransactions(layout, mapping, hasher);

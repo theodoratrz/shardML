@@ -1,0 +1,25 @@
+shardml cost: 2 layouts x banking
+params: s=1, overview_w=2, history_w=48, transfer_w=50; rank offset 0
+
+metric             banking_by_customer  banking_by_account
+distributed_2pc    0.330080             0.333010
+multi_node         0.330080             0.353010
+fan_out_mean       1.000000             1.244094
+multi_shard_share  0.000000             0.007874
+fan_out_max        1                    32
+data_skew          1.123992             1.032734
+data_skew_node     w3                   w3
+load_skew          1.122335             1.032392
+load_skew_node     w3                   w3
+bottleneck         0.950244             1.087453
+bottleneck_node    w3                   w3
+total_touches      2.540000             3.160000
+repartition_joins  0                    0
+
+assumptions:
+  - the shard of a key is Citus's own hash (worker_hash) for SMALLINT, INTEGER and BIGINT keys, reproduced exactly
+  - rank r of a distribution is value r, rotated by the rank offset for top-level domains; a child domain's values follow its parent's rank order
+  - load is counted in shard-relation touches per transaction, unweighted
+  - a reference-table read adds 1/n to every node; a reference-table write adds 1 to every node (it commits on all)
+  - a repartition join is flagged and left out of fan-out, distributed transactions and load
+  - no composite score: the metrics are reported side by side

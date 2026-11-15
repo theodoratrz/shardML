@@ -267,6 +267,47 @@ The tests cover all major validators and the generator, including multi-resource
 
 ---
 
+## Cost model: `shardml cost`
+
+`shardml cost` estimates how a workload behaves under a layout, before deploying it. A `.workload` file
+describes the data (domains of key values, rows per table) and the transaction mix; it imports the same `.msql`
+schema as the layouts, so one workload is evaluated against many layouts.
+
+```sh
+java -jar shardml.cli/target/*-cli.jar cost banking.workload banking-by-customer.shardml                      # one report
+java -jar shardml.cli/target/*-cli.jar cost banking.workload banking-by-customer.shardml banking-by-account.shardml   # side by side
+java -jar shardml.cli/target/*-cli.jar cost --csv --sweep s=1.0,1.28 banking.workload banking-by-customer.shardml banking-by-account.shardml
+```
+
+Options: `--json`, `--csv` (comparisons and sweeps), `--set name=value` (repeatable; the same rules as values in
+the file), `--rank-offset k`, `--sweep name=v1,v2,...`, `--compare` (an alias that needs two or more models).
+Every file is validated first; an error exits 1, an error between the files (a layout without nodes, a schema
+mismatch, an unknown `--set` param) prints `shardml cost: error: ...` and exits 1, a usage error exits 2.
+
+For the banking example (`shardml.tests/resources/cost`: 10,000 customers, 1,000,000 accounts, by customer vs by
+account), the comparison prints:
+
+```
+metric             banking_by_customer  banking_by_account
+distributed_2pc    0.330080             0.333010
+multi_node         0.330080             0.353010
+fan_out_mean       1.000000             1.244094
+multi_shard_share  0.000000             0.007874
+fan_out_max        1                    32
+data_skew          1.123992             1.032734
+load_skew          1.122335             1.032392
+bottleneck         0.950244             1.087453
+total_touches      2.540000             3.160000
+repartition_joins  0                    0
+```
+
+(node columns omitted). Assumptions, printed under every table: the shard of a key is Citus's own hash for
+`SMALLINT` / `INTEGER` / `BIGINT` keys, reproduced exactly; rank r of a distribution is value r, rotated by the
+rank offset for top-level domains (child domains follow their parent's rank order); load is counted in unweighted
+shard-relation touches per transaction; a reference-table read adds 1/n to every node and a write 1 to every node;
+repartition joins are flagged and left out of fan-out, distributed transactions and load; there is no composite
+score. The predictions are not yet validated against measured throughput.
+
 ## Limitations
 
 - The SQL grammar supports a subset of DDL: `CREATE TABLE`, `ALTER TABLE .. ADD` constraint, `CREATE [UNIQUE] INDEX`, `CREATE SCHEMA` and the pg_dump preamble. Sequences, user-defined types, partitions, functions, triggers and views are errors (SHML_061), and other `ALTER TABLE` actions (`ALTER COLUMN`, `ADD COLUMN`, ..) are not supported.

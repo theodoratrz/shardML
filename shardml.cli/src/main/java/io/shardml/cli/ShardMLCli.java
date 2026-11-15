@@ -55,6 +55,7 @@ public final class ShardMLCli {
 			"  shardml validate <model.shardml | workload.workload>",
 			"  shardml generate <model.shardml> [-o <output-dir>]",
 			"  shardml placement <model.shardml>",
+			"  shardml cost [options] <workload.workload> <model.shardml>...",
 			"",
 			"generate writes <output-dir>/<database>-sharding.json,",
 			"<output-dir>/<database>-schema.sql (apply first) and",
@@ -65,7 +66,9 @@ public final class ShardMLCli {
 			"The default output directory is src-gen/ next to the model file.",
 			"",
 			"placement prints the node of every shard, one per line:",
-			"<table> TAB <bucket> TAB <host>:<port>.");
+			"<table> TAB <bucket> TAB <host>:<port>.",
+			"",
+			"cost prints the cost model's report (see shardml cost --help).");
 
 	/** Exit codes: 0 ok, 1 model error, 2 bad invocation or I/O failure. */
 	private static final int EXIT_OK = 0;
@@ -86,6 +89,14 @@ public final class ShardMLCli {
 		}
 
 		String command = args[0];
+		if ("cost".equals(command)) {
+			List<String> rest = List.of(args).subList(1, args.length);
+			if (rest.isEmpty() || rest.size() == 1 && isHelp(rest.get(0))) {
+				System.out.println(io.shardml.command.CostCommand.USAGE_TEXT);
+				return rest.isEmpty() ? EXIT_USAGE : EXIT_OK;
+			}
+			return io.shardml.command.CostCommand.run(rest, System.out, System.err);
+		}
 		if (!"validate".equals(command) && !"generate".equals(command) && !"placement".equals(command)) {
 			System.err.println("shardml: unknown command '" + command + "'");
 			System.err.println(USAGE);
