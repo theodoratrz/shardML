@@ -55,7 +55,11 @@ import io.shardml.schema.SqlTypes.SqlType;
  * SkewAndLoad.DataSkew's rows per node for that table (CostModel with CitusHash); hash tables must have rows
  * only on the layout's nodes and equal the model there exactly; a reference table's copies must each hold
  * the model's total (a copy on a node the layout does not declare, the coordinator's, is listed, not compared).
- * Any difference fails. This checks the loader, not the model. */
+ * Any difference fails. Also: per hash table, up to SAMPLE_KEYS keys sampled evenly over the generated rows
+ * are looked up with get_shard_id_for_distribution_column (its bucket by shardminvalue, and its placement's
+ * node) and must equal the model's bucket and node (CitusHash, the layout); any mismatch fails. Reported, not
+ * checked: rows/s of the COPY, and bytes per table and node (pg_total_relation_size of every placement).
+ * This checks the loader, not the model. */
 final class Loader {
 
 	static final int CHUNK_ROWS = 200_000;
@@ -69,6 +73,20 @@ final class Loader {
 			return !compared || expected == actual;
 		}
 	}
+
+	// a hash table's sampled keys: Citus's shard (get_shard_id_for_distribution_column, as a bucket by
+	// shardminvalue) and its node against the model's (CitusHash, the layout's placement)
+	record BucketCheck(String table, int keys, int bucketMismatches, int nodeMismatches, String first) {
+		boolean ok() {
+			return bucketMismatches == 0 && nodeMismatches == 0;
+		}
+	}
+
+	// on-disk size (pg_total_relation_size: heap, indexes, TOAST) of a table's placements on one node
+	record Size(String table, String node, long rows, long bytes) {
+	}
+
+	static final int SAMPLE_KEYS = 1000;
 
 	private Loader() {
 	}
@@ -236,13 +254,20 @@ final class Loader {
 					for (String t : tables)
 						s.execute("VACUUM ANALYZE " + t);
 				}
-				out.printf("load: COPY %.1f s, VACUUM ANALYZE %.1f s%n", (copied - started) / 1e9, (System.nanoTime() - copied) / 1e9);
+				double copySeconds = (copied - started) / 1e9;
+				out.printf("load: COPY %.1f s (%.0f rows/s), VACUUM ANALYZE %.1f s%n", copySeconds, total / Math.max(copySeconds, 1e-9),
+						(System.nanoTime() - copied) / 1e9);
 			}
 			List<NodeCheck> checks = verify(workload, layout, mapping, target, o.database(), settings);
 			out.print(format(checks));
-			boolean ok = checks.stream().allMatch(NodeCheck::ok);
-			out.println(ok ? "load: rows per node equal the model's data-skew rows exactly"
-					: "load: FAILED: rows per node differ from the model's data-skew rows");
+			List<BucketCheck> buckets = bucketCheck(workload, layout, mapping, target, o.database(), settings);
+			for (BucketCheck b : buckets)
+				out.println("bucket check: " + b.table() + ": " + b.keys() + " sampled keys, " + b.bucketMismatches()
+						+ " bucket mismatches, " + b.nodeMismatches() + " node mismatches" + (b.ok() ? "" : "; first: " + b.first()));
+			out.print(formatSizes(sizes(workload, layout, mapping, target, o.database(), settings)));
+			boolean ok = checks.stream().allMatch(NodeCheck::ok) && buckets.stream().allMatch(BucketCheck::ok);
+			out.println(ok ? "load: rows per node equal the model's data-skew rows exactly; sampled keys are on the model's shards"
+					: "load: FAILED: rows per node differ from the model's data-skew rows, or a sampled key is not on the model's shard");
 			return ok ? Driver.OK : Driver.FAIL;
 		} catch (SQLException e) {
 			throw new IllegalArgumentException(e.getMessage(), e);
@@ -318,6 +343,122 @@ final class Loader {
 		for (NodeCheck c : checks)
 			out.append(String.format("%-16s %-34s %12s %12d  %s%n", c.table(), c.node(), c.expected() < 0 ? "-" : String.valueOf(c.expected()),
 					c.actual(), !c.compared() ? "(listed)" : c.ok() ? "ok" : "DIFFERS"));
+		return out.toString();
+	}
+
+	// the values of one column over a table block's rows, in RowCounts' order (no COPY text built)
+	static void columnValues(Workload workload, Layout layout, RankMapping mapping, TableData data, String column,
+			java.util.function.LongConsumer consumer) {
+		List<String> columns = List.of(column);
+		Column source = sources(workload, layout, mapping, data, columns).get(0);
+		long[] row = { 1 };
+		RowCounts.of(workload, mapping, data.table()).forEachRowGroup((values, rows) -> {
+			for (long k = 0; k < rows; k++)
+				consumer.accept(Long.parseLong(source.value(values, row[0]++)));
+		});
+	}
+
+	// up to SAMPLE_KEYS distinct keys of a hash table, evenly strided over its rows (first and last row included)
+	static long[] sampleKeys(Workload workload, Layout layout, RankMapping mapping, TableData data, String keyColumn) {
+		long total = RowCounts.of(workload, mapping, data.table()).total();
+		long stride = Math.max(1, (total + SAMPLE_KEYS - 1) / SAMPLE_KEYS);
+		java.util.LinkedHashSet<Long> keys = new java.util.LinkedHashSet<>();
+		long[] index = { 0 };
+		columnValues(workload, layout, mapping, data, keyColumn, v -> {
+			long i = index[0]++;
+			if (i % stride == 0 || i == total - 1)
+				keys.add(v);
+		});
+		return keys.stream().mapToLong(Long::longValue).toArray();
+	}
+
+	static List<BucketCheck> bucketCheck(Workload workload, Layout layout, RankMapping mapping, String target, String database,
+			Map<String, String> settings) throws SQLException {
+		List<BucketCheck> out = new ArrayList<>();
+		String sql = "SELECT k.key, s.bucket, n.nodename || ':' || n.nodeport "
+				+ "FROM unnest(?::bigint[]) AS k(key) "
+				+ "JOIN LATERAL (SELECT get_shard_id_for_distribution_column(?::regclass, k.key) AS shardid) g ON true "
+				+ "JOIN (SELECT shardid, row_number() OVER (ORDER BY shardminvalue::bigint) - 1 AS bucket "
+				+ "      FROM pg_dist_shard WHERE logicalrelid = ?::regclass) s ON s.shardid = g.shardid "
+				+ "JOIN pg_dist_placement p ON p.shardid = g.shardid "
+				+ "JOIN pg_dist_node n ON n.groupid = p.groupid AND n.noderole = 'primary' ORDER BY 1";
+		try (Connection c = connect(target, database, settings); PreparedStatement ps = c.prepareStatement(sql)) {
+			for (TableData data : workload.tables()) {
+				if (!(layout.table(data.table()).orElse(null) instanceof io.shardml.cost.HashTable hash))
+					continue;
+				long[] keys = sampleKeys(workload, layout, mapping, data, hash.keyColumn());
+				Map<Long, Integer> bucketOf = new java.util.HashMap<>();
+				for (long k : keys)
+					bucketOf.put(k, io.shardml.cost.CitusHash.INSTANCE.bucket(k, hash.buckets()));
+				ps.setArray(1, c.createArrayOf("bigint", java.util.Arrays.stream(keys).boxed().toArray()));
+				ps.setString(2, hash.qualified());
+				ps.setString(3, hash.qualified());
+				int n = 0, bucketMismatches = 0, nodeMismatches = 0;
+				String first = null;
+				try (ResultSet rs = ps.executeQuery()) {
+					while (rs.next()) {
+						n++;
+						long key = rs.getLong(1);
+						int bucket = bucketOf.get(key);
+						Node node = layout.nodeOf(hash, bucket);
+						String modelNode = node.host() + ":" + node.port();
+						boolean badBucket = rs.getInt(2) != bucket, badNode = !rs.getString(3).equals(modelNode);
+						if (badBucket)
+							bucketMismatches++;
+						if (badNode)
+							nodeMismatches++;
+						if ((badBucket || badNode) && first == null)
+							first = "key " + key + " model " + bucket + "/" + modelNode + " citus " + rs.getInt(2) + "/" + rs.getString(3);
+					}
+				}
+				// every key must come back once (one placement per shard)
+				if (n != keys.length && first == null)
+					first = keys.length + " keys sampled, " + n + " placements returned";
+				out.add(new BucketCheck(data.table(), keys.length, bucketMismatches + Math.max(0, keys.length - n), nodeMismatches, first));
+			}
+		}
+		return out;
+	}
+
+	// bytes per table and node (every placement's pg_total_relation_size, summed per node), with the model's rows
+	static List<Size> sizes(Workload workload, Layout layout, RankMapping mapping, String target, String database,
+			Map<String, String> settings) throws SQLException {
+		SkewAndLoad model = new CostModel().skewAndLoad(layout, workload, mapping.offset());
+		Map<String, String> nodeOf = new LinkedHashMap<>();
+		for (Node n : layout.nodes())
+			nodeOf.put(n.host() + ":" + n.port(), n.name());
+		List<Size> out = new ArrayList<>();
+		try (Connection c = connect(target, database, settings);
+				PreparedStatement ps = c.prepareStatement("SELECT nodename || ':' || nodeport, sum(result::bigint) "
+						+ "FROM run_command_on_placements(?::regclass, 'select pg_total_relation_size(''%s'')') GROUP BY 1 ORDER BY 1")) {
+			for (SkewAndLoad.TableRows t : model.data().tables()) {
+				Map<String, Long> rows = new LinkedHashMap<>();
+				for (SkewAndLoad.NodeRows r : t.rowsPerNode())
+					rows.put(r.node(), r.rows());
+				ps.setString(1, layout.table(t.table()).orElseThrow().qualified());
+				try (ResultSet rs = ps.executeQuery()) {
+					while (rs.next()) {
+						String node = nodeOf.getOrDefault(rs.getString(1), rs.getString(1));
+						out.add(new Size(t.table(), node, rows.getOrDefault(node, -1L), rs.getLong(2)));
+					}
+				}
+			}
+		}
+		return out;
+	}
+
+	static String formatSizes(List<Size> sizes) {
+		StringBuilder out = new StringBuilder(String.format("%-16s %-34s %12s %14s %10s%n", "table", "node", "rows", "bytes", "bytes/row"));
+		Map<String, long[]> perNode = new LinkedHashMap<>();
+		for (Size s : sizes) {
+			out.append(String.format("%-16s %-34s %12s %14d %10s%n", s.table(), s.node(), s.rows() < 0 ? "-" : String.valueOf(s.rows()),
+					s.bytes(), s.rows() > 0 ? String.valueOf(s.bytes() / s.rows()) : "-"));
+			long[] t = perNode.computeIfAbsent(s.node(), k -> new long[2]);
+			t[0] += Math.max(0, s.rows());
+			t[1] += s.bytes();
+		}
+		for (Map.Entry<String, long[]> e : perNode.entrySet())
+			out.append(String.format("%-16s %-34s %12d %14d%n", "(all tables)", e.getKey(), e.getValue()[0], e.getValue()[1]));
 		return out.toString();
 	}
 }

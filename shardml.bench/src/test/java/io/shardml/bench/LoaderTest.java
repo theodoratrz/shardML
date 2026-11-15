@@ -106,4 +106,27 @@ public class LoaderTest {
 		Assertions.assertEquals("x", Loader.constant(new SqlTypes.SqlType(SqlTypes.Base.TEXT, null, null, "TEXT")));
 		Assertions.assertEquals("\\N", Loader.constant(null));
 	}
+
+	@Test
+	public void testSampledKeys() {
+		Inputs.Loaded t = Examples.load(Examples.COST + "../../bench/integration/loader/tpcc-small.workload", Examples.COST + "tpcc-by-warehouse.shardml");
+		Workload w = t.workload();
+		Layout layout = t.layouts().get(0);
+		RankMapping mapping = RankMapping.of(w, 0);
+		for (Workload.TableData data : w.tables()) {
+			if (!(layout.table(data.table()).orElseThrow() instanceof HashTable hash))
+				continue;
+			List<Long> all = new java.util.ArrayList<>();
+			Loader.columnValues(w, layout, mapping, data, hash.keyColumn(), all::add);
+			long[] sample = Loader.sampleKeys(w, layout, mapping, data, hash.keyColumn());
+			Set<Long> distinct = new HashSet<>(all);
+			Assertions.assertTrue(sample.length >= 1 && sample.length <= Math.min(distinct.size(), Loader.SAMPLE_KEYS + 1), data.table());
+			Assertions.assertEquals(sample.length, java.util.Arrays.stream(sample).distinct().count(), data.table());
+			Assertions.assertEquals(all.get(0), sample[0], data.table());
+			Assertions.assertTrue(java.util.Arrays.stream(sample).anyMatch(k -> k == all.get(all.size() - 1)), data.table());
+			// every warehouse is sampled from a table distributed by warehouse
+			if (hash.keyColumn().endsWith("w_id"))
+				Assertions.assertEquals(distinct, java.util.Arrays.stream(sample).boxed().collect(java.util.stream.Collectors.toSet()), data.table());
+		}
+	}
 }

@@ -2,17 +2,22 @@
 # Integration test of the Phase 4 loader (Plan-phase4 2.5, P4.2): for each case, in a fresh schema, deploy the
 # generated schema, distribution and placement, run `driver load` through the coordinator, and require that
 # the rows on every node (count(*) of every shard placement, summed per node) equal the model's data-skew rows
-# exactly. Scaled-down workloads (bench/integration/loader/) so it runs in about a minute; the full examples
-# load the same way:
+# exactly, and that sampled keys sit on the model's shard and node. Scaled-down workloads
+# (bench/integration/loader/); on the local emulated cluster the six cases take about 11 minutes, almost all of it
+# moving the empty shards into place, so CI runs only bench/integration/loader/ci.cases (one layout, about 80 s
+# locally). The full examples load the same way:
 #
 #   bench/integration/test-loader.sh
 #   CASES_FILE=... bench/integration/test-loader.sh      (one "label|model|workload|driver options" per line)
+#   TRANSFER_MODE=force_logical bench/integration/test-loader.sh   (the generated scripts' own mode; default
+#                                                                   block_writes, the tables being empty)
 set -uo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 BENCH="$ROOT/bench"
 SCHEMA=loader_check
 PORT=${CITUS_PORT:-5433}
+TRANSFER_MODE=${TRANSFER_MODE:-block_writes}
 
 shopt -s nullglob
 CLI= DRIVER=
@@ -60,23 +65,32 @@ for case in "${CASES[@]}"; do
 	db=$(basename "$out"/gen/*-schema.sql -schema.sql)
 	psql_db -c "DROP SCHEMA IF EXISTS $SCHEMA CASCADE;" -c "CREATE SCHEMA $SCHEMA;" </dev/null >/dev/null
 	deployed=1
+	deploy_start=$(date +%s)
 	for step in schema distribution placement; do
 		file="$out/gen/$db-$step.sql"
 		[[ -f "$file" ]] || continue
+		# the tables are still empty, so the moves need not keep them writable: TRANSFER_MODE (default
+		# block_writes) replaces the generated script's force_logical
+		if [[ $step == placement ]]; then
+			sed "s/shard_transfer_mode => 'force_logical'/shard_transfer_mode => '$TRANSFER_MODE'/" "$file" >"$out/placement-run.sql"
+			file="$out/placement-run.sql"
+		fi
 		if ! psql_db <"$file" >"$out/$step.log" 2>&1; then
 			echo "  FAIL  $db-$step.sql"; tail -5 "$out/$step.log"; failures=$((failures + 1)); deployed=0
 		fi
 	done
 	[[ $deployed -eq 1 ]] || continue
+	echo "  deploy $(( $(date +%s) - deploy_start )) s (shard_transfer_mode $TRANSFER_MODE)"
 	start=$(date +%s)
 	# shellcheck disable=SC2086
 	if java -jar "$DRIVER" load --targets "127.0.0.1:$PORT" --schema "$SCHEMA" --jobs "${JOBS:-4}" $options "$ROOT/$workload" "$ROOT/$model" \
 		>"$out/load.log" 2>"$out/load.err"; then
 		echo "  ok    $(grep -c ' ok$' "$out/load.log") node checks equal the model ($(( $(date +%s) - start )) s): $(grep '^load: [0-9]' "$out/load.log")"
+		echo "        $(grep -c '^bucket check: .* 0 bucket mismatches, 0 node mismatches$' "$out/load.log") hash tables' sampled keys on the model's shards; $(grep '^load: COPY' "$out/load.log")"
 	else
 		echo "  FAIL  driver load"
 		grep -v "SHML_022" "$out/load.err" | tail -5
-		grep "DIFFERS\|FAILED" "$out/load.log" | head -10
+		grep "DIFFERS\|FAILED\|first:" "$out/load.log" | head -10
 		failures=$((failures + 1))
 	fi
 	# foreign keys, if the layout has any, after the rows

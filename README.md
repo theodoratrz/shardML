@@ -419,7 +419,10 @@ git commit) to `bench-runs/<workload>/<layout>/<entry>/<mode>/<params>/seed-<s>-
 `driver load --targets <coordinator> <workload> <model>` fills a deployed layout with the rows the model
 counts (`RowCounts.forEachRowGroup`, the rank offset and `--set` applied), with `COPY` through the coordinator on
 `--jobs` connections, then checks that every node holds exactly the model's data-skew rows per table (`count(*)`
-of every shard placement, summed per node); any difference fails. A mapped column takes its key path's value; a
+of every shard placement, summed per node); any difference fails. It also looks up up to 1,000 keys per hash
+table, sampled evenly over the generated rows, with `get_shard_id_for_distribution_column` (Citus's bucket and
+node must be the model's), and reports the `COPY` rate in rows/s and the bytes per table and node
+(`pg_total_relation_size` of every placement). A mapped column takes its key path's value; a
 `unique` column, or a key column the workload does not map, the row's number; any other column a constant of its
 type. `bench/integration/test-loader.sh` runs this check on scaled-down workloads.
 Client i's templates and values depend only on the workload, the seed and i, so two layouts replay the same

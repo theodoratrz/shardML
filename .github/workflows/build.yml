@@ -88,3 +88,9 @@ jobs:
       # `shardml placement`; every psql run is bounded by timeout(1).
       - name: Shard placement on Citus
         run: bench/integration/test-placement.sh
+
+      # The loader on one layout (banking by customer, scaled down): rows per node equal the model's
+      # data-skew rows, and sampled keys are on the model's shards. The other cases are too slow for CI
+      # (bench/integration/test-loader.sh, about 11 minutes locally).
+      - name: Loader rows per node on Citus
+        run: CASES_FILE=bench/integration/loader/ci.cases bench/integration/test-loader.sh
