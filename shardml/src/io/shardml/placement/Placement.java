@@ -13,11 +13,15 @@ public final class Placement {
 	private final List<Node> nodes;
 	private final List<ColocationGroup> groups;
 	private final Map<ShardSlot, Node> assignments;
+	// built by Placement.of from an explicit map, not by PlacementResolver: its groups' round-robin
+	// targets do not describe its assignments, so no placement script may be written from it
+	private final boolean derived;
 
 	// a placement with every shard placed by an explicit map (Phase 7), for the tables and nodes of
 	// shape: the map must place every shard shape places, and nothing else, on shape's nodes only.
 	// groups() still describes shape's groups (tables and buckets; their round-robin targets are
-	// shape's); assignments() and nodeOf are the map
+	// shape's); assignments() and nodeOf are the map. isDerived() is true, and the generator refuses
+	// to write a placement script from it
 	public static Placement of(Placement shape, Map<ShardSlot, Node> assignments) {
 		for (ShardSlot slot : shape.assignments.keySet()) {
 			if (!assignments.containsKey(slot))
@@ -43,6 +47,12 @@ public final class Placement {
 		this.nodes = List.copyOf(nodes);
 		this.groups = List.copyOf(groups);
 		this.assignments = Collections.unmodifiableMap(assignments);
+		this.derived = true;
+	}
+
+	// true for a placement built by Placement.of: only assignments() and nodeOf describe it
+	public boolean isDerived() {
+		return derived;
 	}
 
 	Placement(List<Node> nodes, List<ColocationGroup> groups) {
@@ -56,6 +66,7 @@ public final class Placement {
 			}
 		}
 		this.assignments = Collections.unmodifiableMap(map);
+		this.derived = false;
 	}
 
 	// the declared nodes, in declaration order
@@ -85,16 +96,17 @@ public final class Placement {
 	// value equality: the same nodes, groups and shard map
 	@Override
 	public boolean equals(Object o) {
-		return o instanceof Placement p && nodes.equals(p.nodes) && groups.equals(p.groups) && assignments.equals(p.assignments);
+		return o instanceof Placement p && derived == p.derived && nodes.equals(p.nodes) && groups.equals(p.groups)
+				&& assignments.equals(p.assignments);
 	}
 
 	@Override
 	public int hashCode() {
-		return java.util.Objects.hash(nodes, groups, assignments);
+		return java.util.Objects.hash(derived, nodes, groups, assignments);
 	}
 
 	@Override
 	public String toString() {
-		return "Placement[nodes=" + nodes + ", groups=" + groups + ", assignments=" + assignments + "]";
+		return "Placement[derived=" + derived + ", nodes=" + nodes + ", groups=" + groups + ", assignments=" + assignments + "]";
 	}
 }

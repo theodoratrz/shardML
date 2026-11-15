@@ -144,7 +144,13 @@ public class ShardMLGenerator extends AbstractGenerator {
 	// A shard already on its target matches no row, so a re-run moves nothing.
 	// Each move is its own statement because Citus moves at most one shard per transaction
 	// with logical replication; force_logical fails instead of falling back to blocking writes
+	// Only for a placement PlacementResolver built: the script moves by the groups' round-robin
+	// targets, which a placement derived by Placement.of (an explicit map) does not follow
 	public CharSequence placementDefinitions(String database, Placement placement) {
+		if (placement.isDerived())
+			throw new IllegalArgumentException("The placement of " + database + " was derived from an explicit map "
+					+ "(Placement.of), not resolved from the model; a placement script is written only from the model's "
+					+ "own placement.");
 		StringBuilder out = new StringBuilder();
 		out.append("\\set ON_ERROR_STOP on\n");
 		out.append("-- Shard placement for ").append(database).append(": moves every shard to the node the model assigns it.\n");

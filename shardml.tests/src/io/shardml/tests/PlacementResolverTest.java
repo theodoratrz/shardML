@@ -261,4 +261,32 @@ public class PlacementResolverTest {
 		}
 		Assertions.assertEquals(Map.of("w1", 10, "w2", 11, "w3", 11), perNode);
 	}
+
+	// A placement derived by Placement.of keeps the model's groups, whose round-robin targets no
+	// longer describe its map: the generator refuses it, so it can never write a wrong script
+	@Test
+	public void testDerivedPlacementWritesNoScript() throws Exception {
+		Placement resolved = PlacementResolver.resolve(example("banking").getDb());
+		Map<ShardSlot, Node> shifted = new java.util.LinkedHashMap<>();
+		for (Map.Entry<ShardSlot, Node> e : resolved.assignments().entrySet())
+			shifted.put(e.getKey(), List.of(W3, W1, W2).get(e.getKey().bucket() % 3));
+		Placement derived = Placement.of(resolved, shifted);
+		Assertions.assertTrue(derived.isDerived());
+		Assertions.assertFalse(resolved.isDerived());
+		// the groups still say bucket 0 -> w2, the map says w3: a script from the groups would be wrong
+		Assertions.assertEquals(W2, derived.groups().get(0).targetOf(0));
+		Assertions.assertEquals(W3, derived.nodeOf("customers", 0));
+		io.shardml.generator.ShardMLGenerator generator = new io.shardml.generator.ShardMLGenerator();
+		String expected = "The placement of banking was derived from an explicit map (Placement.of), not resolved from the "
+				+ "model; a placement script is written only from the model's own placement.";
+		Assertions.assertEquals(expected, Assertions.assertThrows(IllegalArgumentException.class,
+				() -> generator.placementDefinitions("banking", derived)).getMessage());
+		// even a derived copy of the resolver's own map is refused: what matters is where it came from
+		Placement same = Placement.of(resolved, resolved.assignments());
+		Assertions.assertEquals(expected, Assertions.assertThrows(IllegalArgumentException.class,
+				() -> generator.placementDefinitions("banking", same)).getMessage());
+		Assertions.assertNotEquals(resolved, same);
+		// the model's own placement still writes its script
+		Assertions.assertTrue(generator.placementDefinitions("banking", resolved).toString().contains("citus_move_shard_placement"));
+	}
 }
