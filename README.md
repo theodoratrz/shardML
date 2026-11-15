@@ -17,12 +17,13 @@ ShardML addresses the gap between sharding intent and deployment correctness. En
 ## Features
 
 - **Declarative syntax**: describe what to shard and how, not low-level middleware configuration
-- **39 validators** (SHML_001 to SHML_039) covering structural correctness, colocation consistency, performance anti-patterns, and query pattern analysis
+- **Validators** (SHML_001 to SHML_077) covering structural correctness, colocation consistency, performance anti-patterns, query pattern analysis, the imported SQL schema and foreign keys against the layout, and workloads
 - **Policy-aware query analysis**: route rules support `allow`, `warn`, `deny` to control strictness per table
 - **Citus code generation**: produces the schema and distribution SQL, plus a JSON summary, from a single model
 - **Cross-schema import**: reference an existing `.msql` SQL schema file; all table and column references are resolved and validated against it
 - **Shard placement**: declare the cluster's worker nodes and which nodes each colocation group goes to; the generated placement script moves the shards there, safely re-runnable
 - **Command-line tool**: `shardml validate`, `shardml generate` and `shardml placement`, with `file:line` diagnostics and a non-zero exit code on model errors
+- **Cost model**: `shardml cost` compares layouts under a workload (distributed transactions, fan-out, data and load skew, bottleneck load) without deploying them; `shardml route` checks its routing against Citus
 
 ---
 
@@ -267,27 +268,78 @@ The tests cover all major validators and the generator, including multi-resource
 
 ---
 
-## Cost model: `shardml cost`
+## Cost model
 
-`shardml cost` estimates how a workload behaves under a layout, before deploying it. A `.workload` file
-describes the data (domains of key values, rows per table) and the transaction mix; it imports the same `.msql`
-schema as the layouts, so one workload is evaluated against many layouts.
+`shardml cost` predicts, before anything is deployed, how a workload will behave under a sharding layout, so that
+layouts can be compared side by side. It predicts **counts**: how many nodes a transaction involves, how many
+shards a statement touches, how rows and work spread over the nodes. It does **not** predict latency or
+throughput, and it gives **no composite score**: the metrics are reported next to each other and the trade-off
+is the reader's. **The predictions are not yet validated against measured throughput** (that is Phase 4); what
+is validated is the routing they rest on (below).
 
-```sh
-java -jar shardml.cli/target/*-cli.jar cost banking.workload banking-by-customer.shardml                      # one report
-java -jar shardml.cli/target/*-cli.jar cost banking.workload banking-by-customer.shardml banking-by-account.shardml   # side by side
-java -jar shardml.cli/target/*-cli.jar cost --csv --sweep s=1.0,1.28 banking.workload banking-by-customer.shardml banking-by-account.shardml
+### What it reports
+
+With n declared worker nodes, template probabilities pi_j = weight_j / total weight, and a statement's node set
+being the nodes its shard tasks run on:
+
+- **M1, distributed transactions**, two numbers, weighted over templates:
+  **2PC** = P[the write statements of a transaction together touch more than one node] (what Citus commits with
+  two-phase commit); **multi-node** = P[all its statements together touch more than one node].
+- **M2, fan-out**: tasks per executed statement (1 when routed to one shard, the group's bucket count when not),
+  its mean, the share of statements with more than one task, and the maximum.
+- **M3, data skew**: rows(n) = the rows of the hash-distributed tables whose shards live on n;
+  skew = max_n rows(n) / mean_n rows(n), over every declared node (reference tables are listed, not counted).
+- **M4, load**: L(n) = sum_j pi_j * E[shard relations on n that template j's statements touch], in unweighted
+  shard-relation touches per transaction; the **bottleneck** max_n L(n), and the **load skew** max / mean.
+- **Repartition joins** (joins not on the distribution columns of one colocation group): flagged with their
+  template and weight, and left out of M1, M2 and M4; default Citus refuses them.
+
+Everything is computed exactly from per-value distributions (never by sampling), within a step budget.
+
+### The workload language
+
+A `.workload` imports the same `.msql` as the layouts, so one workload is evaluated against many layouts:
+
+```
+import "banking.msql"
+workload banking {
+    param s = 1.0                                         // overridable: --set s=1.2, --sweep s=1.0,1.2
+    domain customer { size: 10000 }                       // values 1..size
+    domain account  { size: 1000000 within customer zipf($s) }   // children per parent ~ zipf
+    table accounts { rows: per account  id: account  customer_id: account.customer }
+    transaction transfer weight 50 {                      // weight / total = the template's probability
+        let src = account uniform                         // uniform or zipf(s) draws
+        let dst = account uniform distinct from $src      // also: let x = $y, else with p: D dist
+        write accounts where customer_id = $src.customer AND id = $src
+        repeat 10 { ... }                                 // a body drawn again each time
+    }
+}
 ```
 
-Options: `--json`, `--csv` (comparisons and sweeps), `--set name=value` (repeatable; the same rules as values in
-the file), `--rank-offset k`, `--sweep name=v1,v2,...`, `--compare` (an alias that needs two or more models).
-Every file is validated first; an error exits 1, an error between the files (a layout without nodes, a schema
-mismatch, an unknown `--set` param) prints `shardml cost: error: ...` and exits 1, a usage error exits 2.
+Only `column = $var` routes a statement to a shard; `?`, ranges and `OR` mean every shard.
 
-For the banking example (`shardml.tests/resources/cost`: 10,000 customers, 1,000,000 accounts, by customer vs by
-account), the comparison prints:
+### Assumptions and known limits
+
+- The shard of a key is Citus's own hash (`worker_hash`), reproduced exactly for `SMALLINT`, `INTEGER` /
+  `SERIAL` and `BIGINT` / `BIGSERIAL` keys; other key types are rejected.
+- Rank r of a distribution is value r, rotated by `--rank-offset k` for top-level domains; a child domain's
+  values follow its parent's rank order. Which keys are hot, and so which nodes, depends on k.
+- Load counts unweighted shard-relation touches.
+- A reference-table read adds 1/n to every worker (Citus actually plans a standalone one on the coordinator); a
+  reference-table write touches every worker (it commits on all of them).
+- Only hash-distributed and reference tables are modelled: a statement on a local (coordinator-only) table is
+  rejected.
+
+### Example: banking, by customer vs by account
+
+`examples/cost/` (10,000 customers, 1,000,000 accounts, accounts per customer ~ zipf(s)):
 
 ```
+$ java -jar shardml.cli/target/shardml.cli-1.0.0-SNAPSHOT-cli.jar cost examples/cost/banking.workload \
+      examples/cost/banking-by-customer.shardml examples/cost/banking-by-account.shardml
+shardml cost: 2 layouts x banking
+params: s=1, overview_w=2, history_w=48, transfer_w=50; rank offset 0
+
 metric             banking_by_customer  banking_by_account
 distributed_2pc    0.330080             0.333010
 multi_node         0.330080             0.353010
@@ -295,32 +347,48 @@ fan_out_mean       1.000000             1.244094
 multi_shard_share  0.000000             0.007874
 fan_out_max        1                    32
 data_skew          1.123992             1.032734
+data_skew_node     w3                   w3
 load_skew          1.122335             1.032392
+load_skew_node     w3                   w3
 bottleneck         0.950244             1.087453
+bottleneck_node    w3                   w3
 total_touches      2.540000             3.160000
 repartition_joins  0                    0
 ```
 
-(node columns omitted). Assumptions, printed under every table: the shard of a key is Citus's own hash for
-`SMALLINT` / `INTEGER` / `BIGINT` keys, reproduced exactly; rank r of a distribution is value r, rotated by the
-rank offset for top-level domains (child domains follow their parent's rank order); load is counted in unweighted
-shard-relation touches per transaction; a reference-table read adds 1/n to every node and a write 1 to every node;
-repartition joins are flagged and left out of fan-out, distributed transactions and load; there is no composite
-score. The predictions are not yet validated against measured throughput.
+Sharding by customer does less work (2.54 vs 3.16 touches per transaction) and keeps every statement on one
+shard, but concentrates rows and load on the nodes of the customers who own the most accounts. As s grows, its
+bottleneck rises past the by-account layout's: at rank offset 0 between s = 1.25 and 1.3 (1.277 by linear
+interpolation between sweep points). Over the rank offsets 0, 1, 2, 3, 5, 8, 13 and 21, that crossover lies
+between s = 0.946 and 1.380 (median 1.120), and at offset 13 there is none up to s = 1.4. In the TPC-C example
+(by warehouse vs stock by item, over the remote-warehouse ratio) the predicted 2PC curves do **not** cross: by
+warehouse stays at or below stock-by-item up to a fully remote workload, while stock-by-item has the lower
+skew and bottleneck throughout. Details and all sweep outputs: `examples/cost/README.md`.
+
+### Reproducing
+
+```sh
+mvn -B clean install                               # about 3 minutes, all tests
+examples/cost/regenerate.sh                        # every example output, about a minute
+java -jar shardml.cli/target/*-cli.jar cost --sweep s=0,0.5,0.8,1.0,1.2,1.25,1.3,1.4 \
+    examples/cost/banking.workload examples/cost/banking-by-*.shardml       # about 3 seconds
+```
+
+Options: `--json`, `--csv` (comparisons and sweeps), `--set name=value`, `--rank-offset k`,
+`--sweep name=v1,..` and `--sweep rank-offset=k1,..`, `--compare`. Every file is validated first (exit 1 on an
+error); an error between the files (a layout without nodes, a schema mismatch, an unknown param) exits 1 with
+`shardml cost: error: ...`; a usage error exits 2.
 
 ### Checking the model's routing against Citus
 
-`shardml route <model.shardml> <workload>` prints every workload statement as SQL for sampled bindings (the hottest
-values, the smallest and largest, seeded draws) with the cost model's prediction: task count, nodes, or a
+`shardml route <model.shardml> <workload>` prints every workload statement as SQL for sampled bindings (the
+hottest values, the smallest and largest, seeded draws) with the cost model's prediction: task count, nodes, or a
 repartition join. `bench/integration/test-cost-routing.sh` (CI) deploys each example layout on the bench
 cluster and compares the predictions with `EXPLAIN (FORMAT JSON)`, and 10,000 keys per key type with
-`get_shard_id_for_distribution_column`. Every bucket, node and task count matches; the differences are two
-stated assumptions, listed in `bench/integration/cost-routing/allowlist.tsv`:
-
-- a standalone reference-table **read** is modelled as 1/n of a touch on every worker; Citus plans it on the
-  coordinator's own placement, so that load lands on the coordinator;
-- a reference-table **write** is modelled as touching every worker (it commits on all of them, measured with
-  `pg_dist_transaction`); `EXPLAIN` shows one task on the coordinator and does not list the replicated writes.
+`get_shard_id_for_distribution_column`. Every bucket, node and task count matches; the differences are the two
+reference-table assumptions above, listed in `bench/integration/cost-routing/allowlist.tsv`: Citus plans a
+standalone reference read on the coordinator, and `EXPLAIN` shows a reference write as one coordinator task,
+not the replicated writes on every worker.
 
 ## Limitations
 
