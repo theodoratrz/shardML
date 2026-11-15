@@ -110,7 +110,7 @@ shardml/                               # Language runtime
   src-gen/                             # Xtext-generated parser infrastructure
   model/generated/                     # Generated Ecore metamodels
 
-shardml.tests/                         # JUnit 5 test suite (100 tests)
+shardml.tests/                         # JUnit 5 test suite
 shardml.cli/                           # Command-line front end
 
 examples/
@@ -252,7 +252,7 @@ Every command also validates the `.msql` schema the model (or workload) imports,
 ## Running the Tests
 
 ```sh
-mvn test                                                   # all 100 tests
+mvn test                                                   # all tests
 mvn -pl shardml.tests test -Dtest=ShardMLParsingTest       # one class
 ```
 
