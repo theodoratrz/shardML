@@ -19,6 +19,12 @@ public final class RowCounts {
 		void accept(long value, long rows);
 	}
 
+	// a group of identical rows: the value of each row domain (rowDomains() order), and how many rows
+	@FunctionalInterface
+	public interface RowGroup {
+		void accept(long[] domainValues, long rows);
+	}
+
 	private final Workload workload;
 	private final RankMapping mapping;
 	private final TableData data;
@@ -47,6 +53,54 @@ public final class RowCounts {
 		for (String domain : per.domains())
 			total = Math.multiplyExact(total, workload.domain(domain).size());
 		return total;
+	}
+
+	// the domains a row is drawn over: `per D1, .., Dn` gives D1..Dn, `over D` gives D
+	public java.util.List<String> rowDomains() {
+		return data.rows() instanceof PerRows per ? per.domains() : java.util.List.of(((OverRows) data.rows()).domain());
+	}
+
+	/* Every row of the table block, as groups of identical rows (for the Phase 4 loader), in a fixed
+	 * order: `per D1, .., Dn`, every combination of values, D1 slowest and Dn fastest, `count` rows each;
+	 * `over D dist`, ranks 1..|D| in order, value RankMapping.value(D, r), with the rank's largest
+	 * remainder count (ranks with no row skipped). A mapped column's value is its path projected from its
+	 * row domain's value; `unique` columns number the rows 1..total in this order. Summed per value of a
+	 * column, the groups give forEachKeyValue's counts. The values array is reused between calls. */
+	public void forEachRowGroup(RowGroup consumer) {
+		if (data.rows() instanceof OverRows over) {
+			long[] counts = LargestRemainder.apportion(over.count(),
+					RankMapping.weights((int) this.mapping.size(over.domain()), over.dist()));
+			long[] values = new long[1];
+			for (int r = 1; r <= counts.length; r++) {
+				if (counts[r - 1] == 0)
+					continue;
+				values[0] = this.mapping.value(over.domain(), r);
+				consumer.accept(values, counts[r - 1]);
+			}
+			return;
+		}
+		PerRows per = (PerRows) data.rows();
+		int n = per.domains().size();
+		long[] sizes = new long[n];
+		for (int i = 0; i < n; i++)
+			sizes[i] = this.mapping.size(per.domains().get(i));
+		long[] values = new long[n];
+		java.util.Arrays.fill(values, 1);
+		if (n == 0) {
+			consumer.accept(values, per.count());
+			return;
+		}
+		while (true) {
+			consumer.accept(values, per.count());
+			int i = n - 1;
+			while (i >= 0 && values[i] == sizes[i]) {
+				values[i] = 1;
+				i--;
+			}
+			if (i < 0)
+				return;
+			values[i]++;
+		}
 	}
 
 	// (value, rows) for every value of the column holding at least one row, ascending
