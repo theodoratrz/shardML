@@ -66,7 +66,11 @@ public final class Driver {
 			"  --git-commit C            the commit to record when git is not available (default: git rev-parse HEAD)",
 			"  --out DIR                 root of the run directories (default bench-runs)",
 			"Usage: driver verify-distributions [--draws N] [--seed S] [--set n=v] [--rank-offset k] <workload> [<model>...]",
-			"  the sampler against the model's exact distributions (default 1000000 draws per transaction, seed 1)");
+			"  the sampler against the model's exact distributions (default 1000000 draws per transaction, seed 1)",
+			"Usage: driver load --targets coordinator:port [--schema S] [--set n=v] [--rank-offset k] [--jobs N] [--truncate]",
+			"                   [--verify-only] <workload.workload> <model.shardml>",
+			"  fill the deployed layout with the model's rows (COPY, N connections, default 4), then check rows per node",
+			"  against the model's data-skew rows exactly");
 
 	private Driver() {
 	}
@@ -85,6 +89,7 @@ public final class Driver {
 			return switch (args.get(0)) {
 				case "run" -> runLoad(o, out, err);
 				case "verify-distributions" -> verify(o, out, err);
+				case "load" -> load(o, out, err);
 				default -> throw new UsageError("unknown command '" + args.get(0) + "'");
 			};
 		} catch (UsageError e) {
@@ -108,7 +113,7 @@ public final class Driver {
 	record Options(String mode, int clients, double rate, int warmup, int duration, int drain, List<String> targets, String entry,
 			String database, String user, String schema, long seed, int rep, Map<String, String> sets, long rankOffset, int retries,
 			int prepareThreshold, int statementTimeoutMs, String gitCommit, Path out, long draws, File workload, List<File> models,
-			List<String> argv) {
+			List<String> argv, int jobs, boolean truncate, boolean verifyOnly) {
 
 		static Options parse(List<String> args, String command) throws UsageError {
 			String mode = null;
@@ -132,6 +137,9 @@ public final class Driver {
 			String gitCommit = null;
 			Path out = Path.of("bench-runs");
 			long draws = 1_000_000;
+			int jobs = 4;
+			boolean truncate = false;
+			boolean verifyOnly = false;
 			File workload = null;
 			List<File> models = new ArrayList<>();
 			for (int i = 0; i < args.size(); i++) {
@@ -191,6 +199,9 @@ public final class Driver {
 					case "--git-commit" -> gitCommit = value(args, ++i, a);
 					case "--out" -> out = Path.of(value(args, ++i, a));
 					case "--draws" -> draws = whole(value(args, ++i, a), a, 1);
+					case "--jobs" -> jobs = (int) whole(value(args, ++i, a), a, 1);
+					case "--truncate" -> truncate = true;
+					case "--verify-only" -> verifyOnly = true;
 					default -> {
 						if (a.startsWith("-"))
 							throw new UsageError("unknown option '" + a + "'");
@@ -208,6 +219,12 @@ public final class Driver {
 			}
 			if (workload == null)
 				throw new UsageError("needs a .workload");
+			if (command.equals("load")) {
+				if (models.size() != 1)
+					throw new UsageError("load needs exactly one .shardml model");
+				if (targets.size() != 1)
+					throw new UsageError("load needs one --targets entry: the coordinator");
+			}
 			if (command.equals("run")) {
 				if (models.size() != 1)
 					throw new UsageError("run needs exactly one .shardml model");
@@ -222,7 +239,7 @@ public final class Driver {
 			}
 			return new Options(mode, clients, rate, warmup, duration, drain, List.copyOf(targets), entry, database, user, schema, seed, rep,
 					sets, rankOffset, retries, prepareThreshold, statementTimeoutMs, gitCommit, out, draws, workload, List.copyOf(models),
-					List.copyOf(args));
+					List.copyOf(args), jobs, truncate, verifyOnly);
 		}
 
 		private static String value(List<String> args, int i, String option) throws UsageError {
@@ -254,6 +271,13 @@ public final class Driver {
 				+ loaded.layouts().stream().map(Layout::name).toList());
 		out.print(VerifyDistributions.format(report));
 		return report.passed() ? OK : FAIL;
+	}
+
+	// --- load ---
+
+	private static int load(Options o, PrintStream out, PrintStream err) {
+		Inputs.Loaded loaded = Inputs.load(o.workload(), o.models(), o.sets(), err);
+		return Loader.run(o, loaded.workload(), loaded.layouts().get(0), out, err);
 	}
 
 	// --- run ---

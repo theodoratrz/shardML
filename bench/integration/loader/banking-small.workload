@@ -1,0 +1,39 @@
+import "../../../examples/cost/banking.msql"
+
+// The loader's check (bench/integration/test-loader.sh, LoaderTest): examples/cost/banking.workload scaled
+// down (200 customers, 5,000 accounts ~ zipf(s) per customer, 12,000 transactions rows over accounts by zipf(0.8)),
+// so the check runs in seconds. Not used for any measurement.
+workload banking_small {
+    param s = 1.0
+    param overview_w = 2
+    param history_w = 48
+    param transfer_w = 50
+
+    domain customer { size: 200 }
+    domain account  { size: 5000 within customer zipf($s) }
+
+    table customers    { rows: per customer   id: customer }
+    table cards        { rows: per customer   customer_id: customer  unique id }
+    table accounts     { rows: per account    id: account  customer_id: account.customer }
+    table transactions { rows: 12000 over account zipf(0.8)
+                         account_id: account  customer_id: account.customer  unique id }
+
+    transaction overview weight $overview_w {
+        let c = customer uniform
+        read customers where id = $c
+        read accounts  where customer_id = $c
+        read cards     where customer_id = $c
+    }
+    transaction history weight $history_w {
+        let a = account uniform
+        read transactions where customer_id = $a.customer AND account_id = $a
+    }
+    transaction transfer weight $transfer_w {
+        let src = account uniform
+        let dst = account uniform distinct from $src
+        write accounts     where customer_id = $src.customer AND id = $src
+        write accounts     where customer_id = $dst.customer AND id = $dst
+        write transactions where customer_id = $src.customer AND account_id = $src
+        write transactions where customer_id = $dst.customer AND account_id = $dst
+    }
+}

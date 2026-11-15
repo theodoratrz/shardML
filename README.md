@@ -416,6 +416,12 @@ failures, deadlocks, timeouts and connection errors (no retries unless `--retrie
 each transaction from its intended start in a fixed Poisson schedule and reports the schedule lag. Each run
 writes `result.json` and `manifest.json` (host, JVM, driver settings, seeds, file hashes, the model's report,
 git commit) to `bench-runs/<workload>/<layout>/<entry>/<mode>/<params>/seed-<s>-rep-<r>/`.
+`driver load --targets <coordinator> <workload> <model>` fills a deployed layout with the rows the model
+counts (`RowCounts.forEachRowGroup`, the rank offset and `--set` applied), with `COPY` through the coordinator on
+`--jobs` connections, then checks that every node holds exactly the model's data-skew rows per table (`count(*)`
+of every shard placement, summed per node); any difference fails. A mapped column takes its key path's value; a
+`unique` column, or a key column the workload does not map, the row's number; any other column a constant of its
+type. `bench/integration/test-loader.sh` runs this check on scaled-down workloads.
 Client i's templates and values depend only on the workload, the seed and i, so two layouts replay the same
 transactions. `bench/driver-smoke/run.sh` checks that it runs on the local bench cluster; its numbers are not
 measurements.

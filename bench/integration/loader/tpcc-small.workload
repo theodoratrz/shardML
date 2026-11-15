@@ -1,0 +1,65 @@
+import "../../../examples/cost/tpcc.msql"
+
+// The loader's check (bench/integration/test-loader.sh, LoaderTest): examples/cost/tpcc.workload scaled down
+// (4 warehouses, 1,000 items, every per-warehouse row count divided by 100), so the check runs in seconds.
+// Not used for any measurement.
+workload tpcc_small {
+    param remote = 0.01      // per order line, the spec value
+    param pay_remote = 0.15
+
+    domain warehouse { size: 4 }
+    domain item      { size: 1000 }
+
+    table warehouse  { rows: per warehouse          w_id: warehouse }
+    table district   { rows: 10 per warehouse       d_w_id: warehouse }
+    table customer   { rows: 300 per warehouse    c_w_id: warehouse }
+    table history    { rows: 300 per warehouse    h_w_id: warehouse }
+    table orders     { rows: 300 per warehouse    o_w_id: warehouse }
+    table new_order  { rows: 90 per warehouse     no_w_id: warehouse }
+    table order_line { rows: 3000 per warehouse   ol_w_id: warehouse }
+    table stock      { rows: per warehouse, item    s_w_id: warehouse  s_i_id: item }
+    table item       { rows: per item               i_id: item }
+
+    transaction new_order weight 45 {
+        let w = warehouse uniform
+        read  warehouse where w_id = $w
+        write district  where d_w_id = $w
+        read  customer  where c_w_id = $w
+        write orders    where o_w_id = $w
+        write new_order where no_w_id = $w
+        repeat 10 {
+            let i  = item uniform
+            let sw = $w, else with $remote: warehouse uniform
+            read  item       where i_id = $i
+            write stock      where s_w_id = $sw AND s_i_id = $i
+            write order_line where ol_w_id = $w
+        }
+    }
+    transaction payment weight 43 {
+        let w  = warehouse uniform
+        let cw = $w, else with $pay_remote: warehouse uniform
+        write warehouse where w_id = $w
+        write district  where d_w_id = $w
+        write customer  where c_w_id = $cw
+        write history   where h_w_id = $w
+    }
+    transaction order_status weight 4 {
+        let w = warehouse uniform
+        read customer   where c_w_id = $w
+        read orders     where o_w_id = $w
+        read order_line where ol_w_id = $w
+    }
+    transaction delivery weight 4 {
+        let w = warehouse uniform
+        write new_order  where no_w_id = $w
+        write orders     where o_w_id = $w
+        write order_line where ol_w_id = $w
+        write customer   where c_w_id = $w
+    }
+    transaction stock_level weight 4 {
+        let w = warehouse uniform
+        read district where d_w_id = $w
+        read order_line join stock on order_line.ol_w_id = stock.s_w_id AND order_line.ol_i_id = stock.s_i_id
+             where ol_w_id = $w AND s_w_id = $w
+    }
+}
