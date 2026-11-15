@@ -22,3 +22,6 @@ __MACOSX/
 *.md
 !README.md
 !docs/phase4-validation-plan.md
+
+# validation driver run directories (driver run --out, default bench-runs/)
+bench-runs/

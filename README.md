@@ -112,6 +112,7 @@ shardml/                               # Language runtime
 
 shardml.tests/                         # JUnit 5 test suite
 shardml.cli/                           # Command-line front end
+shardml.bench/                         # Phase 4 validation driver (replays a workload on Citus)
 
 examples/
   README.md                            # What each example shows
@@ -389,6 +390,35 @@ cluster and compares the predictions with `EXPLAIN (FORMAT JSON)`, and 10,000 ke
 reference-table assumptions above, listed in `bench/integration/cost-routing/allowlist.tsv`: Citus plans a
 standalone reference read on the coordinator, and `EXPLAIN` shows a reference write as one coordinator task,
 not the replicated writes on every worker.
+
+### Validation driver (Phase 4, in progress)
+
+`shardml.bench` replays a workload against a Citus cluster exactly as the cost model defines it, to measure
+what the model predicts (`docs/phase4-validation-plan.md`). It draws every binding with the model's own code
+(`io.shardml.cost.Sampler`: the same pmf, rank offset, projections, `distinct from`, `else with` and `repeat`) and
+sends the SQL `shardml route` prints, with placeholders (`io.shardml.cost.StatementSql`): reads as `SELECT`,
+writes as an `UPDATE` of a payload column to its own value, so the data the model describes never changes; a
+workload with a `delete` is refused.
+
+```sh
+J=shardml.bench/target/shardml.bench-1.0.0-SNAPSHOT-driver.jar
+java -jar $J verify-distributions examples/cost/banking.workload examples/cost/banking-by-*.shardml
+java -jar $J run --mode closed --clients 32 --targets worker1:5432,worker2:5432,worker3:5432 \
+    examples/cost/banking.workload examples/cost/banking-by-customer.shardml
+java -jar $J run --mode open --rate 500 --targets ... examples/cost/banking.workload examples/cost/banking-by-account.shardml
+```
+
+`verify-distributions` compares 10^6 draws per transaction with the model's exact marginals (chi-square,
+Bonferroni over all tests at a family alpha of 0.001, no cluster). `run` uses one connection per client
+(autocommit off, prepared statements; client i connects to target i mod n), a warm-up and a measured window
+(default 120 s and 300 s), HdrHistogram latencies per transaction and overall, and counts serialization
+failures, deadlocks, timeouts and connection errors (no retries unless `--retries K`). The open loop times
+each transaction from its intended start in a fixed Poisson schedule and reports the schedule lag. Each run
+writes `result.json` and `manifest.json` (host, JVM, driver settings, seeds, file hashes, the model's report,
+git commit) to `bench-runs/<workload>/<layout>/<entry>/<mode>/<params>/seed-<s>-rep-<r>/`.
+Client i's templates and values depend only on the workload, the seed and i, so two layouts replay the same
+transactions. `bench/driver-smoke/run.sh` checks that it runs on the local bench cluster; its numbers are not
+measurements.
 
 ## Limitations
 

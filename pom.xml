@@ -16,6 +16,7 @@
         <module>shardml</module>
         <module>shardml.tests</module>
         <module>shardml.cli</module>
+        <module>shardml.bench</module>
     </modules>
 
     <properties>

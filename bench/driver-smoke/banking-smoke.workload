@@ -1,0 +1,39 @@
+import "../../examples/cost/banking.msql"
+
+// The validation driver's smoke test only (bench/driver-smoke/run.sh): the banking workload of
+// examples/cost scaled down to 300 customers and 3,000 accounts. Accounts are spread `within customer
+// uniform` (exactly 10 per customer) and transactions `over account uniform` (exactly 2 per account), so
+// the smoke script can fill the tables with plain SQL. Its numbers are NOT performance results.
+workload banking_smoke {
+    param overview_w = 2
+    param history_w = 48
+    param transfer_w = 50
+
+    domain customer { size: 300 }
+    domain account  { size: 3000 within customer uniform }
+
+    table customers    { rows: per customer   id: customer }
+    table cards        { rows: per customer   customer_id: customer  unique id }
+    table accounts     { rows: per account    id: account  customer_id: account.customer }
+    table transactions { rows: 6000 over account uniform
+                         account_id: account  customer_id: account.customer  unique id }
+
+    transaction overview weight $overview_w {
+        let c = customer uniform
+        read customers where id = $c
+        read accounts  where customer_id = $c
+        read cards     where customer_id = $c
+    }
+    transaction history weight $history_w {
+        let a = account uniform
+        read transactions where customer_id = $a.customer AND account_id = $a
+    }
+    transaction transfer weight $transfer_w {
+        let src = account uniform
+        let dst = account uniform distinct from $src
+        write accounts     where customer_id = $src.customer AND id = $src
+        write accounts     where customer_id = $dst.customer AND id = $dst
+        write transactions where customer_id = $src.customer AND account_id = $src
+        write transactions where customer_id = $dst.customer AND account_id = $dst
+    }
+}
