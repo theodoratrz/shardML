@@ -104,8 +104,9 @@ public final class Marginals {
 			return own;
 		KeyPath path = new KeyPath(domains.get(ref.let()), ref.path());
 		double[] out = new double[(int) mapping.size(domain)];
+		java.util.function.LongUnaryOperator projector = mapping.projector(path);
 		for (int v = 1; v <= own.length; v++)
-			out[(int) mapping.project(path, v) - 1] += own[v - 1];
+			out[(int) projector.applyAsLong(v) - 1] += own[v - 1];
 		return out;
 	}
 }

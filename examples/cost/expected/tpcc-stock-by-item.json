@@ -1,0 +1,318 @@
+{
+  "layout": "tpcc_stock_by_item",
+  "workload": "tpcc",
+  "nodes": [
+    "w2",
+    "w3",
+    "w1"
+  ],
+  "rankOffset": 0,
+  "params": [
+    {
+      "name": "remote",
+      "value": 0.010000,
+      "overridden": false
+    },
+    {
+      "name": "pay_remote",
+      "value": 0.150000,
+      "overridden": false
+    }
+  ],
+  "distributed": {
+    "twoPhase": 0.493969,
+    "multiNode": 0.493969
+  },
+  "fanOut": {
+    "mean": 1.000000,
+    "multiShardShare": 0.000000,
+    "max": 1
+  },
+  "dataSkew": {
+    "maxOverMean": 1.405595,
+    "maxNode": "w2",
+    "rowsPerNode": [
+      {
+        "node": "w2",
+        "rows": 2805630
+      },
+      {
+        "node": "w3",
+        "rows": 1611273
+      },
+      {
+        "node": "w1",
+        "rows": 1571229
+      }
+    ],
+    "tables": [
+      {
+        "table": "warehouse",
+        "reference": false,
+        "rowsPerNode": [
+          {
+            "node": "w2",
+            "rows": 6
+          },
+          {
+            "node": "w3",
+            "rows": 3
+          },
+          {
+            "node": "w1",
+            "rows": 3
+          }
+        ]
+      },
+      {
+        "table": "district",
+        "reference": false,
+        "rowsPerNode": [
+          {
+            "node": "w2",
+            "rows": 60
+          },
+          {
+            "node": "w3",
+            "rows": 30
+          },
+          {
+            "node": "w1",
+            "rows": 30
+          }
+        ]
+      },
+      {
+        "table": "customer",
+        "reference": false,
+        "rowsPerNode": [
+          {
+            "node": "w2",
+            "rows": 180000
+          },
+          {
+            "node": "w3",
+            "rows": 90000
+          },
+          {
+            "node": "w1",
+            "rows": 90000
+          }
+        ]
+      },
+      {
+        "table": "history",
+        "reference": false,
+        "rowsPerNode": [
+          {
+            "node": "w2",
+            "rows": 180000
+          },
+          {
+            "node": "w3",
+            "rows": 90000
+          },
+          {
+            "node": "w1",
+            "rows": 90000
+          }
+        ]
+      },
+      {
+        "table": "orders",
+        "reference": false,
+        "rowsPerNode": [
+          {
+            "node": "w2",
+            "rows": 180000
+          },
+          {
+            "node": "w3",
+            "rows": 90000
+          },
+          {
+            "node": "w1",
+            "rows": 90000
+          }
+        ]
+      },
+      {
+        "table": "new_order",
+        "reference": false,
+        "rowsPerNode": [
+          {
+            "node": "w2",
+            "rows": 54000
+          },
+          {
+            "node": "w3",
+            "rows": 27000
+          },
+          {
+            "node": "w1",
+            "rows": 27000
+          }
+        ]
+      },
+      {
+        "table": "order_line",
+        "reference": false,
+        "rowsPerNode": [
+          {
+            "node": "w2",
+            "rows": 1800000
+          },
+          {
+            "node": "w3",
+            "rows": 900000
+          },
+          {
+            "node": "w1",
+            "rows": 900000
+          }
+        ]
+      },
+      {
+        "table": "stock",
+        "reference": false,
+        "rowsPerNode": [
+          {
+            "node": "w2",
+            "rows": 411564
+          },
+          {
+            "node": "w3",
+            "rows": 414240
+          },
+          {
+            "node": "w1",
+            "rows": 374196
+          }
+        ]
+      },
+      {
+        "table": "item",
+        "reference": true,
+        "rowsPerNode": [
+          {
+            "node": "w2",
+            "rows": 100000
+          },
+          {
+            "node": "w3",
+            "rows": 100000
+          },
+          {
+            "node": "w1",
+            "rows": 100000
+          }
+        ]
+      }
+    ]
+  },
+  "load": {
+    "total": 17.790000,
+    "bottleneck": 7.438365,
+    "maxOverMean": 1.254362,
+    "maxNode": "w2",
+    "perNode": [
+      {
+        "node": "w2",
+        "value": 7.438365
+      },
+      {
+        "node": "w3",
+        "value": 5.250900
+      },
+      {
+        "node": "w1",
+        "value": 5.100735
+      }
+    ],
+    "readPerNode": [
+      {
+        "node": "w2",
+        "value": 2.030000
+      },
+      {
+        "node": "w3",
+        "value": 1.765000
+      },
+      {
+        "node": "w1",
+        "value": 1.765000
+      }
+    ],
+    "writePerNode": [
+      {
+        "node": "w2",
+        "value": 5.408365
+      },
+      {
+        "node": "w3",
+        "value": 3.485900
+      },
+      {
+        "node": "w1",
+        "value": 3.335735
+      }
+    ]
+  },
+  "repartitions": [
+    {
+      "transaction": "stock_level",
+      "statement": 2,
+      "table": "order_line",
+      "reason": "join order_line with stock: colocation groups warehouse and stock",
+      "probability": 0.040000,
+      "times": 1
+    }
+  ],
+  "transactions": [
+    {
+      "name": "new_order",
+      "probability": 0.450000,
+      "twoPhase": 0.999981,
+      "multiNode": 0.999981,
+      "fanOutMean": 1.000000,
+      "maxFanOut": 1,
+      "touches": 35.000000
+    },
+    {
+      "name": "payment",
+      "probability": 0.430000,
+      "twoPhase": 0.102273,
+      "multiNode": 0.102273,
+      "fanOutMean": 1.000000,
+      "maxFanOut": 1,
+      "touches": 4.000000
+    },
+    {
+      "name": "order_status",
+      "probability": 0.040000,
+      "twoPhase": 0.000000,
+      "multiNode": 0.000000,
+      "fanOutMean": 1.000000,
+      "maxFanOut": 1,
+      "touches": 3.000000
+    },
+    {
+      "name": "delivery",
+      "probability": 0.040000,
+      "twoPhase": 0.000000,
+      "multiNode": 0.000000,
+      "fanOutMean": 1.000000,
+      "maxFanOut": 1,
+      "touches": 4.000000
+    },
+    {
+      "name": "stock_level",
+      "probability": 0.040000,
+      "twoPhase": 0.000000,
+      "multiNode": 0.000000,
+      "fanOutMean": 1.000000,
+      "maxFanOut": 1,
+      "touches": 1.000000
+    }
+  ]
+}

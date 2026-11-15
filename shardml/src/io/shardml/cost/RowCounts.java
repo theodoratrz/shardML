@@ -69,15 +69,17 @@ public final class RowCounts {
 					each = Math.multiplyExact(each, workload.domain(domain).size());
 			}
 			long size = this.mapping.size(rowDomain);
+			java.util.function.LongUnaryOperator projector = this.mapping.projector(mapped.path());
 			for (long v = 1; v <= size; v++)
-				rows[(int) this.mapping.project(mapped.path(), v)] += each;
+				rows[(int) projector.applyAsLong(v)] += each;
 		} else {
 			OverRows over = (OverRows) data.rows();
 			long[] counts = LargestRemainder.apportion(over.count(),
 					RankMapping.weights((int) this.mapping.size(over.domain()), over.dist()));
+			java.util.function.LongUnaryOperator projector = this.mapping.projector(mapped.path());
 			for (int r = 1; r <= counts.length; r++) {
 				long value = this.mapping.value(over.domain(), r);
-				rows[(int) this.mapping.project(mapped.path(), value)] += counts[r - 1];
+				rows[(int) projector.applyAsLong(value)] += counts[r - 1];
 			}
 		}
 		for (int v = 1; v < rows.length; v++) {

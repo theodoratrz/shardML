@@ -1,0 +1,27 @@
+shardml cost: sweep of rank-offset x banking
+
+rank-offset  layout               distributed_2pc  multi_node  fan_out_mean  data_skew  load_skew  bottleneck  bottleneck_node  repartition_joins
+0            banking_by_customer  0.330080         0.330080    1.000000      1.123992   1.122335   0.950244    w3               0
+0            banking_by_account   0.333010         0.353010    1.244094      1.032734   1.032392   1.087453    w3               0
+1            banking_by_customer  0.325415         0.325415    1.000000      1.306350   1.301968   1.102333    w2               0
+1            banking_by_account   0.333010         0.353010    1.244094      1.032734   1.032392   1.087453    w3               0
+2            banking_by_customer  0.329745         0.329745    1.000000      1.200734   1.198160   1.014442    w2               0
+2            banking_by_account   0.333010         0.353010    1.244094      1.032734   1.032392   1.087453    w3               0
+3            banking_by_customer  0.331348         0.331348    1.000000      1.143700   1.139915   0.965128    w1               0
+3            banking_by_account   0.333010         0.353010    1.244094      1.032734   1.032392   1.087453    w3               0
+5            banking_by_customer  0.331541         0.331541    1.000000      1.142157   1.138398   0.963843    w1               0
+5            banking_by_account   0.333010         0.353010    1.244094      1.032734   1.032392   1.087453    w3               0
+8            banking_by_customer  0.322992         0.322992    1.000000      1.334410   1.329153   1.125349    w3               0
+8            banking_by_account   0.333010         0.353010    1.244094      1.032734   1.032392   1.087453    w3               0
+13           banking_by_customer  0.330865         0.330865    1.000000      1.159062   1.156805   0.979429    w3               0
+13           banking_by_account   0.333010         0.353010    1.244094      1.032734   1.032392   1.087453    w3               0
+21           banking_by_customer  0.332430         0.332430    1.000000      1.085623   1.084623   0.918314    w3               0
+21           banking_by_account   0.333010         0.353010    1.244094      1.032734   1.032392   1.087453    w3               0
+
+assumptions:
+  - the shard of a key is Citus's own hash (worker_hash) for SMALLINT, INTEGER and BIGINT keys, reproduced exactly
+  - rank r of a distribution is value r, rotated by the rank offset for top-level domains; a child domain's values follow its parent's rank order
+  - load is counted in shard-relation touches per transaction, unweighted
+  - a reference-table read adds 1/n to every node; a reference-table write adds 1 to every node (it commits on all)
+  - a repartition join is flagged and left out of fan-out, distributed transactions and load
+  - no composite score: the metrics are reported side by side

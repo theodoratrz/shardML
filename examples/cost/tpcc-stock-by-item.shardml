@@ -1,0 +1,28 @@
+import "tpcc.msql"
+
+// Plan-phase3 5.B, layout S: as W, except stock is distributed by its item (s_i_id), a root of its own:
+// the plausible "more distinct values, better balance" choice.
+database tpcc_stock_by_item {
+    type: postgres
+
+    node w2 { host: "worker2" port: 5432 }
+    node w3 { host: "worker3" port: 5432 }
+    node w1 { host: "worker1" port: 5432 }
+
+    shard warehouse { strategy: hash key: w_id buckets: 32 }
+    shard district { strategy: hash key: d_w_id buckets: 32 colocate_with: warehouse }
+    shard customer { strategy: hash key: c_w_id buckets: 32 colocate_with: warehouse }
+    shard history { strategy: hash key: h_w_id buckets: 32 colocate_with: warehouse }
+    shard orders { strategy: hash key: o_w_id buckets: 32 colocate_with: warehouse }
+    shard new_order { strategy: hash key: no_w_id buckets: 32 colocate_with: warehouse }
+    shard order_line { strategy: hash key: ol_w_id buckets: 32 colocate_with: warehouse }
+    shard stock { strategy: hash key: s_i_id buckets: 32 }
+    shard item { strategy: replicated }
+
+    district belongs_to warehouse via d_w_id
+    customer belongs_to warehouse via c_w_id
+    history belongs_to warehouse via h_w_id
+    orders belongs_to warehouse via o_w_id
+    new_order belongs_to warehouse via no_w_id
+    order_line belongs_to warehouse via ol_w_id
+}

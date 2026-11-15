@@ -28,11 +28,16 @@ jobs:
             java -jar shardml.cli/target/*-cli.jar generate "$model"
           done
 
+      # Regenerates the cost examples' expected outputs (tables, JSON, CSV, sweeps)
+      # with the freshly built CLI.
+      - name: Regenerate cost examples
+        run: examples/cost/regenerate.sh
+
       # Everything generated is committed, so a clean build must not change
       # it. --porcelain also lists untracked files, so new outputs count too.
       - name: Check for generation drift
         run: |
-          paths=(':(glob)**/src-gen/**' 'shardml/model/generated')
+          paths=(':(glob)**/src-gen/**' 'shardml/model/generated' 'examples/cost/expected')
           drift=$(git status --porcelain -- "${paths[@]}")
           if [[ -n "$drift" ]]; then
             echo "::error::Generated files differ from the committed ones. Rebuild locally and commit the result."

@@ -13,12 +13,11 @@ import io.shardml.cost.SkewAndLoad;
 import io.shardml.cost.Workload;
 
 // An independent check of the engine against Plan-phase3 5.A's worked estimate, made by hand and with
-// a throwaway script in Step 0 (resources/cost: the plan's banking workload and its two layouts, the
-// Step 9 material). Within 1e-3; the expected values are the plan's and are not to be adjusted.
+// a throwaway script in Step 0 (examples/cost: the plan's banking workload and its two layouts). Within 1e-3; the expected values are the plan's and are not to be adjusted.
 public class BankingCostSmokeTest {
 
 	private static String read(String name) throws Exception {
-		return Files.readString(Path.of("resources", "cost", name));
+		return Files.readString(Path.of("..", "examples", "cost", name));
 	}
 
 	private static SkewAndLoad run(String layout, Map<String, String> overrides) throws Exception {

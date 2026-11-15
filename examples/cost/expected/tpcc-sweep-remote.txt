@@ -1,0 +1,23 @@
+shardml cost: sweep of remote x tpcc; rank offset 0
+
+remote  layout              distributed_2pc  multi_node  fan_out_mean  data_skew  load_skew  bottleneck  bottleneck_node  repartition_joins
+0       tpcc_by_warehouse   0.043977         0.043977    1.000000      1.500000   1.374091   8.185000    w2               0
+0       tpcc_stock_by_item  0.493969         0.493969    1.000000      1.405595   1.254362   7.438365    w2               1
+0.01    tpcc_by_warehouse   0.073699         0.073699    1.000000      1.500000   1.374091   8.185000    w2               0
+0.01    tpcc_stock_by_item  0.493969         0.493969    1.000000      1.405595   1.254362   7.438365    w2               1
+0.1     tpcc_by_warehouse   0.269747         0.269747    1.000000      1.500000   1.374091   8.185000    w2               0
+0.1     tpcc_stock_by_item  0.493969         0.493969    1.000000      1.405595   1.254362   7.438365    w2               1
+0.3     tpcc_by_warehouse   0.442836         0.442836    1.000000      1.500000   1.374091   8.185000    w2               0
+0.3     tpcc_stock_by_item  0.493969         0.493969    1.000000      1.405595   1.254362   7.438365    w2               1
+0.6     tpcc_by_warehouse   0.489443         0.489443    1.000000      1.500000   1.374091   8.185000    w2               0
+0.6     tpcc_stock_by_item  0.493969         0.493969    1.000000      1.405595   1.254362   7.438365    w2               1
+1.0     tpcc_by_warehouse   0.493893         0.493893    1.000000      1.500000   1.374091   8.185000    w2               0
+1.0     tpcc_stock_by_item  0.493969         0.493969    1.000000      1.405595   1.254362   7.438365    w2               1
+
+assumptions:
+  - the shard of a key is Citus's own hash (worker_hash) for SMALLINT, INTEGER and BIGINT keys, reproduced exactly
+  - rank r of a distribution is value r, rotated by the rank offset for top-level domains; a child domain's values follow its parent's rank order
+  - load is counted in shard-relation touches per transaction, unweighted
+  - a reference-table read adds 1/n to every node; a reference-table write adds 1 to every node (it commits on all)
+  - a repartition join is flagged and left out of fan-out, distributed transactions and load
+  - no composite score: the metrics are reported side by side

@@ -55,6 +55,7 @@ public final class CostCommand {
 			"  --set name=value        override a workload param (repeatable)",
 			"  --rank-offset k         rotate the top-level domains' ranks by k (k >= 0, default 0)",
 			"  --sweep name=v1,v2,...  evaluate every value of one param",
+			"  --sweep rank-offset=k1,k2,...  evaluate every rank offset (alone, or with one param sweep)",
 			"  --compare               the same as giving two or more models; an error with fewer");
 
 	private CostCommand() {
@@ -67,9 +68,13 @@ public final class CostCommand {
 		}
 	}
 
+	// offsets: the swept rank offsets (`--sweep rank-offset=..`), empty when not swept
 	private record Options(File workload, List<File> models, boolean json, boolean csv, Map<String, String> sets,
-			long rankOffset, String sweepParam, List<String> sweepValues) {
+			long rankOffset, String sweepParam, List<String> sweepValues, List<Long> offsets) {
 	}
+
+	// the reserved sweep name for the rank offset (not a workload param)
+	static final String RANK_OFFSET = "rank-offset";
 
 	public static int run(List<String> args, PrintStream out, PrintStream err) {
 		Options options;
@@ -93,6 +98,8 @@ public final class CostCommand {
 		long rankOffset = 0;
 		String sweepParam = null;
 		List<String> sweepValues = List.of();
+		List<Long> offsets = List.of();
+		boolean rankOffsetGiven = false;
 		for (int i = 0; i < args.size(); i++) {
 			String arg = args.get(i);
 			switch (arg) {
@@ -117,22 +124,42 @@ public final class CostCommand {
 					}
 					if (rankOffset < 0)
 						throw new UsageError("--rank-offset must be at least 0, got " + rankOffset);
+					rankOffsetGiven = true;
 				}
 				case "--sweep" -> {
-					if (sweepParam != null)
-						throw new UsageError("--sweep given twice; one param per sweep");
 					String value = next(args, ++i, arg);
 					int eq = value.indexOf('=');
 					if (eq <= 0 || eq == value.length() - 1)
 						throw new UsageError("--sweep needs name=v1,v2,..., got '" + value + "'");
-					sweepParam = value.substring(0, eq);
+					String name = value.substring(0, eq);
 					List<String> values = new ArrayList<>();
 					for (String v : value.substring(eq + 1).split(",", -1)) {
 						if (v.isBlank())
-							throw new UsageError("--sweep " + sweepParam + " has an empty value");
+							throw new UsageError("--sweep " + name + " has an empty value");
 						values.add(v.strip());
 					}
-					sweepValues = List.copyOf(values);
+					if (name.equals(RANK_OFFSET)) {
+						if (!offsets.isEmpty())
+							throw new UsageError("--sweep " + RANK_OFFSET + " given twice");
+						List<Long> ks = new ArrayList<>();
+						for (String v : values) {
+							long k;
+							try {
+								k = Long.parseLong(v);
+							} catch (NumberFormatException e) {
+								throw new UsageError("--sweep " + RANK_OFFSET + " needs whole numbers, got '" + v + "'");
+							}
+							if (k < 0)
+								throw new UsageError("--sweep " + RANK_OFFSET + " values must be at least 0, got " + k);
+							ks.add(k);
+						}
+						offsets = List.copyOf(ks);
+					} else {
+						if (sweepParam != null)
+							throw new UsageError("--sweep given twice; one param per sweep (and optionally " + RANK_OFFSET + ")");
+						sweepParam = name;
+						sweepValues = List.copyOf(values);
+					}
 				}
 				default -> {
 					if (arg.startsWith("-"))
@@ -157,11 +184,14 @@ public final class CostCommand {
 			throw new UsageError("--compare needs two or more models, got " + models.size());
 		if (json && csv)
 			throw new UsageError("--json and --csv are exclusive");
-		if (csv && models.size() < 2 && sweepParam == null)
+		if (rankOffsetGiven && !offsets.isEmpty())
+			throw new UsageError("--rank-offset and --sweep " + RANK_OFFSET + " together; give one");
+		if (csv && models.size() < 2 && sweepParam == null && offsets.isEmpty())
 			throw new UsageError("--csv is for comparisons and sweeps; one model without --sweep prints a table or --json");
 		if (sweepParam != null && sets.containsKey(sweepParam))
 			throw new UsageError("--sweep " + sweepParam + " and --set " + sweepParam + " together; give one");
-		return new Options(workloads.get(0), List.copyOf(models), json, csv, Map.copyOf(sets), rankOffset, sweepParam, sweepValues);
+		return new Options(workloads.get(0), List.copyOf(models), json, csv, Map.copyOf(sets), rankOffset, sweepParam, sweepValues,
+				offsets);
 	}
 
 	private static String next(List<String> args, int i, String option) throws UsageError {
@@ -207,7 +237,7 @@ public final class CostCommand {
 			for (Resource model : files.subList(1, files.size()))
 				layouts.add(Layouts.of(((Model) model.getContents().get(0)).getDb()));
 			CostModel costModel = new CostModel();
-			if (options.sweepParam() != null)
+			if (options.sweepParam() != null || !options.offsets().isEmpty())
 				return sweep(options, workloadModel, layouts, costModel, out);
 			Workload workload = Workloads.of(workloadModel, options.sets());
 			List<CostReport> reports = new ArrayList<>();
@@ -226,35 +256,49 @@ public final class CostCommand {
 		}
 	}
 
+	// a sweep of one param, of the rank offset, or of both (offsets outermost, then values, then layouts)
 	private static int sweep(Options options, WorkloadModel model, List<Layout> layouts, CostModel costModel, PrintStream out) {
 		String name = options.sweepParam();
-		List<String> params = model.getWorkload().getParams().stream().map(Param::getName).toList();
-		if (!params.contains(name))
-			throw new IllegalArgumentException("--sweep " + name + ": workload '" + model.getWorkload().getName()
-					+ "' has no param '" + name + "' (params: " + (params.isEmpty() ? "none" : String.join(", ", params)) + ").");
-		List<SweepPoint> points = new ArrayList<>();
-		for (String value : options.sweepValues()) {
-			try {
-				new BigDecimal(value);
-			} catch (NumberFormatException e) {
-				throw new IllegalArgumentException("--sweep " + name + "=" + value + ": not a number.");
-			}
-			Map<String, String> overrides = new LinkedHashMap<>(options.sets());
-			overrides.put(name, value);
-			Workload workload;
-			try {
-				workload = Workloads.of(model, overrides);
-			} catch (IllegalArgumentException e) {
-				// the value came from --sweep, not --set
-				throw new IllegalArgumentException(e.getMessage().replace("--set " + name + "=", "--sweep " + name + "="));
-			}
-			for (Layout layout : layouts)
-				points.add(new SweepPoint(name, value, costModel.evaluate(layout, workload, options.rankOffset())));
+		if (name != null) {
+			List<String> params = model.getWorkload().getParams().stream().map(Param::getName).toList();
+			if (!params.contains(name))
+				throw new IllegalArgumentException("--sweep " + name + ": workload '" + model.getWorkload().getName()
+						+ "' has no param '" + name + "' (params: " + (params.isEmpty() ? "none" : String.join(", ", params)) + ").");
 		}
+		List<Long> offsets = options.offsets().isEmpty() ? List.of(options.rankOffset()) : options.offsets();
+		List<SweepPoint> points = new ArrayList<>();
+		for (long offset : offsets) {
+			if (name == null) {
+				Workload workload = Workloads.of(model, options.sets());
+				for (Layout layout : layouts)
+					points.add(new SweepPoint(RANK_OFFSET, String.valueOf(offset), costModel.evaluate(layout, workload, offset)));
+				continue;
+			}
+			for (String value : options.sweepValues()) {
+				try {
+					new BigDecimal(value);
+				} catch (NumberFormatException e) {
+					throw new IllegalArgumentException("--sweep " + name + "=" + value + ": not a number.");
+				}
+				Map<String, String> overrides = new LinkedHashMap<>(options.sets());
+				overrides.put(name, value);
+				Workload workload;
+				try {
+					workload = Workloads.of(model, overrides);
+				} catch (IllegalArgumentException e) {
+					// the value came from --sweep, not --set
+					throw new IllegalArgumentException(e.getMessage().replace("--set " + name + "=", "--sweep " + name + "="));
+				}
+				for (Layout layout : layouts)
+					points.add(new SweepPoint(name, value, costModel.evaluate(layout, workload, offset)));
+			}
+		}
+		// a rank_offset column only when a param and the offset are both swept
+		boolean offsetColumn = name != null && !options.offsets().isEmpty();
 		if (options.json())
 			out.print(CostReportFormat.jsonArray(points.stream().map(SweepPoint::report).toList()));
 		else
-			out.print(options.csv() ? CostReportFormat.sweepCsv(points) : CostReportFormat.sweep(points));
+			out.print(options.csv() ? CostReportFormat.sweepCsv(points, offsetColumn) : CostReportFormat.sweep(points, offsetColumn));
 		return OK;
 	}
 

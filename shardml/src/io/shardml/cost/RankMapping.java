@@ -129,6 +129,45 @@ public final class RankMapping {
 		return v;
 	}
 
+	// project(path, v) for many values: the path resolved once into its prefix sums and the offsets of
+	// its top-level parents, then an array walk per value (no lookup by name). The same values as project
+	public java.util.function.LongUnaryOperator projector(KeyPath path) {
+		List<long[]> sums = new java.util.ArrayList<>();
+		List<long[]> parents = new java.util.ArrayList<>(); // { 1 if the parent is top-level, its size }
+		String current = path.domain();
+		for (String target : path.parents()) {
+			while (!current.equals(target)) {
+				String parent = parentOf(current);
+				if (parent == null)
+					throw new IllegalArgumentException("Domain '" + target + "' is not an ancestor of '" + path.domain() + "'.");
+				sums.add(childSums(current));
+				Domain p = domain(parent);
+				parents.add(new long[] { p.within() == null ? 1 : 0, p.size() });
+				current = parent;
+			}
+		}
+		long[][] steps = sums.toArray(long[][]::new);
+		long[][] parentInfo = parents.toArray(long[][]::new);
+		long k = offset;
+		return value -> {
+			long v = value;
+			for (int s = 0; s < steps.length; s++) {
+				long[] cumulative = steps[s];
+				int lo = 1;
+				int hi = cumulative.length - 1;
+				while (lo < hi) {
+					int mid = (lo + hi) >>> 1;
+					if (cumulative[mid] >= v)
+						hi = mid;
+					else
+						lo = mid + 1;
+				}
+				v = parentInfo[s][0] == 1 ? Math.floorMod(lo - 1 + k, parentInfo[s][1]) + 1 : lo;
+			}
+			return v;
+		};
+	}
+
 	// the bucket of every value of path.domain(), through the path, hashed into the given bucket
 	// count: built once and cached
 	public synchronized KeyBuckets buckets(KeyPath path, KeyHasher hasher, int bucketCount) {
@@ -137,8 +176,9 @@ public final class RankMapping {
 		if (cached == null) {
 			int size = (int) size(path.domain());
 			int[] array = new int[size];
+			java.util.function.LongUnaryOperator projector = projector(path);
 			for (int v = 1; v <= size; v++)
-				array[v - 1] = hasher.bucket(project(path, v), bucketCount);
+				array[v - 1] = hasher.bucket(projector.applyAsLong(v), bucketCount);
 			cached = new KeyBuckets(array, bucketCount);
 			buckets.put(key, cached);
 		}

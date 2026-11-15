@@ -198,8 +198,9 @@ public final class CostModel {
 		for (TableLayout table : layout.tables()) {
 			if (table instanceof HashTable hash) {
 				long[] perNode = new long[nodes.size()];
+				int[] nodeOfBucket = DistributedTransactions.nodeIndexOfBuckets(layout, hash);
 				RowCounts.of(workload, mapping, hash.table()).forEachKeyValue(hash.keyColumn(),
-						(value, count) -> perNode[nodes.indexOf(layout.nodeOf(hash, hasher.bucket(value, hash.buckets())))] += count);
+						(value, count) -> perNode[nodeOfBucket[hasher.bucket(value, hash.buckets())]] += count);
 				for (int n = 0; n < rows.length; n++)
 					rows[n] += perNode[n];
 				tables.add(new TableRows(hash.table(), false, rows(nodes, perNode)));

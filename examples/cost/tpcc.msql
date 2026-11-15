@@ -1,0 +1,66 @@
+/* Plan-phase3 5.B: the 9 TPC-C tables with their keys and one payload column each (not the full TPC-C
+ * column lists). order_line has ol_i_id, for stock_level's join with stock. Every primary key includes the
+ * warehouse column, and stock's also s_i_id, so both layouts (by warehouse; stock by item) pass SHML_024. */
+CREATE TABLE warehouse (
+    w_id INT PRIMARY KEY,
+    w_ytd NUMERIC(12, 2)
+)
+
+CREATE TABLE district (
+    d_w_id INT,
+    d_id INT,
+    d_ytd NUMERIC(12, 2),
+    PRIMARY KEY (d_w_id, d_id)
+)
+
+CREATE TABLE customer (
+    c_w_id INT,
+    c_d_id INT,
+    c_id INT,
+    c_balance NUMERIC(12, 2),
+    PRIMARY KEY (c_w_id, c_d_id, c_id)
+)
+
+CREATE TABLE history (
+    h_w_id INT,
+    h_id BIGINT,
+    h_amount NUMERIC(6, 2),
+    PRIMARY KEY (h_w_id, h_id)
+)
+
+CREATE TABLE orders (
+    o_w_id INT,
+    o_d_id INT,
+    o_id INT,
+    o_c_id INT,
+    PRIMARY KEY (o_w_id, o_d_id, o_id)
+)
+
+CREATE TABLE new_order (
+    no_w_id INT,
+    no_d_id INT,
+    no_o_id INT,
+    PRIMARY KEY (no_w_id, no_d_id, no_o_id)
+)
+
+CREATE TABLE order_line (
+    ol_w_id INT,
+    ol_d_id INT,
+    ol_o_id INT,
+    ol_number INT,
+    ol_i_id INT,
+    ol_amount NUMERIC(6, 2),
+    PRIMARY KEY (ol_w_id, ol_d_id, ol_o_id, ol_number)
+)
+
+CREATE TABLE stock (
+    s_w_id INT,
+    s_i_id INT,
+    s_quantity INT,
+    PRIMARY KEY (s_w_id, s_i_id)
+)
+
+CREATE TABLE item (
+    i_id INT PRIMARY KEY,
+    i_price NUMERIC(5, 2)
+)

@@ -102,7 +102,7 @@ public final class DistributedTransactions {
 		for (Cluster r : s.repeatRoots) {
 			double[] m = m(r.root, singles(r.root, s, writesOnly));
 			for (int t = 0; t <= n; t++)
-				z[t] *= StrictMath.pow(m[t], r.times);
+				z[t] *= power(m[t], r.times);
 		}
 		// top-level roots with their dependents
 		for (Cluster c : s.roots) {
@@ -136,12 +136,26 @@ public final class DistributedTransactions {
 					double ind = fits(d.single[u - 1], t) ? 1 : 0;
 					double excluded = (d.m[t] - pu * ind) / (1 - pu);
 					double q = d.elseWith ? (1 - d.remote) * ind + d.remote * excluded : excluded;
-					term *= StrictMath.pow(q, d.times);
+					term *= power(q, d.times);
 				}
 				z[t] += term;
 			}
 		}
 		return z;
+	}
+
+	// the index in layout.nodes() of each bucket's node: built once per table, so loops over values do
+	// array lookups instead of a placement map lookup per value
+	static int[] nodeIndexOfBuckets(Layout layout, HashTable table) {
+		int[] index = new int[table.buckets()];
+		for (int b = 0; b < index.length; b++)
+			index[b] = layout.nodes().indexOf(layout.nodeOf(table, b));
+		return index;
+	}
+
+	// x^k; fdlibm's pow(x, 1) is x exactly, so the common k = 1 skips the call without changing a bit
+	private static double power(double x, long k) {
+		return k == 1 ? x : StrictMath.pow(x, k);
 	}
 
 	// t = 0: T empty; t = i + 1: T = {node i}
@@ -159,9 +173,9 @@ public final class DistributedTransactions {
 		int[] single = singles(y, s, writesOnly);
 		Let root = s.lets.get(base.let());
 		int[] baseValue = new int[(int) mapping.size(root.domain())];
-		KeyPath path = new KeyPath(root.domain(), base.path());
+		java.util.function.LongUnaryOperator projector = mapping.projector(new KeyPath(root.domain(), base.path()));
 		for (int v = 1; v <= baseValue.length; v++)
-			baseValue[v - 1] = (int) (base.path().isEmpty() ? v : mapping.project(path, v));
+			baseValue[v - 1] = (int) projector.applyAsLong(v);
 		return new Dependent(p, single, m(single, p), baseValue, y instanceof ElseWith,
 				y instanceof ElseWith w ? w.p() : 0, times);
 	}
@@ -195,8 +209,9 @@ public final class DistributedTransactions {
 			if (writesOnly && !b.write)
 				continue;
 			KeyBuckets kb = mapping.buckets(new KeyPath(let.domain(), b.routed.value().path()), hasher, b.routed.keyTable().buckets());
+			int[] nodeOfBucket = nodeIndexOfBuckets(layout, b.routed.keyTable());
 			for (int v = 1; v <= size; v++) {
-				int node = nodes.indexOf(layout.nodeOf(b.routed.keyTable(), kb.bucket(v)));
+				int node = nodeOfBucket[kb.bucket(v)];
 				int current = single[v - 1];
 				single[v - 1] = current == EMPTY ? node : current == node ? node : MULTI;
 			}

@@ -14,11 +14,11 @@ import org.junit.jupiter.api.io.TempDir;
 
 import io.shardml.command.CostCommand;
 
-// `shardml cost` end to end (Plan-phase3 4.5, 4.5a): goldens for the banking example (resources/cost), exit
+// `shardml cost` end to end (Plan-phase3 4.5, 4.5a): goldens for the banking example (examples/cost), exit
 // codes 0 / 1 / 2 with each kind of error, --set, determinism, and validation output.
 public class CostCommandTest {
 
-	private static final Path COST = Path.of("resources", "cost");
+	private static final Path COST = Path.of("..", "examples", "cost");
 	private static final Path EXPECTED = COST.resolve("expected");
 
 	private record Run(int exit, String out, String err) {
@@ -45,28 +45,34 @@ public class CostCommandTest {
 	private static final String BY_ACCOUNT = file("banking-by-account.shardml");
 
 	@Test
-	public void testSingleReportGoldens() throws Exception {
+	public void testSingleReportAndAliases() throws Exception {
+		// every example output is compared in CostExamplesTest; here, one, and the command's own behaviour
 		Run c = run(WORKLOAD, BY_CUSTOMER);
 		Assertions.assertEquals(0, c.exit(), c.err());
 		Assertions.assertEquals(expected("banking-by-customer.txt"), c.out());
 		// the warnings of a valid model go to stderr: the layouts declare no route rules (SHML_022)
 		Assertions.assertTrue(c.err().contains("banking-by-customer.shardml:11: warning: No route rule defined for table "
 				+ "'customers'. Query patterns will not get validated [SHML_022]"), c.err());
-		Assertions.assertEquals(expected("banking-by-account.txt"), run(WORKLOAD, BY_ACCOUNT).out());
-		Assertions.assertEquals(expected("banking-by-customer.json"), run("--json", WORKLOAD, BY_CUSTOMER).out());
+		// file order does not matter; --compare is an alias of two or more models
 		Assertions.assertEquals(expected("banking-by-account.json"), run("--json", BY_ACCOUNT, WORKLOAD).out());
+		Assertions.assertEquals(expected("banking-comparison.txt"), run("--compare", WORKLOAD, BY_CUSTOMER, BY_ACCOUNT).out());
 	}
 
 	@Test
-	public void testComparisonAndSweepGoldens() throws Exception {
-		Run comparison = run(WORKLOAD, BY_CUSTOMER, BY_ACCOUNT);
-		Assertions.assertEquals(0, comparison.exit());
-		Assertions.assertEquals(expected("banking-comparison.txt"), comparison.out());
-		Assertions.assertEquals(comparison.out(), run("--compare", WORKLOAD, BY_CUSTOMER, BY_ACCOUNT).out(), "--compare is an alias");
-		Assertions.assertEquals(expected("banking-sweep-s.csv"),
-				run("--csv", "--sweep", "s=1.0,1.28", WORKLOAD, BY_CUSTOMER, BY_ACCOUNT).out());
-		Assertions.assertEquals(expected("banking-sweep-s.txt"),
-				run("--sweep", "s=1.0,1.28", WORKLOAD, BY_CUSTOMER, BY_ACCOUNT).out());
+	public void testRankOffsetSweep() {
+		// alone: one row per (offset, layout); with a param: a rank_offset column; with --rank-offset: usage
+		Run alone = run("--csv", "--sweep", "rank-offset=0,1", WORKLOAD, BY_CUSTOMER);
+		Assertions.assertEquals(0, alone.exit(), alone.err());
+		Assertions.assertTrue(alone.out().startsWith("param,param_value,layout,metric,value\nrank-offset,0,banking_by_customer,"),
+				alone.out());
+		Run both = run("--csv", "--sweep", "s=1.0", "--sweep", "rank-offset=0,1", WORKLOAD, BY_CUSTOMER);
+		Assertions.assertTrue(both.out().startsWith("rank_offset,param,param_value,layout,metric,value\n0,s,1.0,banking_by_customer,"),
+				both.out());
+		Assertions.assertTrue(both.out().contains("\n1,s,1.0,banking_by_customer,distributed_2pc,"), both.out());
+		Assertions.assertEquals(2, run("--rank-offset", "1", "--sweep", "rank-offset=0,1", WORKLOAD, BY_CUSTOMER).exit());
+		Assertions.assertEquals(2, run("--sweep", "rank-offset=0,-1", WORKLOAD, BY_CUSTOMER).exit());
+		Assertions.assertEquals(2, run("--sweep", "rank-offset=a", WORKLOAD, BY_CUSTOMER).exit());
+		Assertions.assertEquals(2, run("--sweep", "s=1", "--sweep", "overview_w=2", WORKLOAD, BY_CUSTOMER).exit());
 	}
 
 	@Test

@@ -148,16 +148,26 @@ public final class CostReportFormat {
 
 	// one row per (value, layout), values in the order given
 	public static String sweep(List<SweepPoint> points) {
+		return sweep(points, false);
+	}
+
+	// offsetColumn: a param and the rank offset are both swept; each row also names its rank offset
+	public static String sweep(List<SweepPoint> points, boolean offsetColumn) {
 		StringBuilder out = new StringBuilder();
 		SweepPoint first = points.get(0);
-		out.append("shardml cost: sweep of ").append(first.param()).append(" x ").append(first.report().workload())
-				.append("; rank offset ").append(first.report().rankOffset()).append("\n\n");
+		out.append("shardml cost: sweep of ").append(offsetColumn ? "rank-offset and " : "").append(first.param()).append(" x ")
+				.append(first.report().workload());
+		if (!offsetColumn && !first.param().equals("rank-offset"))
+			out.append("; rank offset ").append(first.report().rankOffset());
+		out.append("\n\n");
 		List<String[]> rows = new ArrayList<>();
-		List<String> header = new ArrayList<>(List.of(first.param(), "layout"));
+		List<String> header = new ArrayList<>(offsetColumn ? List.of("rank_offset") : List.of());
+		header.addAll(List.of(first.param(), "layout"));
 		header.addAll(SWEEP_METRICS);
 		rows.add(header.toArray(String[]::new));
 		for (SweepPoint p : points) {
-			List<String> row = new ArrayList<>(List.of(p.value(), p.report().layout()));
+			List<String> row = new ArrayList<>(offsetColumn ? List.of(String.valueOf(p.report().rankOffset())) : List.of());
+			row.addAll(List.of(p.value(), p.report().layout()));
 			for (String metric : SWEEP_METRICS)
 				row.add(metric(p.report(), metric));
 			rows.add(row.toArray(String[]::new));
@@ -167,10 +177,14 @@ public final class CostReportFormat {
 	}
 
 	public static String sweepCsv(List<SweepPoint> points) {
-		StringBuilder out = new StringBuilder("param,param_value,layout,metric,value\n");
+		return sweepCsv(points, false);
+	}
+
+	public static String sweepCsv(List<SweepPoint> points, boolean offsetColumn) {
+		StringBuilder out = new StringBuilder(offsetColumn ? "rank_offset," : "").append("param,param_value,layout,metric,value\n");
 		for (SweepPoint p : points) {
 			for (String metric : METRICS)
-				out.append(csv(p.param())).append(',').append(csv(p.value())).append(',').append(csv(p.report().layout()))
+				out.append(offsetColumn ? p.report().rankOffset() + "," : "").append(csv(p.param())).append(',').append(csv(p.value())).append(',').append(csv(p.report().layout()))
 						.append(',').append(metric).append(',').append(csv(metric(p.report(), metric))).append('\n');
 		}
 		return out.toString();

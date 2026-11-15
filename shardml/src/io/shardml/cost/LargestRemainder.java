@@ -1,7 +1,6 @@
 package io.shardml.cost;
 
 import java.util.Arrays;
-import java.util.Comparator;
 
 /* Splits a whole number of items over ranks 1..n in proportion to a distribution, by largest
  * remainder: each rank gets floor(total * pmf(r)), and the items left over go one each to the
@@ -35,12 +34,28 @@ public final class LargestRemainder {
 			remainders[i] = exact - counts[i];
 			assigned += counts[i];
 		}
-		Integer[] order = new Integer[n];
-		for (int i = 0; i < n; i++)
-			order[i] = i;
-		Arrays.sort(order, Comparator.<Integer>comparingDouble(i -> -remainders[i]).thenComparingInt(i -> i));
-		for (long k = 0; k < total - assigned && k < n; k++)
-			counts[order[(int) k]]++;
+		// the k items left over go to the k largest remainders, ties to the lower rank: every rank above
+		// the k-th largest remainder t, then the lowest ranks among those equal to t. The same result as
+		// sorting by (remainder descending, rank), on primitives
+		long k = Math.min(total - assigned, n);
+		if (k <= 0)
+			return counts;
+		double[] sorted = remainders.clone();
+		Arrays.sort(sorted);
+		double t = sorted[(int) (n - k)];
+		long above = 0;
+		for (int i = 0; i < n; i++) {
+			if (remainders[i] > t) {
+				counts[i]++;
+				above++;
+			}
+		}
+		for (int i = 0; i < n && above < k; i++) {
+			if (remainders[i] == t) {
+				counts[i]++;
+				above++;
+			}
+		}
 		return counts;
 	}
 }
