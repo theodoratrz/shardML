@@ -20,6 +20,7 @@ import io.shardml.cost.KeyType;
 import io.shardml.cost.Layout;
 import io.shardml.cost.Layouts;
 import io.shardml.cost.RankMapping;
+import io.shardml.cost.StatementSql;
 import io.shardml.cost.Routing;
 import io.shardml.cost.Routing.AllShards;
 import io.shardml.cost.Routing.ReferenceOnly;
@@ -28,10 +29,7 @@ import io.shardml.cost.Routing.Route;
 import io.shardml.cost.Routing.Routed;
 import io.shardml.cost.TableLayout;
 import io.shardml.cost.Workload;
-import io.shardml.cost.Workload.ColumnRef;
 import io.shardml.cost.Workload.Condition;
-import io.shardml.cost.Workload.Join;
-import io.shardml.cost.Workload.JoinOn;
 import io.shardml.cost.Workload.KeyPath;
 import io.shardml.cost.Workload.Kind;
 import io.shardml.cost.Workload.Let;
@@ -42,7 +40,6 @@ import io.shardml.cost.Workload.Transaction;
 import io.shardml.cost.Workload.VarRef;
 import io.shardml.cost.Workloads;
 import io.shardml.placement.Node;
-import io.shardml.schema.SqlNames;
 import io.shardml.shardML.Model;
 import io.shardml.workload.WorkloadModel;
 
@@ -199,6 +196,7 @@ public final class RouteCommand {
 			Map<Integer, Let> lets = new LinkedHashMap<>();
 			List<Statement> statements = new ArrayList<>();
 			collect(t.steps(), lets, statements);
+			List<StatementSql.Template> templates = StatementSql.templates(t, layout, mapping);
 			for (int s = 0; s < statements.size(); s++) {
 				Statement statement = statements.get(s);
 				Map<Integer, List<Long>> values = new LinkedHashMap<>();
@@ -214,7 +212,7 @@ public final class RouteCommand {
 						binding.put(e.getKey(), e.getValue().get(j % e.getValue().size()));
 					out.append(t.name()).append('\t').append(s + 1).append('\t').append(j + 1).append('\t')
 							.append(prediction(route, statement, binding, lets, layout, mapping)).append('\t')
-							.append(sql(statement, binding, lets, layout, mapping)).append('\n');
+							.append(sql(templates.get(s), binding)).append('\n');
 				}
 			}
 		}
@@ -269,88 +267,12 @@ public final class RouteCommand {
 		return node.host() + ":" + node.port();
 	}
 
-	// the statement as SQL with the binding's values: SELECT for a read, UPDATE .. SET c = c for a write (c the
-	// first non-key column), DELETE for a delete; `?` is the literal 0
-	static String sql(Statement statement, Map<Integer, Long> binding, Map<Integer, Let> lets, Layout layout,
-			RankMapping mapping) {
-		String table = qualified(layout, statement.table());
-		List<String> where = new ArrayList<>();
-		for (Join join : statement.joins()) {
-			for (JoinOn on : join.on())
-				where.add(column(layout, on.left()) + " = " + column(layout, on.right()));
-		}
-		StringBuilder conditions = new StringBuilder();
-		for (int i = 0; i < statement.conditions().size(); i++) {
-			Condition c = statement.conditions().get(i);
-			if (i > 0)
-				conditions.append(' ').append(statement.connectives().get(i - 1).name()).append(' ');
-			conditions.append(column(layout, c.column())).append(' ').append(op(c.op())).append(' ')
-					.append(c.value() == null ? "0" : String.valueOf(value(c.value(), binding, lets, mapping)));
-		}
-		StringBuilder sql = new StringBuilder();
-		switch (statement.kind()) {
-			case READ -> {
-				sql.append("SELECT * FROM ").append(table);
-				for (Join join : statement.joins()) {
-					List<String> on = new ArrayList<>();
-					for (JoinOn o : join.on())
-						on.add(column(layout, o.left()) + " = " + column(layout, o.right()));
-					sql.append(" JOIN ").append(qualified(layout, join.table())).append(" ON ").append(String.join(" AND ", on));
-				}
-				if (conditions.length() > 0)
-					sql.append(" WHERE ").append(conditions);
-				return sql.toString();
-			}
-			case WRITE -> {
-				String c = SqlNames.write(nonKeyColumn(layout, statement.table()));
-				sql.append("UPDATE ").append(table).append(" SET ").append(c).append(" = ").append(c);
-			}
-			case DELETE -> sql.append("DELETE FROM ").append(table);
-		}
-		if (!statement.joins().isEmpty())
-			sql.append(statement.kind() == Kind.WRITE ? " FROM " : " USING ")
-					.append(String.join(", ", statement.joins().stream().map(j -> qualified(layout, j.table())).toList()));
-		List<String> all = new ArrayList<>(where);
-		if (conditions.length() > 0)
-			all.add(where.isEmpty() ? conditions.toString() : "(" + conditions + ")");
-		if (!all.isEmpty())
-			sql.append(" WHERE ").append(String.join(" AND ", all));
-		return sql.toString();
-	}
-
-	private static long value(VarRef ref, Map<Integer, Long> binding, Map<Integer, Let> lets, RankMapping mapping) {
-		long v = binding.get(ref.let());
-		return ref.path().isEmpty() ? v : mapping.project(new KeyPath(lets.get(ref.let()).domain(), ref.path()), v);
-	}
-
-	private static String op(Workload.Op op) {
-		return switch (op) {
-			case EQ -> "=";
-			case NEQ -> "<>";
-			case LT -> "<";
-			case LE -> "<=";
-			case GT -> ">";
-			case GE -> ">=";
-		};
-	}
-
-	private static String qualified(Layout layout, String table) {
-		return layout.table(table).map(TableLayout::qualified).orElseThrow();
-	}
-
-	private static String column(Layout layout, ColumnRef ref) {
-		return qualified(layout, ref.table()) + "." + SqlNames.write(ref.column());
-	}
-
-	// the first column of the table that is not its shard key (any column of a reference table)
-	private static String nonKeyColumn(Layout layout, String table) {
-		TableLayout t = layout.table(table).orElseThrow();
-		String key = t instanceof HashTable hash ? hash.keyColumn() : null;
-		for (String column : layout.schema().tables().get(table).keySet()) {
-			if (!column.equals(key))
-				return column;
-		}
-		throw new IllegalArgumentException("Table '" + table + "' has no column besides its shard key to update.");
+	// the statement as SQL with the binding's values (StatementSql, shared with the Phase 4 driver): SELECT for a
+	// read, UPDATE .. SET c = c for a write (c the payload column), DELETE for a delete; `?` is the literal 0
+	private static String sql(StatementSql.Template template, Map<Integer, Long> binding) {
+		long[] lets = new long[binding.keySet().stream().mapToInt(Integer::intValue).max().orElse(-1) + 1];
+		binding.forEach((let, value) -> lets[let] = value);
+		return template.inline(template.parameters(lets));
 	}
 
 	private static void collect(List<Step> steps, Map<Integer, Let> lets, List<Statement> statements) {

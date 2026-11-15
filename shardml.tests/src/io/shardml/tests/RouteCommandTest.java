@@ -62,7 +62,7 @@ public class RouteCommandTest {
 		// a reference write commits on every node; a reference join with a routed table goes to that table's node;
 		// a colocated join without a key condition touches every bucket; a delete is written as a delete
 		Assertions.assertTrue(w.contains("reference_write\t1\t1\treference-write\t1\tworker1:5432,worker2:5432,worker3:5432\t"
-				+ "UPDATE item SET i_id = i_id WHERE item.i_id = 1\n"), w);
+				+ "UPDATE item SET i_price = i_price WHERE item.i_id = 1\n"), w);
 		Assertions.assertTrue(w.contains("reference_join\t1\t1\trouted\t1\tworker3:5432\tSELECT * FROM order_line JOIN item ON "
 				+ "order_line.ol_i_id = item.i_id WHERE order_line.ol_w_id = 1\n"), w);
 		Assertions.assertTrue(w.contains("colocated_unrouted\t1\t1\tunrouted\t32\tworker1:5432,worker2:5432,worker3:5432\tSELECT * "
