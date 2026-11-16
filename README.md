@@ -421,7 +421,10 @@ holds the cluster's counters per node before and after the measured window (read
 participant, cgroup CPU), each node's versions and architecture, the shard map, the entry shares per target
 (`uniform` when the clients divide evenly and no share is off 1/n by more than 0.02), and `emulated`: true when a
 node's architecture differs from the driver host's, as on the local bench cluster, whose CPU numbers are never
-a result.
+a result. The warm-up is a phase of its own: its clients stop before the before snapshot, which is therefore
+never taken under load. During the measured window every node's CPU is sampled each second (`clusterCpu`: the
+series, each node's mean and peak against its cores, and `saturation` when a node's mean exceeds 85%), and the
+after snapshot holds the top 100 hot keys from `citus_stat_tenants`, zeroed before the window.
 `driver load --targets <coordinator> <workload> <model>` fills a deployed layout with the rows the model
 counts (`RowCounts.forEachRowGroup`, the rank offset and `--set` applied), with `COPY` through the coordinator on
 `--jobs` connections, then checks that every node holds exactly the model's data-skew rows per table (`count(*)`
