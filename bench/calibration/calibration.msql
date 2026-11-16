@@ -1,0 +1,29 @@
+/* Plan-phase4 1a: the calibration microbenchmarks' schema. Every table: an int8 key and one payload column
+ * (the column a write sets, StatementSql.payloadColumn). kv's r is the ref row a kv row joins (benchmark 4);
+ * the other benchmarks leave it a constant. A model distributes only the tables it uses; the rest deploy
+ * as empty local tables. */
+CREATE TABLE kv (
+    k BIGINT PRIMARY KEY,
+    payload BIGINT,
+    r BIGINT
+)
+
+CREATE TABLE ref (
+    id BIGINT PRIMARY KEY,
+    payload BIGINT
+)
+
+CREATE TABLE tpc1 (
+    k BIGINT PRIMARY KEY,
+    payload BIGINT
+)
+
+CREATE TABLE tpc2 (
+    k BIGINT PRIMARY KEY,
+    payload BIGINT
+)
+
+CREATE TABLE tpc3 (
+    k BIGINT PRIMARY KEY,
+    payload BIGINT
+)

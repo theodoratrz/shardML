@@ -425,6 +425,19 @@ node must be the model's), and reports the `COPY` rate in rows/s and the bytes p
 (`pg_total_relation_size` of every placement). A mapped column takes its key path's value; a
 `unique` column, or a key column the workload does not map, the row's number; any other column a constant of its
 type. `bench/integration/test-loader.sh` runs this check on scaled-down workloads.
+`driver touches <workload> <model>...` prints the model's load split by touch kind (routed, unrouted and
+reference reads and writes: shard relations per transaction on each node) and the statements per transaction by
+kind with their entry-node counts (`CostModel.touchProfile`, the inputs of the plan's calibrated predictor;
+`--json` too, and every run manifest records it); it adds to the cost report without changing it.
+`bench/calibration/run.sh` is the calibration harness: the plan's five microbenchmarks (point read and write,
+an unrouted probe over 4 to 64 shards, writes on one vs two or three pinned workers, reference reads, writes
+and joins), each a model and workload in `bench/calibration/`, deployed, loaded and run with the driver; around
+each measured run it snapshots scans and updates per node, Citus's statement counters, 2PC transactions and
+every container's CPU, and checks the counts per transaction against the model (PostgreSQL counts the
+planner's own index probes, for a range bound outside the histogram or a merge-join estimate, as index scans,
+so the unrouted probe and the reference join show 2 scans per touch; the harness states it). `KEYS=30000 WARMUP=5
+DURATION=20 CLIENTS=4 bench/calibration/run.sh` is a local counts-only pass; on the emulated cluster the CPU
+numbers are recorded but are not costs.
 Client i's templates and values depend only on the workload, the seed and i, so two layouts replay the same
 transactions. `bench/driver-smoke/run.sh` checks that it runs on the local bench cluster; its numbers are not
 measurements.

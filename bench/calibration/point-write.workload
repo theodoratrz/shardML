@@ -1,0 +1,11 @@
+import "calibration.msql"
+
+// Plan-phase4 1a, benchmark 1 (with point.shardml): a routed single-shard point write.
+workload point_write {
+    domain key { size: 1000000 }
+    table kv { rows: per key  k: key }
+    transaction point_write weight 1 {
+        let k = key uniform
+        write kv where k = $k
+    }
+}

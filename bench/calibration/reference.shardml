@@ -1,0 +1,14 @@
+import "calibration.msql"
+
+// Plan-phase4 1a, benchmark 4: a reference table of 100,000 rows (a copy on every node), and kv (32 shards
+// spread) whose rows each join one ref row.
+database calib_reference {
+    type: postgres
+
+    node w1 { host: "worker1" port: 5432 }
+    node w2 { host: "worker2" port: 5432 }
+    node w3 { host: "worker3" port: 5432 }
+
+    shard kv { strategy: hash key: k buckets: 32 }
+    shard ref { strategy: replicated }
+}

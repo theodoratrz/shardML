@@ -1,0 +1,13 @@
+import "calibration.msql"
+
+// Plan-phase4 1a, benchmark 2: kv in 4 shards spread over the 3 workers (an unrouted statement's cost
+// against the shard count: 4, 8, 16, 32, 64).
+database calib_scan_4 {
+    type: postgres
+
+    node w1 { host: "worker1" port: 5432 }
+    node w2 { host: "worker2" port: 5432 }
+    node w3 { host: "worker3" port: 5432 }
+
+    shard kv { strategy: hash key: k buckets: 4 }
+}

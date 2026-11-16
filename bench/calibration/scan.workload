@@ -1,0 +1,11 @@
+import "calibration.msql"
+
+// Plan-phase4 1a, benchmark 2 (with scan-4 .. scan-64.shardml): an unrouted indexed predicate. `k < ?` is
+// sent as k < 0: an index probe on every shard that finds no row, so the cost is per shard and per statement.
+workload scan {
+    domain key { size: 1000000 }
+    table kv { rows: per key  k: key }
+    transaction scan weight 1 {
+        read kv where k < ?
+    }
+}

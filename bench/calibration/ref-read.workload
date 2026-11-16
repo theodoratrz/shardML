@@ -1,0 +1,13 @@
+import "calibration.msql"
+
+// Plan-phase4 1a, benchmark 4 (with reference.shardml): a standalone point read of the reference table.
+workload ref_read {
+    domain ref { size: 100000 }
+    domain key { size: 1000000 within ref uniform }
+    table kv  { rows: per key  k: key  r: key.ref }
+    table ref { rows: per ref  id: ref }
+    transaction ref_read weight 1 {
+        let i = ref uniform
+        read ref where id = $i
+    }
+}

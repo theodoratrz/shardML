@@ -1,0 +1,13 @@
+import "calibration.msql"
+
+// Plan-phase4 1a, benchmark 4 (with reference.shardml): a reference read joined into a routed statement.
+workload ref_join {
+    domain ref { size: 100000 }
+    domain key { size: 1000000 within ref uniform }
+    table kv  { rows: per key  k: key  r: key.ref }
+    table ref { rows: per ref  id: ref }
+    transaction ref_join weight 1 {
+        let k = key uniform
+        read kv join ref on kv.r = ref.id where kv.k = $k
+    }
+}

@@ -1,0 +1,15 @@
+import "calibration.msql"
+
+// Plan-phase4 1a, benchmark 3 (with twopc.shardml): one routed write on each of two workers (tpc1, tpc2): 2PC.
+workload twopc_2 {
+    domain key { size: 1000000 }
+    table tpc1 { rows: per key  k: key }
+    table tpc2 { rows: per key  k: key }
+    table tpc3 { rows: per key  k: key }
+    transaction two_nodes weight 1 {
+        let a = key uniform
+        let b = key uniform
+        write tpc1 where k = $a
+        write tpc2 where k = $b
+    }
+}

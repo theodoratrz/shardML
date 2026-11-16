@@ -1,0 +1,19 @@
+import "calibration.msql"
+
+// Plan-phase4 1a, benchmark 3: three tables of 32 shards, each pinned whole to one worker, so a write to
+// tpc1 and one to tpc2 always involve two workers (2PC), and two writes to tpc1 always one.
+database calib_twopc {
+    type: postgres
+
+    node w1 { host: "worker1" port: 5432 }
+    node w2 { host: "worker2" port: 5432 }
+    node w3 { host: "worker3" port: 5432 }
+
+    shard tpc1 { strategy: hash key: k buckets: 32 }
+    shard tpc2 { strategy: hash key: k buckets: 32 }
+    shard tpc3 { strategy: hash key: k buckets: 32 }
+
+    place tpc1 { strategy: pin nodes: w1 }
+    place tpc2 { strategy: pin nodes: w2 }
+    place tpc3 { strategy: pin nodes: w3 }
+}
