@@ -432,12 +432,13 @@ kind with their entry-node counts (`CostModel.touchProfile`, the inputs of the p
 `bench/calibration/run.sh` is the calibration harness: the plan's five microbenchmarks (point read and write,
 an unrouted probe over 4 to 64 shards, writes on one vs two or three pinned workers, reference reads, writes
 and joins), each a model and workload in `bench/calibration/`, deployed, loaded and run with the driver; around
-each measured run it snapshots scans and updates per node, Citus's statement counters, 2PC transactions and
-every container's CPU, and checks the counts per transaction against the model (PostgreSQL counts the
-planner's own index probes, for a range bound outside the histogram or a merge-join estimate, as index scans,
-so the unrouted probe and the reference join show 2 scans per touch; the harness states it). `KEYS=30000 WARMUP=5
-DURATION=20 CLIENTS=4 bench/calibration/run.sh` is a local counts-only pass; on the emulated cluster the CPU
-numbers are recorded but are not costs.
+each measured run it snapshots the read and write touches per node (executions per shard relation from
+`pg_stat_statements`: unlike `seq_scan + idx_scan`, they do not count the planner's index probes, and an
+`UPDATE` counts once), Citus's statement counters, 2PC transactions and the nodes taking part in each, and every
+container's CPU, and checks the counts per transaction against the model within one transaction per client
+plus four standard deviations. `KEYS=30000 WARMUP=5 DURATION=20 CLIENTS=4 bench/calibration/run.sh` is a local
+counts-only pass (`ENTRY=workers CLIENTS=6` enters through the workers); under amd64 emulation the CPU numbers
+are recorded but are never a result.
 Client i's templates and values depend only on the workload, the seed and i, so two layouts replay the same
 transactions. `bench/driver-smoke/run.sh` checks that it runs on the local bench cluster; its numbers are not
 measurements.
