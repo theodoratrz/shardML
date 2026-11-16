@@ -457,3 +457,47 @@ microbenchmark's counts per executed transaction agree with the model, given poi
    so its CPU-seconds measure the emulator. Counts-only checks (rows per node, touches, statements, 2PC
    transactions) do not depend on the CPU and are unaffected. Section 7.2's "Emulation is out" is extended from
    throughput and latency to CPU.
+
+### Amendment 2 (2026-11-16): the per-node load diagnostic, redefined
+
+**Timing.** Like amendment 1, this predates every measurement it affects: no calibration (P4.0c) or validation
+run has been made; the only runs are the counts-only harness passes on the local emulated cluster.
+
+**Definition** (replaces section 3's "after-minus-before deltas of `seq_scan + idx_scan + n_tup_upd`, summed per
+node", which amendment 1, point 1 showed to double-count writes and to count planner index probes). On every
+node, with `pg_stat_statements` preloaded (`pg_stat_statements.track = all`,
+`pg_stat_statements.track_utility = off`) and reset after the last shard move before the run:
+- **read touches on node n** = sum, over the `pg_stat_statements` entries of the run's database on n whose
+  query begins with `SELECT`, of `calls` times the number of distinct shard relations of the layout's tables
+  the query names (`<table>_<shardid>`);
+- **write touches on node n** = the same over the queries beginning with `UPDATE`, `DELETE`, `INSERT` or `MERGE`;
+- statements that read the statistics themselves (naming `pg_stat_user_tables`, `pg_total_relation_size`,
+  `pg_dist_` or `pg_stat_statements`) are excluded;
+- each as the after-minus-before delta over the measured window, compared per executed transaction with the
+  model's touches summed over the read kinds and over the write kinds (`TouchProfile`).
+It counts executions, so the planner's index probes do not count, an `UPDATE` counts once (as a write), and a
+statement joining k shard relations counts k touches, as the model does.
+**Per-node 2PC participation** (amendment 1, point 4) is measured as the distinct 2PC transactions (`gid` without
+its last field) whose `pg_dist_transaction` records name the node's group, on every node, with
+`citus.recover_2pc_interval = -1` during the run.
+
+**Evidence.** The calibration harness (`bench/calibration/run.sh`), local pass through the coordinator (mode (a);
+30,000 keys, 4 clients, 20 s per run, 14 runs): every read and write touch count per node, every statement count
+and every 2PC count (total and per node) agrees with the model with no per-workload factor, within one transaction
+per client plus four standard deviations of the model's own probabilities, and exactly wherever the count is
+certain (for example 93,588 read touches on one node for the 64-shard probe, model 93,588.0; 7,247 2PC
+transactions on each of three pinned workers, model 7,247.0). The unrouted probe and the reference join, which
+showed 2 index scans per touch under the old definition, match without a factor.
+
+**Limit: connection mode (b).** Entering through a worker with Citus local execution on (the default), a
+statement whose shard is on the entry worker runs there without a connection, and that execution is recorded
+neither in `pg_stat_statements` nor, as a 2PC participant, in `pg_dist_transaction`. Measured through the
+published workers (6 clients, round-robin): point reads 9,552 / 9,477 / 8,485 read touches against the model's
+14,238 / 14,225 / 12,746 (about two thirds: the local third is missing), and per-node 2PC participation 11,928 /
+11,984 against 18,352 on each written worker; the totals (single-shard statements 41,209 and 36,704, 2PC
+transactions 18,352) are exact. With `citus.enable_local_execution = off` on the workers the same runs match the
+model on every node, but that setting changes the system being measured, so it is not used in validation runs.
+**Therefore, in mode (b) this diagnostic is reported as measured and is not compared per node with the model;**
+its per-node comparison is made in mode (a) runs (the sensitivity check, section 2.6), and in mode (b) only the
+totals are compared. This changes no hypothesis or predictor: the per-node load is a diagnostic (section 3), and
+P1 does not use it.
