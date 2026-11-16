@@ -44,6 +44,12 @@ Every node also preloads `pg_stat_statements` (`track = all`, `track_utility =
 off`): the Phase 4 per-node load diagnostic counts executions per shard query
 from it (`docs/phase4-validation-plan.md`, amendment 2).
 
+And it tracks hot keys: `citus.stat_tenants_track = all`, with the longest
+period (`citus.stat_tenants_period = 86400`) so that one period outlasts a run;
+the driver zeroes the counters before a measured window and records the top 100
+after it. Citus then prefixes every shard query with the tenant it tracks
+(`/*{"cId":..,"tId":..}*/`).
+
 ## Requirements
 
 - Docker with Compose v2 (`docker compose`, not `docker-compose`).

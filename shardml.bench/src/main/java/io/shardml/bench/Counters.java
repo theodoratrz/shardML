@@ -47,6 +47,10 @@ final class Counters {
 		return "\\m(" + String.join("|", names) + ")_[0-9]+\\M";
 	}
 
+	// a statement's leading comments: Citus prefixes every shard query with the tenant it tracks
+	// (citus.stat_tenants_track, e.g. /*{"cId":347,"tId":"10954"}*/), which holds no '*'
+	static final String LEADING_COMMENTS = "^(\\s*/\\*[^*]*\\*/)*\\s*";
+
 	static Map<String, Object> snapshot(Connection c, Layout layout) {
 		Map<String, Object> out = new LinkedHashMap<>();
 		Map<String, Map<String, Object>> nodes = new TreeMap<>();
@@ -56,7 +60,8 @@ final class Counters {
 		String pattern = shardPattern(layout);
 		// touches (first: the other queries below name shards too, and are excluded by name anyway)
 		String touches = "SELECT coalesce(string_agg(side || '=' || x, ','), '') FROM ("
-				+ " SELECT CASE WHEN query ~* '^\\s*select' THEN 'read' WHEN query ~* '^\\s*(update|delete|insert|merge)' THEN 'write' END AS side,"
+				+ " SELECT CASE WHEN query ~* '" + LEADING_COMMENTS + "select' THEN 'read'"
+				+ " WHEN query ~* '" + LEADING_COMMENTS + "(update|delete|insert|merge)' THEN 'write' END AS side,"
 				+ " sum(calls * (SELECT count(DISTINCT m[1]) FROM regexp_matches(query, '" + pattern + "', 'g') AS m)) AS x"
 				+ " FROM pg_stat_statements WHERE dbid = (SELECT oid FROM pg_database WHERE datname = current_database())"
 				+ " AND query !~ 'pg_stat_user_tables|pg_total_relation_size|pg_dist_|pg_stat_statements'"
@@ -71,6 +76,9 @@ final class Counters {
 			}
 			node.put("touches", t);
 		});
+		// entries pg_stat_statements evicted (pg_stat_statements.max): a change over the window loses counts
+		onEveryNode(c, "SELECT dealloc FROM pg_stat_statements_info", nodes, errors, "pg_stat_statements_info",
+				(node, result) -> node.put("pgStatStatementsDeallocations", Long.parseLong(result.strip())));
 		onEveryNode(c, "SELECT coalesce((SELECT query_execution_single_shard || ',' || query_execution_multi_shard FROM citus_stat_counters"
 				+ " WHERE name = current_database()), '0,0')", nodes, errors, "statements", (node, result) -> {
 					String[] f = result.split(",");
@@ -277,6 +285,61 @@ final class Counters {
 		out.put("uniform", uniform);
 		out.put("rule", "uniform when clients are a multiple of the targets and every statement share is within " + SHARE_TOLERANCE
 				+ " of 1/targets (plan amendment 3, 2)");
+		return out;
+	}
+
+	// --- hot keys (Plan-phase4 section 3: citus_stat_tenants, citus.stat_tenants_track = 'all') ---
+
+	static final int TENANTS = 100;
+
+	// zero the tenant counters on every node (citus_stat_tenants_reset), with no client running: the after
+	// read then holds the measured window's counts (this + last period, the period set longer than a run)
+	static void resetTenants(Connection c, List<String> errors) {
+		try (Statement s = c.createStatement()) {
+			s.execute("SELECT citus_stat_tenants_reset()");
+		} catch (SQLException e) {
+			errors.add("tenants reset: " + e.getMessage());
+		}
+	}
+
+	/* The top TENANTS tenants (distribution-column values of router statements) by statements, over every
+	 * node: read and statement counts and CPU of this period plus the last, with the tracking settings; with
+	 * tracking off, only the settings (tracked: false), which is not an error. */
+	static Map<String, Object> tenants(Connection c, List<String> errors) {
+		Map<String, Object> out = new LinkedHashMap<>();
+		try (Statement s = c.createStatement(); ResultSet rs = s.executeQuery("SELECT current_setting('citus.stat_tenants_track'),"
+				+ " current_setting('citus.stat_tenants_period'), current_setting('citus.stat_tenants_limit')")) {
+			rs.next();
+			out.put("track", rs.getString(1));
+			out.put("periodSeconds", Long.parseLong(rs.getString(2)));
+			out.put("limit", Long.parseLong(rs.getString(3)));
+		} catch (SQLException e) {
+			errors.add("tenants settings: " + e.getMessage());
+			return out;
+		}
+		boolean tracked = !"none".equals(out.get("track"));
+		out.put("tracked", tracked);
+		if (!tracked)
+			return out;
+		List<Object> top = new ArrayList<>();
+		try (Statement s = c.createStatement(); ResultSet rs = s.executeQuery("SELECT nodeid, colocation_id, tenant_attribute,"
+				+ " read_count_in_this_period + read_count_in_last_period, query_count_in_this_period + query_count_in_last_period,"
+				+ " cpu_usage_in_this_period + cpu_usage_in_last_period FROM citus_stat_tenants"
+				+ " ORDER BY 5 DESC, 4 DESC, 2, 3 LIMIT " + TENANTS)) {
+			while (rs.next()) {
+				Map<String, Object> t = new LinkedHashMap<>();
+				t.put("nodeid", rs.getInt(1));
+				t.put("colocationId", rs.getInt(2));
+				t.put("tenant", rs.getString(3));
+				t.put("reads", rs.getLong(4));
+				t.put("statements", rs.getLong(5));
+				t.put("cpuSeconds", rs.getDouble(6));
+				top.add(t);
+			}
+		} catch (SQLException e) {
+			errors.add("tenants: " + e.getMessage());
+		}
+		out.put("top", top);
 		return out;
 	}
 }

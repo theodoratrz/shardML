@@ -391,9 +391,11 @@ public final class Driver {
 					crashes.add("client " + i + " (warm-up): " + warm.get(i).crash());
 			}
 		}
-		// no client is running: the before snapshot
+		// no client is running: the before snapshot, and the tenant counters zeroed
 		Map<String, Object> before = Counters.snapshot(counters, layout);
 		before.put("underLoad", false);
+		List<String> tenantErrors = new ArrayList<>();
+		Counters.resetTenants(counters, tenantErrors);
 		snapshots.put("before", before);
 
 		long t0 = System.nanoTime() + 200_000_000L;
@@ -441,6 +443,10 @@ public final class Driver {
 		}
 		Map<String, Object> after = Counters.snapshot(counters, layout);
 		after.put("underLoad", false);
+		after.put("tenants", Counters.tenants(counters, tenantErrors));
+		@SuppressWarnings("unchecked")
+		List<String> afterErrors = (List<String>) after.get("errors");
+		afterErrors.addAll(tenantErrors);
 		snapshots.put("after", after);
 		manifest.put("snapshotUnderLoad", false);
 		try {

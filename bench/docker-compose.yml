@@ -19,9 +19,13 @@ x-citus: &citus
   # load diagnostic (docs/phase4-validation-plan.md, amendment 2): track = all for
   # the queries Citus runs locally, track_utility off so that every 2PC's
   # PREPARE TRANSACTION (a fresh gid each) does not take an entry.
+  # citus_stat_tenants tracks the hot keys (Phase 4 section 3) of every router
+  # statement; the period (its maximum, a day) outlasts any run, so the driver
+  # zeroes the counters before the measured window and reads them after it.
   command: ["postgres", "-c", "wal_level=logical",
             "-c", "shared_preload_libraries=citus,pg_stat_statements",
-            "-c", "pg_stat_statements.track=all", "-c", "pg_stat_statements.track_utility=off"]
+            "-c", "pg_stat_statements.track=all", "-c", "pg_stat_statements.track_utility=off",
+            "-c", "citus.stat_tenants_track=all", "-c", "citus.stat_tenants_period=86400"]
   healthcheck:
     test: ["CMD-SHELL", "pg_isready -U postgres -h localhost"]
     interval: 2s
