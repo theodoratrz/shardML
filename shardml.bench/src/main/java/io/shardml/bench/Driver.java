@@ -70,7 +70,10 @@ public final class Driver {
 			"Usage: driver load --targets coordinator:port [--schema S] [--set n=v] [--rank-offset k] [--jobs N] [--truncate]",
 			"                   [--verify-only] <workload.workload> <model.shardml>",
 			"  fill the deployed layout with the model's rows (COPY, N connections, default 4), then check rows per node",
-			"  against the model's data-skew rows exactly");
+			"  against the model's data-skew rows exactly",
+			"Usage: driver touches [--json] [--set n=v] [--rank-offset k] <workload.workload> <model.shardml>...",
+			"  the model's touches per transaction by kind and node, statements by kind and their entry-node counts",
+			"  (Plan-phase4 1a, the inputs of the calibrated predictor P1)");
 
 	private Driver() {
 	}
@@ -90,6 +93,7 @@ public final class Driver {
 				case "run" -> runLoad(o, out, err);
 				case "verify-distributions" -> verify(o, out, err);
 				case "load" -> load(o, out, err);
+				case "touches" -> touches(o, out, err);
 				default -> throw new UsageError("unknown command '" + args.get(0) + "'");
 			};
 		} catch (UsageError e) {
@@ -113,7 +117,7 @@ public final class Driver {
 	record Options(String mode, int clients, double rate, int warmup, int duration, int drain, List<String> targets, String entry,
 			String database, String user, String schema, long seed, int rep, Map<String, String> sets, long rankOffset, int retries,
 			int prepareThreshold, int statementTimeoutMs, String gitCommit, Path out, long draws, File workload, List<File> models,
-			List<String> argv, int jobs, boolean truncate, boolean verifyOnly) {
+			List<String> argv, int jobs, boolean truncate, boolean verifyOnly, boolean json) {
 
 		static Options parse(List<String> args, String command) throws UsageError {
 			String mode = null;
@@ -140,6 +144,7 @@ public final class Driver {
 			int jobs = 4;
 			boolean truncate = false;
 			boolean verifyOnly = false;
+			boolean json = false;
 			File workload = null;
 			List<File> models = new ArrayList<>();
 			for (int i = 0; i < args.size(); i++) {
@@ -202,6 +207,7 @@ public final class Driver {
 					case "--jobs" -> jobs = (int) whole(value(args, ++i, a), a, 1);
 					case "--truncate" -> truncate = true;
 					case "--verify-only" -> verifyOnly = true;
+					case "--json" -> json = true;
 					default -> {
 						if (a.startsWith("-"))
 							throw new UsageError("unknown option '" + a + "'");
@@ -239,7 +245,7 @@ public final class Driver {
 			}
 			return new Options(mode, clients, rate, warmup, duration, drain, List.copyOf(targets), entry, database, user, schema, seed, rep,
 					sets, rankOffset, retries, prepareThreshold, statementTimeoutMs, gitCommit, out, draws, workload, List.copyOf(models),
-					List.copyOf(args), jobs, truncate, verifyOnly);
+					List.copyOf(args), jobs, truncate, verifyOnly, json);
 		}
 
 		private static String value(List<String> args, int i, String option) throws UsageError {
@@ -278,6 +284,23 @@ public final class Driver {
 	private static int load(Options o, PrintStream out, PrintStream err) {
 		Inputs.Loaded loaded = Inputs.load(o.workload(), o.models(), o.sets(), err);
 		return Loader.run(o, loaded.workload(), loaded.layouts().get(0), out, err);
+	}
+
+	// --- touches ---
+
+	private static int touches(Options o, PrintStream out, PrintStream err) {
+		Inputs.Loaded loaded = Inputs.load(o.workload(), o.models(), o.sets(), err);
+		List<String> json = new ArrayList<>();
+		for (Layout layout : loaded.layouts()) {
+			io.shardml.cost.TouchProfile p = new io.shardml.cost.CostModel().touchProfile(layout, loaded.workload(), o.rankOffset());
+			if (o.json())
+				json.add(p.json());
+			else
+				out.print(p.format());
+		}
+		if (o.json())
+			out.println(json.size() == 1 ? json.get(0) : "[" + String.join(", ", json) + "]");
+		return OK;
 	}
 
 	// --- run ---
@@ -555,6 +578,7 @@ public final class Driver {
 		m.put("files", hashes(o));
 		m.put("git", git(o));
 		m.put("modelReport", modelReport(o, err));
+		m.put("modelTouches", modelTouches(o, loaded, err));
 		m.put("arguments", o.argv());
 		return m;
 	}
@@ -590,6 +614,16 @@ public final class Driver {
 			return Map.of("error", errors.toString(StandardCharsets.UTF_8).strip());
 		}
 		return new Json.Raw(out.toString(StandardCharsets.UTF_8));
+	}
+
+	// the model's touches by kind (Plan-phase4 1a), for P1
+	private static Object modelTouches(Options o, Inputs.Loaded loaded, PrintStream err) {
+		try {
+			return new Json.Raw(new io.shardml.cost.CostModel().touchProfile(loaded.layouts().get(0), loaded.workload(), o.rankOffset()).json());
+		} catch (RuntimeException e) {
+			err.println("driver: warning: touch profile failed: " + e.getMessage());
+			return Map.of("error", String.valueOf(e.getMessage()));
+		}
 	}
 
 	private static final Pattern IMPORT = Pattern.compile("import\\s+\"([^\"]+)\"");
