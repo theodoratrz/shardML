@@ -410,3 +410,50 @@ the thresholds of section 4.2.
 - A **driver entry point** in the core: a public sampler built from `Marginals` (today `Marginals.draw` is
   package-private) so the driver does not copy the pmf code.
 - Exposing per-template SQL with placeholders from `RouteCommand` (today it inlines values).
+
+---
+
+## Amendments
+
+Appended, never edited in place; the text above stays as committed. Each entry is dated and states its evidence.
+
+### Amendment 1 (2026-11-16): touch kinds, 2PC participation, the load diagnostic, emulated CPU
+
+**Timing.** This amendment predates every measurement it affects: no calibration run (P4.0c) and no validation
+run has been made. The only runs so far are the counts-only harness pass on the local emulated cluster
+(`bench/calibration/run.sh`, commit `4679a66`), which fits nothing and is not a result.
+
+**Evidence** (step P4.0b): the model extension (`CostModel.touchProfile`, commit `e270592`) and the calibration
+harness (commit `4679a66`). In its local pass (30,000 keys, 4 clients, 20 s runs through the coordinator) every
+microbenchmark's counts per executed transaction agree with the model, given points 1 and 5 below.
+
+1. **The per-node load diagnostic of section 3 is wrong as defined.** `seq_scan + idx_scan + n_tup_upd`:
+   - counts every routed write twice: an `UPDATE .. WHERE key = $k` increments both `idx_scan` (the lookup) and
+     `n_tup_upd` (the harness's point-write benchmark);
+   - counts the planner's own index probes: PostgreSQL's selectivity estimation reads the index
+     (`get_actual_variable_range`) for a range bound outside the column's histogram and for a merge-join estimate,
+     and those reads increment `idx_scan`; Citus plans every shard query anew on its worker, so every execution
+     pays them. Measured: `EXPLAIN SELECT * FROM t WHERE k < 0` alone adds 1 to `idx_scan`; a join
+     `t JOIN ref ON t.r = ref.id WHERE t.k = 5` adds 3 to ref's `idx_scan` (1 execution + 2 planner probes). In
+     the harness the unrouted probe (`k < 0`) and the reference join showed exactly 2 scans per model touch.
+   The diagnostic is redefined in a later amendment, before any measurement uses it.
+2. **Six touch kinds**, not five: routed read, routed write, unrouted read, unrouted write, reference read,
+   reference write (`TouchKind`). Section 1a's "unrouted per shard" cost c_shard applies to both unrouted kinds:
+   **P1 sums the two unrouted kinds** and costs them with c_shard. Entry-node statement counts are the statements per
+   transaction by kind divided by the number of nodes (mode (b), round-robin); in mode (a) the coordinator receives
+   all of them.
+3. **A reference table joined into a routed statement is modelled as routed** (each relation of the statement is a
+   routed touch on the routed node, as in the Phase 3 load), so **P1 has no term of its own for it**: such a touch
+   is costed with c_read. Microbenchmark 4 measures the joined case separately; its cost is reported as a
+   diagnostic, not fitted into P1. **Threat to validity**: if a joined reference read costs differently from a
+   routed read, P1 misprices the workloads that join reference tables (TPC-C's stock-level and new-order joins with
+   `item` in layout W). Reported with the results, never corrected after validation data (section 4.3).
+4. **P1's 2PC term uses per-node participation.** In D_n of section 1a, `P2PC * participants_n` is the model's
+   probability, per transaction, that the transaction commits with 2PC **and node n is one of its participants**
+   (a node a write of the transaction touches); the model computes it exactly (step P4.0b follow-up), and the
+   calibration's 2PC benchmarks check it per node.
+5. **CPU measured under amd64 emulation is not a valid result and is never reported**, neither as a cost, nor as a
+   calibration parameter, nor as a diagnostic: the local bench cluster runs amd64 images emulated on an arm64 host,
+   so its CPU-seconds measure the emulator. Counts-only checks (rows per node, touches, statements, 2PC
+   transactions) do not depend on the CPU and are unaffected. Section 7.2's "Emulation is out" is extended from
+   throughput and latency to CPU.
