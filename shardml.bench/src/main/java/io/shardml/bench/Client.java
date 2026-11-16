@@ -137,6 +137,8 @@ final class Client implements Runnable {
 		int attempt = 0;
 		while (true) {
 			try {
+				if (measured)
+					stats.statements += run.executions().size();
 				session.execute(run);
 				long done = clock.now();
 				if (!measured)

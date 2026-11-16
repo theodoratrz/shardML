@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
+import java.util.concurrent.locks.LockSupport;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -344,6 +345,30 @@ public final class Driver {
 			}
 		}
 		Map<String, Object> manifest = manifest(o, loaded, replay, settings, err);
+		// the cluster's counters (P4.3): one connection to the first target, for the cluster facts and the snapshots
+		java.sql.Connection counters;
+		try {
+			Map<String, String> props = new LinkedHashMap<>();
+			props.put("user", o.user());
+			props.put("ApplicationName", "shardml-counters");
+			if (o.schema() != null)
+				props.put("options", "-c search_path=" + o.schema());
+			counters = Loader.connect(o.targets().get(0), o.database(), props);
+			counters.setAutoCommit(true);
+		} catch (java.sql.SQLException e) {
+			sessions.forEach(JdbcSession::close);
+			throw new IllegalArgumentException("cannot connect for the counters: " + e.getMessage());
+		}
+		Map<String, Object> cluster = Counters.cluster(counters, layout, System.getProperty("os.arch"));
+		manifest.put("cluster", cluster);
+		manifest.put("emulated", ((Map<?, ?>) cluster.get("emulation")).get("emulated"));
+		Map<String, Object> snapshots = new LinkedHashMap<>();
+		snapshots.put("window", "before: just before the clients start (no warm-up) or at the end of the warm-up, while they run; "
+				+ "after: once every client has finished, plus " + AFTER_PAUSE_MILLIS + " ms for the table statistics to flush");
+		manifest.put("counters", snapshots);
+		// with no warm-up, the before snapshot precedes every transaction of the run: its counts are exact
+		if (o.warmup() == 0)
+			snapshots.put("before", Counters.snapshot(counters, layout));
 		Instant started = Instant.now();
 		manifest.put("startedAt", started.toString());
 		try {
@@ -369,6 +394,17 @@ public final class Driver {
 			Thread t = new Thread(c, "client-" + i);
 			threads.add(t);
 		}
+		Thread beforeAtWarmEnd = null;
+		if (o.warmup() > 0) {
+			beforeAtWarmEnd = new Thread(() -> {
+				long wait = warmEnd - System.nanoTime();
+				if (wait > 0)
+					LockSupport.parkNanos(wait);
+				snapshots.put("before", Counters.snapshot(counters, layout));
+			}, "counters-before");
+			beforeAtWarmEnd.setDaemon(true);
+			beforeAtWarmEnd.start();
+		}
 		CpuMeter cpu = new CpuMeter(warmEnd, end);
 		Thread cpuThread = new Thread(cpu, "cpu-meter");
 		cpuThread.setDaemon(true);
@@ -384,9 +420,26 @@ public final class Driver {
 		}
 		try {
 			cpuThread.join(5000);
+			if (beforeAtWarmEnd != null)
+				beforeAtWarmEnd.join();
+			Thread.sleep(AFTER_PAUSE_MILLIS);
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 		}
+		snapshots.put("after", Counters.snapshot(counters, layout));
+		try {
+			counters.close();
+		} catch (java.sql.SQLException e) {
+			// closing only
+		}
+		long[] transactionsByClient = new long[clients.size()];
+		long[] statementsByClient = new long[clients.size()];
+		for (int i = 0; i < clients.size(); i++) {
+			Stats s = clients.get(i).stats;
+			transactionsByClient[i] = s.committed + s.committedAfterRetry + s.failedTotal();
+			statementsByClient[i] = s.statements;
+		}
+		manifest.put("entryShares", Counters.entry(o.targets(), o.clients(), transactionsByClient, statementsByClient));
 		Stats total = new Stats(replay.transactions().size());
 		List<String> crashes = new ArrayList<>();
 		for (int i = 0; i < clients.size(); i++) {
@@ -409,6 +462,10 @@ public final class Driver {
 		}
 		return OK;
 	}
+
+	// after the clients finish, before the after snapshot: backends flush their table statistics (the listed
+	// seq_scan / idx_scan / n_tup_upd) when their transaction ends at least a second after the last flush
+	static final long AFTER_PAUSE_MILLIS = 2000;
 
 	@SuppressWarnings("unchecked")
 	static String summary(Map<String, Object> result) {

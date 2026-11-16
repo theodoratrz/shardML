@@ -415,7 +415,13 @@ Bonferroni over all tests at a family alpha of 0.001, no cluster). `run` uses on
 failures, deadlocks, timeouts and connection errors (no retries unless `--retries K`). The open loop times
 each transaction from its intended start in a fixed Poisson schedule and reports the schedule lag. Each run
 writes `result.json` and `manifest.json` (host, JVM, driver settings, seeds, file hashes, the model's report,
-git commit) to `bench-runs/<workload>/<layout>/<entry>/<mode>/<params>/seed-<s>-rep-<r>/`.
+git commit) to `bench-runs/<workload>/<layout>/<entry>/<mode>/<params>/seed-<s>-rep-<r>/`. The manifest also
+holds the cluster's counters per node before and after the measured window (read and write touches from
+`pg_stat_statements`, Citus's single- and multi-shard statement counts, 2PC transactions in all and per
+participant, cgroup CPU), each node's versions and architecture, the shard map, the entry shares per target
+(`uniform` when the clients divide evenly and no share is off 1/n by more than 0.02), and `emulated`: true when a
+node's architecture differs from the driver host's, as on the local bench cluster, whose CPU numbers are never
+a result.
 `driver load --targets <coordinator> <workload> <model>` fills a deployed layout with the rows the model
 counts (`RowCounts.forEachRowGroup`, the rank offset and `--set` applied), with `COPY` through the coordinator on
 `--jobs` connections, then checks that every node holds exactly the model's data-skew rows per table (`count(*)`

@@ -21,6 +21,9 @@ final class Stats {
 	long unstarted;
 	long offered;
 	long retries;
+	// statements sent by measured transactions, retries included (each attempt sends them again): the
+	// client's entry-node load (amendment 3, 2)
+	long statements;
 	final long[] failed = new long[ErrorClass.values().length];
 	final long[][] failedByTemplate;
 	final long[] committedByTemplate;
@@ -60,6 +63,7 @@ final class Stats {
 		unstarted += other.unstarted;
 		offered += other.offered;
 		retries += other.retries;
+		statements += other.statements;
 		for (int c = 0; c < failed.length; c++)
 			failed[c] += other.failed[c];
 	}
