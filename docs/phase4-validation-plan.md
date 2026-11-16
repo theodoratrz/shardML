@@ -501,3 +501,37 @@ model on every node, but that setting changes the system being measured, so it i
 its per-node comparison is made in mode (a) runs (the sensitivity check, section 2.6), and in mode (b) only the
 totals are compared. This changes no hypothesis or predictor: the per-node load is a diagnostic (section 3), and
 P1 does not use it.
+
+### Amendment 3 (2026-11-16): mode (b) per-node counts, entry shares, the count tolerance, amendment 2's timing
+
+1. **Mode (b) per-node counts are validated in diagnostic-only runs with local execution off.** Amendment 2
+   showed that, entering through a worker with Citus local execution on, the entry worker's own executions are
+   invisible to `pg_stat_statements` and `pg_dist_transaction`, and that with `citus.enable_local_execution = off`
+   on every node the per-node counts match the model. So: the per-node touches and per-node 2PC participation of
+   mode (b) are validated in **diagnostic-only runs** with local execution off on every node (set for the run,
+   restored after it); **performance runs keep the default (on)**, and in them only the totals are compared.
+   **Threat to validity**: a touch executed locally (no connection, no network round trip, no remote parse) may
+   cost less CPU than the same touch executed remotely, so a per-touch cost fitted on one mix of local and remote
+   executions may misprice another. **P4.0c must test this**: the calibration measures the routed read and write
+   costs with local execution on and off (or, equivalently, split by whether the entry worker holds the shard) and
+   reports the difference; if it is material, it is reported with P1's results as a threat, never fitted after
+   validation data (section 4.3).
+2. **Entry shares.** The model's entry-node statement counts (amendment 1, point 2) assume that every entry node
+   receives an equal share of the statements: 1/n of them in mode (b), with clients assigned round-robin. The
+   driver records, per target, its clients and the transactions and statements it sent in the measured window,
+   and flags the run as **non-uniform** when the client count is not a multiple of the number of targets, or when
+   any target's share of the statements differs from 1/n by more than 0.02. A non-uniform run is reported as such
+   and its entry-node comparison is not scored.
+3. **The count tolerance** for every counts-only check (calibration harness, P4.4): with N the transactions the
+   driver executed in the window (committed, committed after a retry, and failed), m the model's count per
+   transaction for the quantity checked, C the number of clients, k the most one transaction can add to that
+   count (its touches of that kind, its statements, or 1 for 2PC), and v the per-transaction variance from the
+   model's own probabilities (r m - m^2 for a node's routed and reference touches, r their relations per such
+   statement; p (1 - p) for a 2PC probability p; 0 for unrouted touches and statement counts):
+   **|measured - N m| <= C k + 4 sqrt(N v)**. C k allows one transaction per client at the window's edges (a
+   transaction whose counters straddle a snapshot); 4 sqrt(N v) is four standard deviations of the sum of N
+   independent transactions, and is 0 where the count is certain, so those counts must match up to C k.
+4. **Clarification of amendment 2's timing statement.** "This predates every measurement it affects" means: it
+   predates **all P4.3-and-later validation measurements** (no validation or calibration run, P4.0c onward, has
+   been made). The definition itself was derived and validated on calibration data: the counts-only harness
+   passes on the local emulated cluster (`bench/calibration/run.sh`), which fit nothing and are not results.
