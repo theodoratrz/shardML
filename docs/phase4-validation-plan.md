@@ -535,3 +535,36 @@ P1 does not use it.
    predates **all P4.3-and-later validation measurements** (no validation or calibration run, P4.0c onward, has
    been made). The definition itself was derived and validated on calibration data: the counts-only harness
    passes on the local emulated cluster (`bench/calibration/run.sh`), which fit nothing and are not results.
+
+### Amendment 4 (2026-11-16): the saturation flag, the warm-up rule, entry shares under a closed loop
+
+**Timing.** Like the earlier amendments, this predates every P4.3-and-later validation measurement; it rests only
+on counts-only harness runs on the local emulated cluster.
+
+1. **The warm-up is a separate phase.** In every driver run the warm-up phase runs its clients on the same
+   connections and random streams, then all of them stop; the before snapshot of the counters is taken with no
+   client running, the hot-key counters (`citus_stat_tenants`) are zeroed, and only then does the measured phase
+   start its clients. The after snapshot is taken once every client of the measured phase has finished. A
+   snapshot taken while clients run would be recorded with `underLoad: true` and its duration; the driver takes
+   none (`snapshotUnderLoad: false` in every manifest). Throughput and latency are unaffected: as before, only
+   transactions started inside the measured window count, and the warm-up keeps its purpose (warm caches,
+   prepared statements, connections).
+   **The saturation flag** (section 2.6): every node's cgroup CPU is sampled every second over the measured
+   window (over SQL, as the other counters); a node's utilization is CPU-seconds used per second divided by its
+   cores (its cgroup CPU quota, else its cpuset); a node is **saturated when its mean utilization over the window
+   exceeds 0.85**, and the run is flagged when any node is. Every node's mean, per-second maximum and the number of
+   seconds above 0.85 are recorded, the coordinator's included. The driver does not know which node the
+   predictor names as the bottleneck, so it lists every saturated node, and the analysis applies section 2.6's
+   rule (a flagged node other than the predicted bottleneck, or the coordinator in any mode). On an emulated
+   cluster the samples are recorded but are not a result (amendment 1, point 5; `valid: false`).
+2. **Entry shares are not uniform under a closed loop, even with equal client counts.** Through the workers
+   (mode (b)), 6 closed-loop clients (2 per worker) on the 2PC microbenchmark (`twopc-2`: one write on each of
+   two workers pinned to `tpc1` and `tpc2`) with local execution on: the entry shares deviated from 1/3 by up to
+   0.031 (flagged non-uniform, amendment 3, point 2), because the clients entering the third worker, which holds
+   neither table and so executes nothing locally, ran slower than those entering a worker that executes one of
+   their writes locally; a closed-loop client's share follows the speed of its entry node. **So uniform entry
+   shares cannot be assumed under a closed loop**: they are measured and flagged per run (amendment 3), and the
+   model's entry-node counts (1/n) are compared only on runs flagged uniform. **The open-loop driver will assign
+   the entry node per arrival** (each arrival to the next entry node in turn, or drawn uniformly), so that the
+   offered entry shares are 1/n by construction, independent of node speed. That change is part of the open-loop
+   redesign, not yet made; until then open-loop runs are flagged like closed-loop ones.
