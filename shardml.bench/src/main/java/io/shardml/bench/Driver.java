@@ -404,7 +404,35 @@ public final class Driver {
 		Thread cpuThread = new Thread(cpu, "cpu-meter");
 		cpuThread.setDaemon(true);
 		cpuThread.start();
+		// the cluster's CPU every second over the measured window, on a connection of its own
+		CpuSampler sampler = null;
+		Thread samplerThread = null;
+		java.sql.Connection samplerConnection = null;
+		try {
+			samplerConnection = Loader.connect(o.targets().get(0), o.database(), Map.of("user", o.user(), "ApplicationName", "shardml-cpu"));
+			samplerConnection.setAutoCommit(true);
+			sampler = new CpuSampler(samplerConnection, t0);
+			samplerThread = new Thread(sampler, "cpu-sampler");
+			samplerThread.setDaemon(true);
+			samplerThread.start();
+		} catch (java.sql.SQLException e) {
+			manifest.put("clusterCpu", Map.of("errors", List.of("cannot connect for the CPU sampler: " + e.getMessage())));
+		}
 		List<Client> clients = runClients(o, replay, sessions, streams, t0, warmEnd, end, drainEnd, false);
+		if (sampler != null) {
+			sampler.stop();
+			try {
+				samplerThread.join();
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+			manifest.put("clusterCpu", sampler.summary(Boolean.TRUE.equals(manifest.get("emulated"))));
+			try {
+				samplerConnection.close();
+			} catch (java.sql.SQLException e) {
+				// closing only
+			}
+		}
 		try {
 			cpuThread.join(5000);
 			Thread.sleep(AFTER_PAUSE_MILLIS);
