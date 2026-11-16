@@ -57,6 +57,13 @@ else
 fi
 ONLY=${ONLY:-}
 LOCAL_EXEC=${LOCAL_EXEC:-on}
+# WARMUP_IN=run (default): the warm-up is a separate driver run; WARMUP_IN=driver: the measured run's own
+# warm-up phase (its clients stop before the before snapshot; Plan-phase4 amendment 4)
+WARMUP_IN=${WARMUP_IN:-run}
+if [[ $WARMUP_IN != run && $WARMUP_IN != driver ]]; then
+	echo "calibration: WARMUP_IN must be run or driver" >&2
+	exit 2
+fi
 if [[ $LOCAL_EXEC != on && $LOCAL_EXEC != off ]]; then
 	echo "calibration: LOCAL_EXEC must be on or off" >&2
 	exit 2
@@ -202,11 +209,13 @@ for entry in "${BENCHMARKS[@]}"; do
 		java -jar "$DRIVER" touches --json "$wl" "$m" >"$work/touches.json" 2>/dev/null
 		for rep in $(seq 1 "$REPS"); do
 			label="$model/$w rep $rep"
-			if (( WARMUP > 0 )); then
+			measured_warmup=0
+			[[ $WARMUP_IN == driver ]] && measured_warmup=$WARMUP
+			if [[ $WARMUP_IN == run ]] && (( WARMUP > 0 )); then
 				java -jar "$DRIVER" run "${run_options[@]}" --warmup 0 --duration "$WARMUP" --rep "$rep" --out "$work/warmup" "$wl" "$m" \
 					>"$work/warmup.log" 2>&1 || { echo "  FAIL  $label: warm-up run"; tail -3 "$work/warmup.log"; failures=$((failures + 1)); continue; }
 			fi
-			if ! java -jar "$DRIVER" run "${run_options[@]}" --warmup 0 --duration "$DURATION" --rep "$rep" --out "$session/runs" "$wl" "$m" \
+			if ! java -jar "$DRIVER" run "${run_options[@]}" --warmup "$measured_warmup" --duration "$DURATION" --rep "$rep" --out "$session/runs" "$wl" "$m" \
 				>"$work/run.log" 2>"$work/run.err"; then
 				echo "  FAIL  $label: driver run"; grep -v SHML_0 "$work/run.err" | tail -3; failures=$((failures + 1)); continue
 			fi

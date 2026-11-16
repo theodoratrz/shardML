@@ -85,8 +85,17 @@ final class Client implements Runnable {
 		} catch (Throwable t) {
 			crash = t;
 		} finally {
-			session.close();
+			if (closeSession)
+				session.close();
 		}
+	}
+
+	// the warm-up phase: the session stays open for the measured phase (the driver closes it)
+	private boolean closeSession = true;
+
+	Client keepSession() {
+		closeSession = false;
+		return this;
 	}
 
 	Throwable crash() {

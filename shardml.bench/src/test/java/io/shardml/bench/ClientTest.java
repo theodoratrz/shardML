@@ -141,6 +141,22 @@ public class ClientTest {
 		Assertions.assertEquals(800, c.stats.committed, "back to back from t0 = 0.2 s to 1 s, 1 ms each");
 	}
 
+	// the warm-up phase keeps its session for the measured phase; a measured client closes it
+	@Test
+	public void testWarmupKeepsTheSession() {
+		long sec = 1_000_000_000L;
+		VirtualClock clock = new VirtualClock();
+		FakeSession session = new FakeSession(clock, 1_000_000L, n -> null);
+		Client warm = new Client(banking(), session, new Streams(1, 1).draws(0), null, 0, 0, sec, sec, sec, clock).keepSession();
+		warm.run();
+		Assertions.assertFalse(session.closed);
+		Assertions.assertEquals(0, warm.stats.committed, "nothing measured in the warm-up");
+		Client measured = new Client(banking(), session, new Streams(1, 1).draws(0), null, 0, sec, sec, 2 * sec, 2 * sec, clock);
+		measured.run();
+		Assertions.assertTrue(session.closed);
+		Assertions.assertEquals(1000, measured.stats.committed);
+	}
+
 	@Test
 	public void testBoundedRetriesAreReportedApart() {
 		VirtualClock clock = new VirtualClock();

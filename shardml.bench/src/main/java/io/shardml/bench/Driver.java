@@ -19,7 +19,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.TreeMap;
-import java.util.concurrent.locks.LockSupport;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -363,12 +362,12 @@ public final class Driver {
 		manifest.put("cluster", cluster);
 		manifest.put("emulated", ((Map<?, ?>) cluster.get("emulation")).get("emulated"));
 		Map<String, Object> snapshots = new LinkedHashMap<>();
-		snapshots.put("window", "before: just before the clients start (no warm-up) or at the end of the warm-up, while they run; "
-				+ "after: once every client has finished, plus " + AFTER_PAUSE_MILLIS + " ms for the table statistics to flush");
+		snapshots.put("window", "before: with no client running, after the warm-up phase (if any) has stopped its clients and "
+				+ "before the measured phase starts them; after: once every client has finished, plus " + AFTER_PAUSE_MILLIS
+				+ " ms for the table statistics to flush. A snapshot taken while clients run would say underLoad: true");
 		manifest.put("counters", snapshots);
-		// with no warm-up, the before snapshot precedes every transaction of the run: its counts are exact
-		if (o.warmup() == 0)
-			snapshots.put("before", Counters.snapshot(counters, layout));
+		manifest.put("warmup", "a separate phase: the clients run the warm-up on the same connections and random streams, all "
+				+ "stop, the before snapshot is taken, then the measured phase starts (Plan-phase4 amendment 4)");
 		Instant started = Instant.now();
 		manifest.put("startedAt", started.toString());
 		try {
@@ -381,52 +380,41 @@ public final class Driver {
 				+ ", warm-up " + o.warmup() + " s, measured " + o.duration() + " s -> " + dir);
 
 		Streams streams = new Streams(o.seed(), o.clients());
+		List<String> crashes = new ArrayList<>();
+		// the warm-up phase: nothing measured (warmEnd = end), no drain; the sessions stay open
+		if (o.warmup() > 0) {
+			long w0 = System.nanoTime() + 200_000_000L;
+			long wEnd = w0 + o.warmup() * 1_000_000_000L;
+			List<Client> warm = runClients(o, replay, sessions, streams, w0, wEnd, wEnd, wEnd, true);
+			for (int i = 0; i < warm.size(); i++) {
+				if (warm.get(i).crash() != null)
+					crashes.add("client " + i + " (warm-up): " + warm.get(i).crash());
+			}
+		}
+		// no client is running: the before snapshot
+		Map<String, Object> before = Counters.snapshot(counters, layout);
+		before.put("underLoad", false);
+		snapshots.put("before", before);
+
 		long t0 = System.nanoTime() + 200_000_000L;
-		long warmEnd = t0 + o.warmup() * 1_000_000_000L;
+		long warmEnd = t0;
 		long end = warmEnd + o.duration() * 1_000_000_000L;
 		long drainEnd = end + o.drain() * 1_000_000_000L;
-		List<Client> clients = new ArrayList<>();
-		List<Thread> threads = new ArrayList<>();
-		for (int i = 0; i < o.clients(); i++) {
-			Schedule schedule = o.mode().equals("open") ? new Schedule(streams.arrivals(i), o.rate() / o.clients()) : null;
-			Client c = new Client(replay, sessions.get(i), streams.draws(i), schedule, o.retries(), t0, warmEnd, end, drainEnd, Client.REAL);
-			clients.add(c);
-			Thread t = new Thread(c, "client-" + i);
-			threads.add(t);
-		}
-		Thread beforeAtWarmEnd = null;
-		if (o.warmup() > 0) {
-			beforeAtWarmEnd = new Thread(() -> {
-				long wait = warmEnd - System.nanoTime();
-				if (wait > 0)
-					LockSupport.parkNanos(wait);
-				snapshots.put("before", Counters.snapshot(counters, layout));
-			}, "counters-before");
-			beforeAtWarmEnd.setDaemon(true);
-			beforeAtWarmEnd.start();
-		}
 		CpuMeter cpu = new CpuMeter(warmEnd, end);
 		Thread cpuThread = new Thread(cpu, "cpu-meter");
 		cpuThread.setDaemon(true);
 		cpuThread.start();
-		threads.forEach(Thread::start);
-		for (Thread t : threads) {
-			try {
-				t.join();
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-				throw new IllegalStateException("interrupted");
-			}
-		}
+		List<Client> clients = runClients(o, replay, sessions, streams, t0, warmEnd, end, drainEnd, false);
 		try {
 			cpuThread.join(5000);
-			if (beforeAtWarmEnd != null)
-				beforeAtWarmEnd.join();
 			Thread.sleep(AFTER_PAUSE_MILLIS);
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
 		}
-		snapshots.put("after", Counters.snapshot(counters, layout));
+		Map<String, Object> after = Counters.snapshot(counters, layout);
+		after.put("underLoad", false);
+		snapshots.put("after", after);
+		manifest.put("snapshotUnderLoad", false);
 		try {
 			counters.close();
 		} catch (java.sql.SQLException e) {
@@ -441,13 +429,13 @@ public final class Driver {
 		}
 		manifest.put("entryShares", Counters.entry(o.targets(), o.clients(), transactionsByClient, statementsByClient));
 		Stats total = new Stats(replay.transactions().size());
-		List<String> crashes = new ArrayList<>();
 		for (int i = 0; i < clients.size(); i++) {
 			total.add(clients.get(i).stats);
 			if (clients.get(i).crash() != null)
 				crashes.add("client " + i + ": " + clients.get(i).crash());
 		}
 		Map<String, Object> result = result(o, replay, total, cpu.summary(Runtime.getRuntime().availableProcessors()), crashes);
+		sessions.forEach(JdbcSession::close);
 		manifest.put("finishedAt", Instant.now().toString());
 		try {
 			Files.writeString(dir.resolve("result.json"), Json.write(result));
@@ -461,6 +449,31 @@ public final class Driver {
 			return FAIL;
 		}
 		return OK;
+	}
+
+	// one phase: a client per session, started together, joined; keepSessions for the warm-up
+	private static List<Client> runClients(Options o, Replay replay, List<JdbcSession> sessions, Streams streams, long t0, long warmEnd,
+			long end, long drainEnd, boolean keepSessions) {
+		List<Client> clients = new ArrayList<>();
+		List<Thread> threads = new ArrayList<>();
+		for (int i = 0; i < o.clients(); i++) {
+			Schedule schedule = o.mode().equals("open") ? new Schedule(streams.arrivals(i), o.rate() / o.clients()) : null;
+			Client c = new Client(replay, sessions.get(i), streams.draws(i), schedule, o.retries(), t0, warmEnd, end, drainEnd, Client.REAL);
+			if (keepSessions)
+				c.keepSession();
+			clients.add(c);
+			threads.add(new Thread(c, "client-" + i));
+		}
+		threads.forEach(Thread::start);
+		for (Thread t : threads) {
+			try {
+				t.join();
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				throw new IllegalStateException("interrupted");
+			}
+		}
+		return clients;
 	}
 
 	// after the clients finish, before the after snapshot: backends flush their table statistics (the listed
