@@ -15,7 +15,13 @@ x-citus: &citus
     POSTGRES_HOST_AUTH_METHOD: trust
   # Online shard moves and splits use logical replication. With the default
   # wal_level = replica, shard_transfer_mode 'auto' silently blocks writes.
-  command: ["postgres", "-c", "wal_level=logical"]
+  # pg_stat_statements counts executions per shard query, the Phase 4 per-node
+  # load diagnostic (docs/phase4-validation-plan.md, amendment 2): track = all for
+  # the queries Citus runs locally, track_utility off so that every 2PC's
+  # PREPARE TRANSACTION (a fresh gid each) does not take an entry.
+  command: ["postgres", "-c", "wal_level=logical",
+            "-c", "shared_preload_libraries=citus,pg_stat_statements",
+            "-c", "pg_stat_statements.track=all", "-c", "pg_stat_statements.track_utility=off"]
   healthcheck:
     test: ["CMD-SHELL", "pg_isready -U postgres -h localhost"]
     interval: 2s
@@ -31,14 +37,23 @@ services:
     ports:
       - "127.0.0.1:${CITUS_PORT:-5433}:5432"
 
+  # Workers are published too, on loopback only, so a client can enter the
+  # cluster through each worker (Phase 4 connection mode (b); metadata is synced
+  # to every worker). Inside the network they stay worker1..3:5432.
   worker1:
     <<: *citus
     hostname: worker1
+    ports:
+      - "127.0.0.1:${CITUS_WORKER1_PORT:-5434}:5432"
 
   worker2:
     <<: *citus
     hostname: worker2
+    ports:
+      - "127.0.0.1:${CITUS_WORKER2_PORT:-5435}:5432"
 
   worker3:
     <<: *citus
     hostname: worker3
+    ports:
+      - "127.0.0.1:${CITUS_WORKER3_PORT:-5436}:5432"

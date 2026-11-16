@@ -19,14 +19,19 @@ bench/down.sh    # stop and delete all data
 Both scripts work from any directory. `up.sh` can be run again on a running
 cluster: workers that are already registered are skipped.
 
-Only the coordinator is reachable from the host, on `127.0.0.1:5433`:
+The coordinator is reachable from the host on `127.0.0.1:5433`, and the workers
+on `127.0.0.1:5434`, `5435` and `5436` (so a client can enter the cluster through
+each worker, Phase 4's connection mode (b); Citus metadata is synced to every
+worker):
 
 ```sh
 psql -h 127.0.0.1 -p 5433 -U postgres
 ```
 
-Set `CITUS_PORT` to use another port (`CITUS_PORT=6000 bench/up.sh`). There is
-no password (`trust` authentication), so the port is bound to localhost only.
+Set `CITUS_PORT` (and `CITUS_WORKER1_PORT` .. `CITUS_WORKER3_PORT`) to use other
+ports (`CITUS_PORT=6000 bench/up.sh`). There is no password (`trust`
+authentication), so every port is bound to localhost only. Inside the Compose
+network the nodes stay `coordinator`, `worker1` .. `worker3`, port 5432.
 
 There are no volumes: every `up.sh` starts from an empty cluster, and `down.sh`
 deletes everything.
@@ -34,6 +39,10 @@ deletes everything.
 Every node runs with `wal_level=logical`. Citus needs it for online shard moves
 and splits; with the Postgres default (`replica`), `shard_transfer_mode => 'auto'`
 falls back to blocking writes without any error.
+
+Every node also preloads `pg_stat_statements` (`track = all`, `track_utility =
+off`): the Phase 4 per-node load diagnostic counts executions per shard query
+from it (`docs/phase4-validation-plan.md`, amendment 2).
 
 ## Requirements
 
