@@ -58,6 +58,8 @@ public class CostModelPropertyTest {
 	public void testFactorizedEqualsEnumeration() {
 		Random random = new Random(SEED);
 		double maxDiff = 0;
+		double maxParticipationDiff = 0;
+		int strictParticipation = 0;
 		int checked = 0;
 		Set<String> forms = new TreeSet<>();
 		Set<Integer> nodeCounts = new TreeSet<>();
@@ -81,6 +83,29 @@ public class CostModelPropertyTest {
 					+ "\nbrute " + java.util.Arrays.toString(brute) + "\nreport " + report.distributed() + " " + report.fanOut());
 			maxDiff = Math.max(maxDiff, d);
 			checked++;
+			// Phase 4: per-node 2PC participation (DistributedTransactions.participation, via TouchProfile)
+			// against the same enumeration; the generic z at {} and the singletons is within() bit for bit
+			io.shardml.cost.TouchProfile profile = new CostModel(HASH).touchProfile(layout, workload, 0);
+			Assertions.assertEquals(report.distributed().twoPhase(), profile.twoPhase(), "case " + i);
+			for (int n = 0; n < layout.nodes().size(); n++) {
+				double e = brute[5 + n];
+				double got = profile.twoPhasePerNode().get(n).value();
+				Assertions.assertTrue(Math.abs(e - got) < 1e-9, "case " + i + " node " + n + ": participation " + got + ", enumerated "
+						+ e + "\n" + c.layout() + "\n" + c.workload());
+				maxParticipationDiff = Math.max(maxParticipationDiff, Math.abs(e - got));
+				if (e > 1e-9 && e < 1 - 1e-9)
+					strictParticipation++;
+			}
+			io.shardml.cost.DistributedTransactions m1 = new io.shardml.cost.DistributedTransactions(layout, RankMapping.of(workload, 0), HASH);
+			long[] masks = new long[layout.nodes().size() + 1];
+			for (int n = 0; n < layout.nodes().size(); n++)
+				masks[n + 1] = 1L << n;
+			for (boolean writesOnly : new boolean[] { true, false }) {
+				double[] z = m1.within(workload.transactions().get(0), writesOnly);
+				double[] g = m1.within(workload.transactions().get(0), writesOnly, masks);
+				for (int t = 0; t < z.length; t++)
+					Assertions.assertEquals(Double.doubleToRawLongBits(z[t]), Double.doubleToRawLongBits(g[t]), "case " + i + " z[" + t + "]");
+			}
 			if (brute[0] > 1e-9 && brute[0] < 1 - 1e-9)
 				strictTwoPhase++;
 			if (brute[1] > 1e-9 && brute[1] < 1 - 1e-9)
@@ -100,13 +125,15 @@ public class CostModelPropertyTest {
 		// not vacuous: most cases have a probability strictly between 0 and 1
 		Assertions.assertTrue(strictMulti >= CASES / 3, "only " + strictMulti + " cases with 0 < multi-node < 1");
 		Assertions.assertTrue(strictTwoPhase >= CASES / 5, "only " + strictTwoPhase + " cases with 0 < 2PC < 1");
+		Assertions.assertTrue(strictParticipation >= CASES / 5, "only " + strictParticipation + " node participations strictly in (0, 1)");
 		Assertions.assertTrue(forms.containsAll(List.of("draw", "distinct", "else", "draw in repeat")), forms.toString());
 		Assertions.assertEquals(Set.of(1, 2, 3, 4), nodeCounts);
 		Assertions.assertTrue(distinctWithReferenceWrite >= 10, "only " + distinctWithReferenceWrite
 				+ " cases with a distinct-from draw and a reference write");
 		System.out.println("CostModelPropertyTest: " + checked + " cases, max difference " + maxDiff + ", strictly between 0 and 1: "
 				+ strictTwoPhase + " (2PC), " + strictMulti + " (multi-node); node counts " + nodeCounts
-				+ "; distinct from with a reference write: " + distinctWithReferenceWrite + "; forms " + forms);
+				+ "; distinct from with a reference write: " + distinctWithReferenceWrite + "; forms " + forms
+				+ "; 2PC participation: max difference " + maxParticipationDiff + ", " + strictParticipation + " strictly between 0 and 1");
 	}
 
 	// --- generation ---
@@ -241,7 +268,8 @@ public class CostModelPropertyTest {
 
 	// --- enumeration ---
 
-	// { 2PC, multi-node, mean fan-out, multi-shard share, max fan-out }
+	// { 2PC, multi-node, mean fan-out, multi-shard share, max fan-out, then per node: P[2PC and the node is a
+	// participant (one of the writes' nodes)] }
 	private static double[] enumerate(Case c, Layout layout, RankMapping mapping) {
 		// instances: every let once per iteration of its repeat; statements per iteration of their let
 		List<int[]> instances = new ArrayList<>(); // { var index, iteration }
@@ -249,17 +277,19 @@ public class CostModelPropertyTest {
 			for (int it = 0; it < c.vars().get(i).repeat(); it++)
 				instances.add(new int[] { i, it });
 		}
-		double[] out = new double[5];
+		double[] out = new double[5 + layout.nodes().size()];
 		Map<Integer, Integer> instanceOf = new HashMap<>(); // top-level var -> its instance
 		for (int k = 0; k < instances.size(); k++) {
 			if (c.vars().get(instances.get(k)[0]).repeat() == 1)
 				instanceOf.put(instances.get(k)[0], k);
 		}
 		int[] values = new int[instances.size()];
-		double[] acc = new double[2];
+		double[] acc = new double[2 + layout.nodes().size()];
 		walk(0, 1.0, values, instances, instanceOf, c, layout, mapping, acc);
 		out[0] = acc[0];
 		out[1] = acc[1];
+		for (int n = 0; n < layout.nodes().size(); n++)
+			out[5 + n] = acc[2 + n];
 		// fan-out: deterministic per statement; executions = its let's repeat
 		double tasks = 0;
 		double executions = 0;
@@ -304,8 +334,11 @@ public class CostModelPropertyTest {
 						writeNodes.addAll(nodes);
 				}
 			}
-			if (writeNodes.size() > 1)
+			if (writeNodes.size() > 1) {
 				acc[0] += probability;
+				for (int n : writeNodes)
+					acc[2 + n] += probability;
+			}
 			if (allNodes.size() > 1)
 				acc[1] += probability;
 			return;

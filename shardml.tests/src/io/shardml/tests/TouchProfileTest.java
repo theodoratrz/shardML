@@ -83,6 +83,12 @@ public class TouchProfileTest {
 		Assertions.assertEquals(5.5, p.totalStatements(), EPS);
 		Assertions.assertEquals(0.5 + 0.375 + 1.5 + 1.5 + 0.75 + 0.75, p.touchesOn("n1"), EPS);
 		Assertions.assertTrue(p.format().contains("repartition      0.750000"), p.format());
+		// 2PC: `all` writes a customer (one node) and accounts unrouted and codes (both nodes), so it always
+		// commits with 2PC on both; `one` only reads
+		Assertions.assertEquals(0.75, p.twoPhase(), EPS);
+		Assertions.assertEquals(0.75, p.twoPhasePerNode().get(0).value(), EPS);
+		Assertions.assertEquals(0.75, p.twoPhasePerNode().get(1).value(), EPS);
+		Assertions.assertTrue(p.json().contains("\"two_phase\": 0.750000"), p.json());
 		Assertions.assertTrue(p.json().contains("\"routed_write\": 0.750000"), p.json());
 	}
 

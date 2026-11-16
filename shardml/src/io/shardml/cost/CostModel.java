@@ -78,10 +78,24 @@ public final class CostModel {
 	// entry-node counts (TouchProfile). The same walk; nothing SkewAndLoad or CostReport report changes
 	public TouchProfile touchProfile(Layout layout, Workload workload, long rankOffset) {
 		CostInputs.check(layout, workload);
-		budget(layout, workload, false);
+		budget(layout, workload, true);
 		ByKind byKind = new ByKind(layout.nodes().size());
-		loads(layout, workload, mapping(workload, rankOffset), rankOffset, new java.util.HashMap<>(), byKind);
+		RankMapping mapping = mapping(workload, rankOffset);
+		loads(layout, workload, mapping, rankOffset, new java.util.HashMap<>(), byKind);
 		List<Node> nodes = layout.nodes();
+		// 2PC: the share as evaluate sums it (the same order, so the same number), and per node the probability
+		// that the transaction commits with 2PC and the node is a participant (amendment 1, 4)
+		DistributedTransactions m1 = new DistributedTransactions(layout, mapping, hasher);
+		double totalWeight = totalWeight(workload);
+		double twoPhase = 0;
+		double[] participation = new double[nodes.size()];
+		for (Transaction t : workload.transactions()) {
+			double pi = t.weight() / totalWeight;
+			twoPhase += pi * m1.of(t).twoPhase();
+			double[] part = m1.participation(t);
+			for (int n = 0; n < part.length; n++)
+				participation[n] += pi * part[n];
+		}
 		List<TouchProfile.KindNodes> touches = new ArrayList<>();
 		List<TouchProfile.KindValue> statements = new ArrayList<>();
 		List<TouchProfile.KindNodes> entry = new ArrayList<>();
@@ -93,7 +107,7 @@ public final class CostModel {
 			entry.add(new TouchProfile.KindNodes(k, values(nodes, each)));
 		}
 		return new TouchProfile(layout.name(), workload.name(), rankOffset, nodes.stream().map(Node::name).toList(), touches,
-				statements, byKind.repartitions, entry);
+				statements, byKind.repartitions, entry, twoPhase, values(nodes, participation));
 	}
 
 	// what touchProfile collects from the load walk: touches per kind and node, statements per kind, repartitions

@@ -74,6 +74,132 @@ public final class DistributedTransactions {
 		return z(Structure.of(transaction, layout), writesOnly);
 	}
 
+	/* Phase 4 (Plan-phase4 amendment 1, 4): per node n, P[the transaction commits with 2PC AND n is one of its
+	 * participants], a participant being a node one of its writes touches, and 2PC that the writes touch more
+	 * than one node (as twoPhase). With W the writes' node set and z(T) = P[W within T]:
+	 *   P[|W| >= 2 and n in W] = P[n in W] - P[W = {n}] = (1 - z(N \ {n})) - (z({n}) - z(empty)).
+	 * Additive: z over arbitrary node sets (zWithin) beside z, which of() keeps using unchanged. Summed over the
+	 * nodes it is E[|W|; 2PC], at least 2 * twoPhase. */
+	public double[] participation(Transaction transaction) {
+		int n = nodes.size();
+		long all = n == 64 ? -1L : (1L << n) - 1;
+		long[] masks = new long[2 * n + 1]; // 0: empty; 1 + i: {i}; 1 + n + i: N \ {i}
+		for (int i = 0; i < n; i++) {
+			masks[1 + i] = 1L << i;
+			masks[1 + n + i] = all & ~(1L << i);
+		}
+		double[] z = zWithin(Structure.of(transaction, layout), true, masks);
+		double[] out = new double[n];
+		for (int i = 0; i < n; i++)
+			out[i] = clean((1 - z[1 + n + i]) - (z[1 + i] - z[0]));
+		return out;
+	}
+
+	// z(T) for each node set T given as a bit mask over layout.nodes(): the factorization of z, with fits()
+	// generalized from {} and {node i} to any set. Exposed for tests (at {} and the singletons it equals within())
+	public double[] within(Transaction transaction, boolean writesOnly, long[] masks) {
+		return zWithin(Structure.of(transaction, layout), writesOnly, masks);
+	}
+
+	private double[] zWithin(Structure s, boolean writesOnly, long[] masks) {
+		if (nodes.size() > 64)
+			throw new IllegalArgumentException("node sets as bit masks: at most 64 nodes, the layout has " + nodes.size());
+		double[] z = new double[masks.length];
+		java.util.Arrays.fill(z, 1);
+		for (Constant c : s.constants) {
+			if (writesOnly && !c.write)
+				continue;
+			for (int t = 0; t < masks.length; t++) {
+				for (int node : c.nodes) {
+					if ((masks[t] >>> node & 1) == 0) {
+						z[t] = 0;
+						break;
+					}
+				}
+			}
+		}
+		for (Cluster r : s.repeatRoots) {
+			double[] m = mWithin(sets(r.root, s, writesOnly), Marginals.draw(r.root.domain(), drawDist(r.root), mapping), masks);
+			for (int t = 0; t < masks.length; t++)
+				z[t] *= power(m[t], r.times);
+		}
+		for (Cluster c : s.roots) {
+			double[] zc = rootWithin(c, s, writesOnly, masks);
+			for (int t = 0; t < masks.length; t++)
+				z[t] *= zc[t];
+		}
+		return z;
+	}
+
+	private double[] rootWithin(Cluster c, Structure s, boolean writesOnly, long[] masks) {
+		Let x = c.root;
+		double[] px = Marginals.draw(x.domain(), drawDist(x), mapping);
+		long[] sx = sets(x, s, writesOnly);
+		List<Dependent> deps = new ArrayList<>();
+		List<long[]> depSets = new ArrayList<>();
+		List<double[]> depM = new ArrayList<>();
+		for (Map.Entry<Let, Long> e : c.dependents.entrySet()) {
+			Dependent d = dependent(e.getKey(), e.getValue(), s, writesOnly);
+			long[] set = sets(e.getKey(), s, writesOnly);
+			deps.add(d);
+			depSets.add(set);
+			depM.add(mWithin(set, d.p, masks));
+		}
+		double[] z = new double[masks.length];
+		for (int v = 1; v <= px.length; v++) {
+			long set = sx[v - 1];
+			for (int t = 0; t < masks.length; t++) {
+				if (!fitsMask(set, masks[t]))
+					continue;
+				double term = px[v - 1];
+				for (int j = 0; j < deps.size(); j++) {
+					Dependent d = deps.get(j);
+					int u = d.baseValue[v - 1];
+					double pu = d.p[u - 1];
+					double ind = fitsMask(depSets.get(j)[u - 1], masks[t]) ? 1 : 0;
+					double excluded = (depM.get(j)[t] - pu * ind) / (1 - pu);
+					double q = d.elseWith ? (1 - d.remote) * ind + d.remote * excluded : excluded;
+					term *= power(q, d.times);
+				}
+				z[t] += term;
+			}
+		}
+		return z;
+	}
+
+	private static double[] mWithin(long[] set, double[] p, long[] masks) {
+		double[] m = new double[masks.length];
+		for (int u = 1; u <= p.length; u++) {
+			for (int t = 0; t < masks.length; t++) {
+				if (fitsMask(set[u - 1], masks[t]))
+					m[t] += p[u - 1];
+			}
+		}
+		return m;
+	}
+
+	// a value's node set lies within the set
+	private static boolean fitsMask(long set, long mask) {
+		return (set & ~mask) == 0;
+	}
+
+	// sets(v): the node set, as a bit mask, of the scope's statements bound to the let, for each value: what
+	// singles() keeps only as EMPTY, one node or MULTI, which is enough for {} and the singletons but not for
+	// larger sets (two statements on nodes a and b lie within N \ {n} when n is neither)
+	private long[] sets(Let let, Structure s, boolean writesOnly) {
+		int size = (int) mapping.size(let.domain());
+		long[] set = new long[size];
+		for (Bound b : s.bound.getOrDefault(let.id(), List.of())) {
+			if (writesOnly && !b.write)
+				continue;
+			KeyBuckets kb = mapping.buckets(new KeyPath(let.domain(), b.routed.value().path()), hasher, b.routed.keyTable().buckets());
+			int[] nodeOfBucket = nodeIndexOfBuckets(layout, b.routed.keyTable());
+			for (int v = 1; v <= size; v++)
+				set[v - 1] |= 1L << nodeOfBucket[kb.bucket(v)];
+		}
+		return set;
+	}
+
 	// P[the node sets of the scope's statements together hold at most one node]
 	private double atMostOneNode(Structure s, boolean writesOnly) {
 		int n = nodes.size();

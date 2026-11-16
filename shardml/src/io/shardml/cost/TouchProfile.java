@@ -18,15 +18,21 @@ import io.shardml.cost.SkewAndLoad.NodeValue;
  *    kind (excluded from the load, as in SkewAndLoad) and is counted in repartitionStatements.
  *  - entryStatements: per kind, per node, the statements each node receives as the entry node when clients
  *    connect to the layout's nodes round-robin (Plan-phase4 2.6, mode (b)): statements / n on every node. In
- *    mode (a) (through the coordinator) the coordinator receives all of them: `statements`. */
+ *    mode (a) (through the coordinator) the coordinator receives all of them: `statements`.
+ *  - twoPhase: the probability a transaction commits with 2PC (CostReport's distributed twoPhase, the same
+ *    number); twoPhasePerNode: per node, the probability that it commits with 2PC AND the node is one of its
+ *    participants (a node one of its writes touches; DistributedTransactions.participation), P1's
+ *    P2PC * participants_n (Plan-phase4 amendment 1, 4). */
 public record TouchProfile(String layout, String workload, long rankOffset, List<String> nodes, List<KindNodes> touches,
-		List<KindValue> statements, double repartitionStatements, List<KindNodes> entryStatements) {
+		List<KindValue> statements, double repartitionStatements, List<KindNodes> entryStatements, double twoPhase,
+		List<NodeValue> twoPhasePerNode) {
 
 	public TouchProfile {
 		nodes = List.copyOf(nodes);
 		touches = List.copyOf(touches);
 		statements = List.copyOf(statements);
 		entryStatements = List.copyOf(entryStatements);
+		twoPhasePerNode = List.copyOf(twoPhasePerNode);
 	}
 
 	public record KindNodes(TouchKind kind, List<NodeValue> perNode) {
@@ -90,6 +96,10 @@ public record TouchProfile(String layout, String workload, long rankOffset, List
 		for (KindNodes k : entryStatements)
 			row(out, k.kind().label(), k.perNode(), statements(k.kind()));
 		out.append(String.format(Locale.ROOT, "%-16s %s%n", "repartition", SkewAndLoad.num(repartitionStatements)));
+		out.append(String.format(Locale.ROOT, "%-16s", "2PC participant"));
+		for (NodeValue v : twoPhasePerNode)
+			out.append(String.format(Locale.ROOT, " %14s", SkewAndLoad.num(v.value())));
+		out.append(String.format(Locale.ROOT, " %14s%n", "2PC " + SkewAndLoad.num(twoPhase)));
 		return out.toString();
 	}
 
@@ -117,6 +127,11 @@ public record TouchProfile(String layout, String workload, long rankOffset, List
 		out.field("repartition_statements").number(repartitionStatements);
 		out.field("entry_statements");
 		kinds(out, entryStatements);
+		out.field("two_phase").number(twoPhase);
+		out.field("two_phase_participation").open();
+		for (NodeValue v : twoPhasePerNode)
+			out.field(v.node()).number(v.value());
+		out.close();
 		out.close();
 		return out.toString();
 	}
