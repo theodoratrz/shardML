@@ -10,16 +10,21 @@
 #   4 reference read / write   reference.shardml         ref-read, ref-write, ref-join
 #   5 entry-node CPU           from 1 to 4               (the entry node's container CPU and statement counts)
 #
-# Per (model, workload, repetition): a warm-up driver run (discarded), a counter snapshot, the measured
-# run, a snapshot; counts.py compares the counts per executed transaction with the model (`driver touches`):
+# Per (model, workload, repetition): a warm-up driver run (discarded), then the measured run with no warm-up,
+# around which the driver itself snapshots the cluster's counters into manifest.json (P4.3, Counters.java:
+# the one implementation; with no warm-up its before snapshot precedes every transaction); counts.py compares the counts per executed transaction with the model (`driver touches`):
 # read and write touches per node (pg_stat_statements executions per shard relation, the plan's amendment 2),
 # single- and multi-shard statements on the entry nodes (citus_stat_counters), 2PC transactions and, per node,
 # those it took part in (pg_dist_transaction), within one transaction per client plus four standard deviations;
 # and records every container's CPU (cgroup usage). Under amd64 emulation CPU is not a result and is never
 # reported (amendment 1); the fit (P4.0c) runs on the VM with the same script and the plan's sizes.
 #
-# Needs pg_stat_statements preloaded (bench/docker-compose.yml). For the runs it sets, on every node, citus.enable_stat_counters = on and citus.recover_2pc_interval = -1
-# (2PC records stay countable), with ALTER SYSTEM; both are reset on exit.
+# Needs pg_stat_statements preloaded (bench/docker-compose.yml). For the runs it sets, on every node,
+# citus.enable_stat_counters = on and citus.recover_2pc_interval = -1 (2PC records stay countable), and with
+# LOCAL_EXEC=off citus.enable_local_execution = off, with ALTER SYSTEM; all are reset on exit, an abort included.
+# LOCAL_EXEC=off is for diagnostic-only runs (plan amendment 3, 1): entering through the workers (ENTRY=workers),
+# per-node touches and 2PC participation are checked only with local execution off; with it on (the default,
+# and always in performance runs) they are listed, and the totals checked.
 #
 #   bench/calibration/run.sh                        the plan's sizes: 1M keys, 120 s warm-up, 300 s measured
 #   KEYS=30000 WARMUP=5 DURATION=20 CLIENTS=4 bench/calibration/run.sh     a local counts-only pass
@@ -51,6 +56,11 @@ else
 	TARGETS=${TARGETS:-127.0.0.1:$PORT}
 fi
 ONLY=${ONLY:-}
+LOCAL_EXEC=${LOCAL_EXEC:-on}
+if [[ $LOCAL_EXEC != on && $LOCAL_EXEC != off ]]; then
+	echo "calibration: LOCAL_EXEC must be on or off" >&2
+	exit 2
+fi
 TRANSFER_MODE=${TRANSFER_MODE:-block_writes}
 JOBS=${JOBS:-4}
 OUT=${OUT:-$ROOT/bench-runs/calibration}
@@ -103,16 +113,22 @@ set_gucs() { # one ALTER SYSTEM per argument (each must run outside a transactio
 }
 work=$(mktemp -d)
 cleanup() {
-	set_gucs "ALTER SYSTEM RESET citus.enable_stat_counters" "ALTER SYSTEM RESET citus.recover_2pc_interval" 2>/dev/null
+	set_gucs "ALTER SYSTEM RESET citus.enable_stat_counters" "ALTER SYSTEM RESET citus.recover_2pc_interval" \
+		"ALTER SYSTEM RESET citus.enable_local_execution" 2>/dev/null
 	psql_db -c "DROP SCHEMA IF EXISTS $SCHEMA CASCADE;" </dev/null >/dev/null 2>&1
 	rm -rf "$work"
 }
 trap cleanup EXIT
+# an interrupt or kill exits through the EXIT trap too, so the settings are always reset
+trap 'exit 130' INT
+trap 'exit 143' TERM
 if ! compose exec -T coordinator psql -U postgres -v ON_ERROR_STOP=1 -qAtX -c "CREATE EXTENSION IF NOT EXISTS pg_stat_statements;" >/dev/null; then
 	echo "calibration: pg_stat_statements is not available (bench/docker-compose.yml preloads it; recreate the cluster)" >&2
 	exit 2
 fi
-if ! set_gucs "ALTER SYSTEM SET citus.enable_stat_counters = on" "ALTER SYSTEM SET citus.recover_2pc_interval = -1"; then
+gucs=("ALTER SYSTEM SET citus.enable_stat_counters = on" "ALTER SYSTEM SET citus.recover_2pc_interval = -1")
+[[ $LOCAL_EXEC == off ]] && gucs+=("ALTER SYSTEM SET citus.enable_local_execution = off")
+if ! set_gucs "${gucs[@]}"; then
 	echo "calibration: cannot set citus.enable_stat_counters / citus.recover_2pc_interval" >&2
 	exit 2
 fi
@@ -131,47 +147,6 @@ mkdir -p "$session"
 	echo "commit=$(git -C "$ROOT" rev-parse HEAD 2>/dev/null)"
 	compose exec -T coordinator psql -U postgres -qAtX -c "SELECT citus_version();"
 } >"$session/session.txt"
-
-# one snapshot: per table and node (every placement, summed), scans and updates; the statement counters
-# (summed over the nodes: only an entry node counts); distinct 2PC transactions on every node; every
-# container's CPU
-snapshot() { # tables-csv shard-name-regex file
-	local tables=$1 shard_re=$2 file=$3
-	psql_db >"$file" <<SQL
-SELECT 'touch|' || n.nodename || ':' || n.nodeport || '|' || split_part(e, '=', 1) || '|' || split_part(e, '=', 2)
-FROM run_command_on_all_nodes(\$\$
-  SELECT coalesce(string_agg(side || '=' || x, ','), '') FROM (
-    SELECT CASE WHEN query ~* '^\s*select' THEN 'read' WHEN query ~* '^\s*(update|delete|insert|merge)' THEN 'write' END AS side,
-           sum(calls * (SELECT count(DISTINCT m[1]) FROM regexp_matches(query, '$shard_re', 'g') AS m)) AS x
-    FROM pg_stat_statements
-    WHERE dbid = (SELECT oid FROM pg_database WHERE datname = current_database())
-      AND query !~ 'pg_stat_user_tables|pg_total_relation_size|pg_dist_|pg_stat_statements'
-    GROUP BY 1) t WHERE side IS NOT NULL
-\$\$) r JOIN pg_dist_node n ON n.nodeid = r.nodeid, string_to_table(r.result, ',') AS e
-WHERE e <> '' ORDER BY 1;
-SELECT 'stat|' || t || '|' || r.nodename || ':' || r.nodeport || '|' || sum(split_part(r.result, ' ', 1)::bigint) || '|'
-       || sum(split_part(r.result, ' ', 2)::bigint)
-FROM unnest(string_to_array('$tables', ',')) AS t,
-     LATERAL run_command_on_placements(t::regclass,
-       'SELECT coalesce(seq_scan, 0) + coalesce(idx_scan, 0) || '' '' || n_tup_upd FROM pg_stat_user_tables WHERE relid = ''%s''::regclass') r
-GROUP BY t, r.nodename, r.nodeport ORDER BY 1;
-SELECT 'counters|' || coalesce(sum(split_part(result, ' ', 1)::bigint), 0) || '|' || coalesce(sum(split_part(result, ' ', 2)::bigint), 0)
-FROM run_command_on_all_nodes(\$\$SELECT query_execution_single_shard || ' ' || query_execution_multi_shard
-                                  FROM citus_stat_counters WHERE name = current_database()\$\$);
-SELECT 'twopc|' || coalesce(sum(result::bigint), 0)
-FROM run_command_on_all_nodes(\$\$SELECT count(DISTINCT regexp_replace(gid, '_[0-9]+\$', '')) FROM pg_dist_transaction\$\$);
-SELECT 'twopcnode|' || split_part(e, '=', 1) || '|' || sum(split_part(e, '=', 2)::bigint)
-FROM run_command_on_all_nodes(\$\$
-  SELECT coalesce(string_agg(n.nodename || ':' || n.nodeport || '=' || c, ','), '')
-  FROM (SELECT groupid, count(DISTINCT regexp_replace(gid, '_[0-9]+\$', '')) AS c FROM pg_dist_transaction GROUP BY groupid) x
-  JOIN pg_dist_node n ON n.groupid = x.groupid AND n.noderole = 'primary'
-\$\$) r, string_to_table(r.result, ',') AS e
-WHERE e <> '' GROUP BY split_part(e, '=', 1) ORDER BY 1;
-SQL
-	for svc in "${SERVICES[@]}"; do
-		echo "cpu|$svc|$(compose exec -T "$svc" sh -c "sed -n 's/^usage_usec //p' /sys/fs/cgroup/cpu.stat")"
-	done >>"$file"
-}
 
 # mode (b): Citus local execution hides the entry worker's own executions from the per-node counters
 local_execution=$(compose exec -T worker1 psql -U postgres -qAtX -c "SHOW citus.enable_local_execution;" | tr -d '[:space:]')
@@ -208,13 +183,6 @@ for entry in "${BENCHMARKS[@]}"; do
 	done
 	[[ $deployed -eq 1 ]] || continue
 	echo "  deploy $(( $(date +%s) - start )) s"
-	# the tables this model distributes (for the snapshots)
-	tables=$(psql_db -c "SELECT string_agg(quote_ident(n.nspname) || '.' || quote_ident(c.relname), ',' ORDER BY c.relname)
-		FROM pg_dist_partition p JOIN pg_class c ON c.oid = p.logicalrelid JOIN pg_namespace n ON n.oid = c.relnamespace
-		WHERE n.nspname = '$SCHEMA';" </dev/null)
-	shard_re=$(psql_db -c "SELECT '\\m(' || string_agg(c.relname, '|' ORDER BY c.relname) || ')_[0-9]+\\M'
-		FROM pg_dist_partition p JOIN pg_class c ON c.oid = p.logicalrelid JOIN pg_namespace n ON n.oid = c.relnamespace
-		WHERE n.nspname = '$SCHEMA';" </dev/null)
 	# load with the first workload: every workload of a model declares the same tables and rows
 	start=$(date +%s)
 	if ! java -jar "$DRIVER" load --targets "127.0.0.1:$PORT" --schema "$SCHEMA" --jobs "$JOBS" "$work/in/${selected[0]}.workload" "$m" \
@@ -238,18 +206,14 @@ for entry in "${BENCHMARKS[@]}"; do
 				java -jar "$DRIVER" run "${run_options[@]}" --warmup 0 --duration "$WARMUP" --rep "$rep" --out "$work/warmup" "$wl" "$m" \
 					>"$work/warmup.log" 2>&1 || { echo "  FAIL  $label: warm-up run"; tail -3 "$work/warmup.log"; failures=$((failures + 1)); continue; }
 			fi
-			snapshot "$tables" "$shard_re" "$work/before.txt"
 			if ! java -jar "$DRIVER" run "${run_options[@]}" --warmup 0 --duration "$DURATION" --rep "$rep" --out "$session/runs" "$wl" "$m" \
 				>"$work/run.log" 2>"$work/run.err"; then
 				echo "  FAIL  $label: driver run"; grep -v SHML_0 "$work/run.err" | tail -3; failures=$((failures + 1)); continue
 			fi
-			sleep 2 # backends flush their table statistics at exit; give the last ones time
-			snapshot "$tables" "$shard_re" "$work/after.txt"
+			# the driver snapshots the counters around the measured window into manifest.json (Counters.java)
 			dir=$(sed -n 's/.*-> //p' "$work/run.log" | head -1)
-			cp "$work/before.txt" "$dir/counters-before.txt"
-			cp "$work/after.txt" "$dir/counters-after.txt"
 			cp "$work/touches.json" "$dir/model-touches.json"
-			if ! python3 "$CAL/counts.py" --before "$work/before.txt" --after "$work/after.txt" --result "$dir/result.json" \
+			if ! python3 "$CAL/counts.py" --manifest "$dir/manifest.json" --result "$dir/result.json" \
 				--touches "$work/touches.json" --model "$m" --entry "$ENTRY" --clients "$CLIENTS" --label "$label" \
 				--local-execution "$local_execution" \
 				--json-out "$dir/counts.json"; then

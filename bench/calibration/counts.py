@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Plan-phase4 1a / P4.0b: one calibration run's counts against the model.
 
-Inputs: the counter snapshots before and after the measured run (bench/calibration/run.sh writes them),
-the driver's result.json, `driver touches --json` for the same workload and layout, the .shardml (node ->
-host:port), the entry mode (coordinator | workers) and the number of clients.
+Inputs: the run's manifest.json, where the driver records the cluster's counters before and after the
+measured window (Counters.java: the one implementation of the snapshots), its result.json, `driver touches
+--json` for the same workload and layout, the .shardml (node -> host:port), the entry mode (coordinator |
+workers) and the number of clients.
 
 N = transactions the driver executed in the measured run (committed + committed after a retry + failed: a
 failed transaction has touched too). With no warm-up inside the run (run.sh warms up in a separate run) the
@@ -53,23 +54,23 @@ import re
 import sys
 
 
-def snapshot(path):
-    snap = {"stats": {}, "touches": {}, "counters": {}, "twopc": 0, "twopc_node": {}, "cpu": {}}
-    for line in open(path):
-        f = line.rstrip("\n").split("|")
-        if f[0] == "stat":  # stat|table|host:port|scans|updates
-            snap["stats"][(f[1], f[2])] = (int(f[3]), int(f[4]))
-        elif f[0] == "touch":  # touch|host:port|read or write|count
-            snap["touches"][(f[1], f[2])] = int(f[3])
-        elif f[0] == "counters":
-            snap["counters"] = {"single": int(f[1]), "multi": int(f[2])}
-        elif f[0] == "twopc":
-            snap["twopc"] = int(f[1])
-        elif f[0] == "twopcnode":  # twopcnode|host:port|count
-            snap["twopc_node"][f[1]] = int(f[2])
-        elif f[0] == "cpu":
-            snap["cpu"][f[1]] = int(f[2])
-    return snap
+def snapshot(snap):
+    """One of the manifest's counter snapshots, as the flat maps the checks use."""
+    out = {"stats": {}, "touches": {}, "counters": {"single": 0, "multi": 0}, "twopc": 0, "twopc_node": {}, "cpu": {}}
+    for host, node in snap["nodes"].items():
+        for side, n in node.get("touches", {}).items():
+            out["touches"][(host, side)] = n
+        st = node.get("statements")
+        if st:
+            out["counters"]["single"] += st["singleShard"]
+            out["counters"]["multi"] += st["multiShard"]
+        if "scans" in node:
+            out["stats"][("all", host)] = (node["scans"], node["tuplesUpdated"])
+        if "cpuUsageMicros" in node:
+            out["cpu"][host] = node["cpuUsageMicros"]
+    out["twopc"] = snap["twoPhase"]["transactions"]
+    out["twopc_node"] = dict(snap["twoPhase"]["byParticipant"])
+    return out
 
 
 def delta(after, before):
@@ -84,8 +85,7 @@ def hosts(shardml):
 
 def main():
     p = argparse.ArgumentParser()
-    p.add_argument("--before", required=True)
-    p.add_argument("--after", required=True)
+    p.add_argument("--manifest", required=True)
     p.add_argument("--result", required=True)
     p.add_argument("--touches", required=True)
     p.add_argument("--model", required=True)
@@ -97,7 +97,16 @@ def main():
     p.add_argument("--json-out")
     a = p.parse_args()
 
-    s0, s1 = snapshot(a.before), snapshot(a.after)
+    manifest = json.load(open(a.manifest))
+    counters = manifest.get("counters", {})
+    if "before" not in counters or "after" not in counters:
+        print("  FAIL  %s: the manifest has no counter snapshots" % a.label)
+        return 1
+    errors = counters["before"]["errors"] + counters["after"]["errors"]
+    if errors:
+        print("  FAIL  %s: the counters could not all be read: %s" % (a.label, "; ".join(errors)))
+        return 1
+    s0, s1 = snapshot(counters["before"]), snapshot(counters["after"])
     result = json.load(open(a.result))
     model = json.load(open(a.touches))
     node_host = hosts(a.model)
@@ -186,9 +195,14 @@ def main():
         listed("seq_scan + idx_scan / n_tup_upd on %s" % h, stats[h][0], "listed; n_tup_upd %d" % stats[h][1])
 
     cpu = {k: (s1["cpu"][k] - s0["cpu"].get(k, 0)) / 1e6 / N for k in s1["cpu"]}
+    shares = manifest.get("entryShares", {})
+    if shares:
+        listed("entry shares uniform (amendment 3, 2)", 1 if shares["uniform"] else 0,
+               "listed; max deviation from 1/targets %.4f" % shares["maxShareDeviation"])
 
     ok = all(ch["ok"] for ch in checks)
-    print("  %s  %s: %d transactions (%d failed), %d clients, entry %s" % ("ok  " if ok else "FAIL", a.label, N, failed, C, a.entry))
+    print("  %s  %s: %d transactions (%d failed), %d clients, entry %s%s" % ("ok  " if ok else "FAIL", a.label, N, failed, C, a.entry,
+                                                                        ", emulated" if manifest.get("emulated") else ""))
     for ch in checks:
         if ch["expected"] is None:
             print("        %-52s %24s  measured %10d  (%s)" % (ch["check"], "", ch["measured"], ch["note"]))
@@ -202,7 +216,8 @@ def main():
         with open(a.json_out, "w") as out:
             json.dump({"label": a.label, "entry": a.entry, "clients": C, "executed": N, "failed": failed,
                        "committed": tp["committed"], "measuredSeconds": result["measuredSeconds"], "checks": checks,
-                       "cpuSecondsPerTransactionEmulatedNotAResult": cpu, "model": model, "ok": ok}, out, indent=1)
+                       "emulated": manifest.get("emulated"), "cpuSecondsPerTransaction": cpu, "model": model, "ok": ok},
+                      out, indent=1)
     return 0 if ok else 1
 
 
