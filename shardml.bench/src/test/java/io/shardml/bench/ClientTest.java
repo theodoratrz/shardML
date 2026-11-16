@@ -128,6 +128,19 @@ public class ClientTest {
 		Assertions.assertEquals(s.failedTotal(), failedPerTemplate);
 	}
 
+	// the clients start before t0 (the threads start early): the closed loop waits for t0, so with no warm-up
+	// every transaction it executes is measured and counted
+	@Test
+	public void testClosedLoopStartsAtT0AndCountsEveryExecution() {
+		long sec = 1_000_000_000L;
+		VirtualClock clock = new VirtualClock();
+		FakeSession session = new FakeSession(clock, 1_000_000L, n -> null);
+		Client c = new Client(banking(), session, new Streams(1, 1).draws(0), null, 0, sec / 5, sec / 5, sec, sec, clock);
+		c.run();
+		Assertions.assertEquals(session.attempts, c.stats.committed, "every execution counted");
+		Assertions.assertEquals(800, c.stats.committed, "back to back from t0 = 0.2 s to 1 s, 1 ms each");
+	}
+
 	@Test
 	public void testBoundedRetriesAreReportedApart() {
 		VirtualClock clock = new VirtualClock();

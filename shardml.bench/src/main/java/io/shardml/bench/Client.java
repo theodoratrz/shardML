@@ -6,8 +6,10 @@ import java.util.concurrent.locks.LockSupport;
 
 /* One client thread of a run. Times are System.nanoTime() values.
  *
- * Closed loop: transactions back to back (think time 0) until the end of the measured window; a
- * transaction is measured when it starts inside [warmEnd, end); latency from its start.
+ * Closed loop: from t0, transactions back to back (think time 0) until the end of the measured window;
+ * a transaction is measured when it starts inside [warmEnd, end); latency from its start. Every
+ * transaction a client starts is either a warm-up one (before warmEnd) or measured: with no warm-up, the
+ * driver counts every transaction it executes.
  *
  * Open loop: the client's Schedule fixes intended start times in advance; the client waits for each,
  * or starts at once when it is behind. Latency is measured from the INTENDED start (so queueing
@@ -92,6 +94,9 @@ final class Client implements Runnable {
 	}
 
 	private void closed() {
+		// start at t0, as the open loop does: a transaction started before t0 (the threads start up to 200 ms
+		// early) would run unmeasured, uncounted even with no warm-up
+		clock.sleepUntil(t0);
 		while (true) {
 			long start = clock.now();
 			if (start >= end)
