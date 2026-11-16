@@ -96,6 +96,11 @@ if (( KEYS < 10 )); then
 	echo "calibration: KEYS must be at least 10" >&2
 	exit 2
 fi
+# counts.py must fail a run whose manifest lists a counter error; check that first
+if ! python3 -I "$CAL/test_counts.py"; then
+	echo "calibration: counts.py self-test failed" >&2
+	exit 2
+fi
 if ! up_log=$("$BENCH/up.sh" 2>&1); then
 	echo "$up_log" >&2
 	echo "calibration: bench/up.sh failed" >&2

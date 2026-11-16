@@ -73,6 +73,17 @@ def snapshot(snap):
     return out
 
 
+def manifest_errors(manifest):
+    """Every error the manifest lists: the counter snapshots, the cluster facts, the CPU sampler. Any one fails
+    the run: a count that could not be read is never treated as zero."""
+    counters = manifest.get("counters", {})
+    errors = []
+    for where, part in (("before", counters.get("before", {})), ("after", counters.get("after", {})),
+                        ("cluster", manifest.get("cluster", {})), ("clusterCpu", manifest.get("clusterCpu", {}))):
+        errors += ["%s: %s" % (where, e) for e in part.get("errors", [])]
+    return errors
+
+
 def delta(after, before):
     return {k: v - before.get(k, 0) for k, v in after.items()}
 
@@ -102,7 +113,12 @@ def main():
     if "before" not in counters or "after" not in counters:
         print("  FAIL  %s: the manifest has no counter snapshots" % a.label)
         return 1
-    errors = counters["before"]["errors"] + counters["after"]["errors"]
+    errors = manifest_errors(manifest)
+    for host, node in counters.get("after", {}).get("nodes", {}).items():
+        d0 = counters["before"]["nodes"].get(host, {}).get("pgStatStatementsDeallocations")
+        d1 = node.get("pgStatStatementsDeallocations")
+        if d0 is not None and d1 is not None and d1 != d0:
+            errors.append("pg_stat_statements evicted entries on %s during the window (%d times): touch counts lost" % (host, d1 - d0))
     if errors:
         print("  FAIL  %s: the counters could not all be read: %s" % (a.label, "; ".join(errors)))
         return 1
